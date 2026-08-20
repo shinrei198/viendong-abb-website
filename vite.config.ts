@@ -2,6 +2,7 @@ import { defineConfig, type HtmlTagDescriptor, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'node:path'
+import fs from 'node:fs'
 
 import siteConfiguration from './.figma/make/site.json'
 
@@ -19,6 +20,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       tailwindcss(),
+      saveSiteDataPlugin(),
       figmaSiteConfiguration(siteConfiguration),
       figmaErrorOverlayReplay(),
       figmaReactRefreshBoundaryFallback(),
@@ -355,6 +357,38 @@ function figmaMakeKitPlugin(options: { storiesGlob: string | string[] }): Plugin
         } catch (err) {
           next(err as Error)
         }
+      })
+    },
+  }
+}
+
+/** Dev-only plugin to save site data directly to src/data/defaultSiteData.json */
+function saveSiteDataPlugin(): Plugin {
+  return {
+    name: 'save-site-data-plugin',
+    configureServer(server) {
+      server.middlewares.use(async (req, res, next) => {
+        if (req.url === '/api/save-site-data' && req.method === 'POST') {
+          let body = ''
+          req.on('data', (chunk) => {
+            body += chunk
+          })
+          req.on('end', () => {
+            try {
+              const data = JSON.parse(body)
+              const filePath = path.resolve(__dirname, './src/data/defaultSiteData.json')
+              fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8')
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify({ success: true, message: 'Đã lưu thành công vào mã nguồn!' }))
+            } catch (err: any) {
+              res.statusCode = 500
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify({ success: false, error: err?.message || 'Error saving file' }))
+            }
+          })
+          return
+        }
+        next()
       })
     },
   }

@@ -21,6 +21,9 @@ import {
   getStoredSiteSettings,
   saveStoredSiteSettings,
   resetAllToDefault,
+  saveAllDataToSourceCode,
+  exportAllDataAsJSON,
+  importAllDataFromJSON,
 } from '@/data/siteData'
 import RichTextEditor from '@/components/RichTextEditor'
 
@@ -809,6 +812,43 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
       ? bannerForm.buttons[selectedBtnIndex]
       : null
 
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isSavingSource, setIsSavingSource] = useState(false)
+
+  const handleSaveSource = async () => {
+    setIsSavingSource(true)
+    try {
+      const res = await saveAllDataToSourceCode()
+      showToast(res.message)
+    } catch {
+      showToast('Lỗi khi lưu vào source code!')
+    } finally {
+      setIsSavingSource(false)
+    }
+  }
+
+  const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      try {
+        const parsed = JSON.parse(event.target?.result as string)
+        const success = importAllDataFromJSON(parsed)
+        if (success) {
+          refreshData()
+          showToast('Đã nạp dữ liệu từ file JSON thành công!')
+        } else {
+          showToast('File JSON không đúng định dạng!')
+        }
+      } catch {
+        showToast('Không thể đọc file JSON!')
+      }
+    }
+    reader.readAsText(file)
+    e.target.value = ''
+  }
+
   return (
     <div className="bg-[#f1f5f9] min-h-screen font-['Roboto'] pb-16">
       {/* Toast Notification */}
@@ -867,7 +907,61 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            {/* Hidden file input for JSON import */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileImport}
+              accept=".json,application/json"
+              className="hidden"
+            />
+
+            {/* 1-Click Save to Source Code Button */}
+            <button
+              onClick={handleSaveSource}
+              disabled={isSavingSource}
+              className="px-3.5 py-1.5 text-xs font-bold text-[#1B4C98] bg-[#FFCC00] hover:bg-yellow-400 active:scale-95 transition-all shadow-md flex items-center gap-1.5 border border-yellow-500 disabled:opacity-50"
+              title="Lưu toàn bộ chỉnh sửa này trực tiếp vào file mã nguồn của dự án (để chuẩn bị push GitHub)"
+            >
+              {isSavingSource ? (
+                <svg className="animate-spin h-3.5 w-3.5 text-[#1B4C98]" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+              ) : (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z" />
+                </svg>
+              )}
+              <span className="font-bold tracking-tight">💾 Lưu vào Mã Nguồn</span>
+            </button>
+
+            {/* Backup JSON dropdown/buttons */}
+            <button
+              onClick={exportAllDataAsJSON}
+              className="px-2.5 py-1.5 text-xs font-semibold text-white/90 bg-white/10 hover:bg-white/20 transition-all flex items-center gap-1"
+              title="Tải file sao lưu JSON về máy tính"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+              </svg>
+              Xuất JSON
+            </button>
+
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="px-2.5 py-1.5 text-xs font-semibold text-white/90 bg-white/10 hover:bg-white/20 transition-all flex items-center gap-1"
+              title="Nhập dữ liệu từ file sao lưu JSON"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z" />
+              </svg>
+              Nạp JSON
+            </button>
+
+            <div className="h-5 w-px bg-white/20 mx-1"></div>
+
             <button
               onClick={() => onNavigate('home')}
               className="px-3.5 py-1.5 text-xs font-semibold text-white bg-white/10 hover:bg-white hover:text-[#1B4C98] transition-all flex items-center gap-1.5"
