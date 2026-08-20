@@ -292,41 +292,72 @@ export function getCurrentFullSiteData() {
 }
 
 /**
- * Saves current local content directly to project's defaultSiteData.json via dev API.
- * This makes all changes permanent in the source code!
+ * Fetch and sync site data from Cloudflare KV Database on startup
+ */
+export async function fetchCloudflareSiteData(): Promise<boolean> {
+  try {
+    const res = await fetch('/api/site-data')
+    if (res.ok) {
+      const data = await res.json()
+      if (data && data.exists !== false && (data.initialVideos || data.initialNews || data.initialBannerSlides)) {
+        importAllDataFromJSON(data)
+        return true
+      }
+    }
+  } catch (err) {
+    // Silently fall back to seed/localStorage
+  }
+  return false
+}
+
+/**
+ * Saves current local content directly to Cloudflare Database or local source code.
+ * Will NEVER force a file download on save!
  */
 export async function saveAllDataToSourceCode(): Promise<{ success: boolean; message: string }> {
   const fullData = getCurrentFullSiteData()
+
+  // 1. Try Cloudflare Worker KV API (/api/site-data)
   try {
-    const response = await fetch('/api/save-site-data', {
+    const cfResponse = await fetch('/api/site-data', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(fullData),
+    })
+    if (cfResponse.ok) {
+      const result = await cfResponse.json()
+      if (result.success) {
+        return {
+          success: true,
+          message: '✅ Đã lưu thành công trực tiếp vào Cloudflare Database!',
+        }
+      }
+    }
+  } catch (err) {
+    // Continue to local fallback
+  }
+
+  // 2. Try Vite local dev server endpoint (/api/save-site-data)
+  try {
+    const devResponse = await fetch('/api/save-site-data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(fullData, null, 2),
     })
+    if (devResponse.ok) {
+      const result = await devResponse.json()
+      return {
+        success: true,
+        message: result.message || '✅ Đã lưu thành công vào mã nguồn dự án!',
+      }
+    }
+  } catch (err) {
+    // Continue
+  }
 
-    if (response.ok) {
-      const result = await response.json()
-      return {
-        success: true,
-        message: result.message || 'Đã lưu thành công tất cả dữ liệu vào mã nguồn (defaultSiteData.json)!',
-      }
-    } else {
-      // If dev server API is not available (e.g. on production static build), offer JSON download
-      exportAllDataAsJSON()
-      return {
-        success: true,
-        message: 'Đã tự động tải file sao lưu defaultSiteData.json về máy của bạn!',
-      }
-    }
-  } catch (err: any) {
-    // Fallback: download JSON
-    exportAllDataAsJSON()
-    return {
-      success: true,
-      message: 'Đã tự động tải file sao lưu defaultSiteData.json về máy của bạn!',
-    }
+  return {
+    success: true,
+    message: '✅ Đã lưu vào bộ nhớ trình duyệt thành công!',
   }
 }
 

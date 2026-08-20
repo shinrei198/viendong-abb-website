@@ -11,6 +11,7 @@ import NewsPage from '@/pages/NewsPage'
 import NewsDetailPage from '@/pages/NewsDetailPage'
 import AdminPage from '@/pages/AdminPage'
 import FloatingButton from '@/components/FloatingButton'
+import { fetchCloudflareSiteData } from '@/data/siteData'
 
 interface CartItem {
   id: string
@@ -36,6 +37,11 @@ export default function App() {
   const [currentProductId, setCurrentProductId] = useState<string>('p1')
   const [currentArticleId, setCurrentArticleId] = useState<string>('n1')
   const [cart, setCart] = useState<CartItem[]>([])
+
+  // Initialize data from Cloudflare KV on mount
+  useEffect(() => {
+    fetchCloudflareSiteData()
+  }, [])
 
   // Scroll to top on page change
   useEffect(() => {
