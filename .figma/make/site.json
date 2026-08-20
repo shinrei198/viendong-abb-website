@@ -1,0 +1,11 @@
+{
+  "title": "Viễn Đông Website renew",
+  "description": "Connects dealers, distributors, and electricians with ABB electrical equipment in Vietnam, offering a streamlined product selection and quote request process.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

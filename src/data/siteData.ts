@@ -1,0 +1,658 @@
+export interface VideoItem {
+  id: string
+  title: string
+  category: string
+  date: string
+  duration: string
+  thumb: string
+  videoUrl: string
+  embedType: 'youtube' | 'drive' | 'vimeo' | 'direct' | 'upload'
+  isFeatured?: boolean
+  isHidden?: boolean
+  linkedProductSku?: string
+  views?: number
+}
+
+export interface NewsItem {
+  id: string
+  title: string
+  slug: string
+  category: string
+  tags: string[]
+  date: string
+  author: string
+  readTime: string
+  thumb: string
+  summary: string
+  content: string
+  quote?: string
+  quoteAuthor?: string
+  status: 'published' | 'draft'
+  isFeatured?: boolean
+  views?: number
+  attachments?: { name: string; url: string; size: string }[]
+}
+
+export interface QuoteRequestItem {
+  id: string
+  code: string
+  createdAt: string
+  customerName: string
+  company: string
+  phone: string
+  email: string
+  province: string
+  customerType: 'Đại lý' | 'Nhà thầu' | 'Thợ điện' | 'Doanh nghiệp' | 'Khách lẻ'
+  note: string
+  items: {
+    id: string
+    name: string
+    sku: string
+    qty: number
+  }[]
+  status: 'new' | 'contacted' | 'quoted' | 'completed' | 'cancelled'
+}
+
+export interface BannerButtonOverlay {
+  id: string
+  label: string
+  actionType: 'internal' | 'external' | 'phone' | 'zalo'
+  targetUrl: string
+  posX: number // Percentage from left (0..100)
+  posY: number // Percentage from top (0..100)
+  size: 'sm' | 'md' | 'lg'
+  styleType: 'red' | 'navy' | 'white' | 'glass'
+}
+
+export interface BannerSlideItem {
+  id: string
+  title: string
+  imageUrl: string
+  mobileImageUrl?: string
+  altText?: string
+  bannerLink?: string
+  bannerLinkType?: 'internal' | 'external' | 'phone' | 'zalo'
+  buttons: BannerButtonOverlay[]
+  order: number
+  isActive: boolean
+}
+
+export interface SiteSettings {
+  heroTitle: string
+  heroSubtitle: string
+  heroDescription: string
+  heroImage: string
+  hotline: string
+  hotlineFormatted: string
+  email: string
+  address: string
+  zaloUrl: string
+  catalogueUrl: string
+  companyName: string
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INITIAL / SEED DATA
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const initialVideoCategories: string[] = [
+  'Sản phẩm mới',
+  'Sự kiện',
+  'Hướng dẫn kỹ thuật',
+  'Dự án tiêu biểu',
+  'Đại lý & Phân phối',
+]
+
+export const initialVideos: VideoItem[] = [
+  {
+    id: 'v1',
+    title: 'Giải pháp bảo vệ toàn diện với thiết bị đóng cắt MCB & RCBO ABB',
+    category: 'Sản phẩm mới',
+    date: '18/08/2026',
+    duration: '0:22',
+    thumb: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=450&fit=crop&auto=format',
+    videoUrl: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
+    embedType: 'youtube',
+    isFeatured: true,
+    isHidden: false,
+    linkedProductSku: 'SH201L-C16',
+    views: 1240,
+  },
+  {
+    id: 'v2',
+    title: 'Giới thiệu dòng công tắc & ổ cắm ABB Inora thiết kế hiện đại',
+    category: 'Sản phẩm mới',
+    date: '15/08/2026',
+    duration: '0:35',
+    thumb: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=800&h=450&fit=crop&auto=format',
+    videoUrl: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
+    embedType: 'youtube',
+    isFeatured: true,
+    isHidden: false,
+    linkedProductSku: 'INORA-SW1-WH',
+    views: 980,
+  },
+  {
+    id: 'v3',
+    title: 'Hội thảo kỹ thuật ABB: Công nghệ bảo vệ hồ quang điện AFDD tiên tiến',
+    category: 'Sự kiện',
+    date: '10/08/2026',
+    duration: '1:15',
+    thumb: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&h=450&fit=crop&auto=format',
+    videoUrl: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
+    embedType: 'youtube',
+    isFeatured: false,
+    isHidden: false,
+    linkedProductSku: 'S-ARC1-B16',
+    views: 2150,
+  },
+  {
+    id: 'v4',
+    title: 'Hướng dẫn lắp đặt và cài đặt Aptomat khối MCCB Tmax XT cho tủ phân phối',
+    category: 'Hướng dẫn kỹ thuật',
+    date: '02/08/2026',
+    duration: '2:45',
+    thumb: 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=800&h=450&fit=crop&auto=format',
+    videoUrl: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
+    embedType: 'youtube',
+    isFeatured: false,
+    isHidden: false,
+    linkedProductSku: 'XT2N-160-TMD',
+    views: 3420,
+  },
+  {
+    id: 'v5',
+    title: 'Tham quan hệ thống phân phối thiết bị điện Viễn Đông Electric tại TP.HCM',
+    category: 'Đại lý & Phân phối',
+    date: '25/07/2026',
+    duration: '1:40',
+    thumb: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&h=450&fit=crop&auto=format',
+    videoUrl: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
+    embedType: 'youtube',
+    isFeatured: false,
+    isHidden: false,
+    views: 890,
+  },
+  {
+    id: 'v6',
+    title: 'Ứng dụng máy cắt không khí ACB Emax 2 trong trung tâm dữ liệu',
+    category: 'Dự án tiêu biểu',
+    date: '18/07/2026',
+    duration: '3:10',
+    thumb: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&h=450&fit=crop&auto=format',
+    videoUrl: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
+    embedType: 'youtube',
+    isFeatured: false,
+    isHidden: false,
+    linkedProductSku: 'EMAX2-E1.2N',
+    views: 1540,
+  },
+]
+
+export const initialNewsCategories: string[] = [
+  'Sản phẩm mới',
+  'Tin tức & Sự kiện',
+  'Hướng dẫn kỹ thuật',
+  'Dự án công trình',
+  'Chính sách đại lý',
+]
+
+export const initialNews: NewsItem[] = [
+  {
+    id: 'n1',
+    title: 'ABB ra mắt dòng thiết bị đóng cắt thông minh thế hệ mới tại Việt Nam',
+    slug: 'abb-ra-mat-dong-thiet-bi-dong-cat-thong-minh',
+    category: 'Sản phẩm mới',
+    tags: ['MCB', 'RCBO', 'ABB Vietnam', 'Công nghệ'],
+    date: '16/08/2026',
+    author: 'Ban Kỹ Thuật Viễn Đông',
+    readTime: '4 phút',
+    thumb: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=800&h=450&fit=crop&auto=format',
+    summary:
+      'Dòng sản phẩm mới tích hợp cảm biến giám sát thông minh giúp phát hiện sự cố rò điện và quá tải sớm, bảo vệ tối ưu cho công trình dân dụng và công nghiệp.',
+    content: `
+      <p>Tại sự kiện công nghệ năng lượng diễn ra tại TP.HCM, tập đoàn ABB phối hợp cùng Nhà phân phối cấp 1 <strong>Viễn Đông Electric</strong> đã chính thức giới thiệu dải thiết bị đóng cắt thế hệ mới.</p>
+      <h2>Những cải tiến vượt bậc</h2>
+      <p>Dòng sản phẩm mới mang lại khả năng vận hành ổn định trong môi trường nhiệt đới ẩm, đồng thời nâng cao độ bền cơ học lên tới 20.000 lần đóng cắt.</p>
+      <ul>
+        <li>Tích hợp cảm biến đo lường dòng rò siêu nhạy 30mA chuẩn IEC 61009-1.</li>
+        <li>Kích thước nhỏ gọn tiết kiệm 25% không gian lắp đặt trong tủ điện âm tường.</li>
+        <li>Vật liệu chống cháy cao cấp đạt chuẩn an toàn quốc tế.</li>
+      </ul>
+      <p>Viễn Đông Electric hiện đã nhập kho sẵn sàng cung ứng cho các đại lý và nhà thầu trên toàn quốc.</p>
+    `,
+    quote:
+      'An toàn điện là nền tảng sống còn của mọi công trình. ABB cam kết mang đến những giải pháp bảo vệ tin cậy nhất cho gia đình và doanh nghiệp Việt Nam.',
+    quoteAuthor: 'Đại diện kỹ thuật ABB Khu vực Đông Nam Á',
+    status: 'published',
+    isFeatured: true,
+    views: 3120,
+    attachments: [
+      { name: 'Catalogue_ABB_Compact_Home_2026.pdf', url: '#', size: '4.2 MB' },
+      { name: 'Bang_Gia_MCB_RCCB_VienDong.pdf', url: '#', size: '1.8 MB' },
+    ],
+  },
+  {
+    id: 'n2',
+    title: 'Hướng dẫn lựa chọn MCB và RCBO phù hợp cho hệ thống điện căn hộ cao cấp',
+    slug: 'huong-dan-lua-chon-mcb-va-rcbo-cho-can-ho',
+    category: 'Hướng dẫn kỹ thuật',
+    tags: ['Kỹ thuật', 'Lắp đặt', 'MCB', 'RCBO'],
+    date: '12/08/2026',
+    author: 'Kỹ sư Nguyễn Thành An',
+    readTime: '6 phút',
+    thumb: 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=800&h=450&fit=crop&auto=format',
+    summary:
+      'Bài viết chi tiết hướng dẫn cách tính toán dòng định mức, dòng cắt ngắn mạch và phân bổ lộ cấp nguồn an toàn cho căn hộ 2-3 phòng ngủ.',
+    content: `
+      <p>Việc chọn đúng aptomat không chỉ bảo vệ tài sản mà còn ngăn ngừa triệt để nguy cơ chập cháy do quá tải hoặc phóng tia lửa điện.</p>
+      <h2>1. Tính toán phụ tải tổng</h2>
+      <p>Đối với căn hộ có tổng công suất sử dụng đồng thời khoảng 8kW - 12kW, nên lựa chọn MCB tổng 2P từ 40A đến 63A dòng cắt 6kA (như mã SH202-C40 hoặc SH202-C63).</p>
+      <h2>2. Phân chia các nhánh lộ tải</h2>
+      <ul>
+        <li><strong>Lộ máy lạnh / Điều hòa:</strong> MCB 1P 16A - 20A cho mỗi phòng.</li>
+        <li><strong>Lộ bếp từ / Lò nướng:</strong> RCBO 2P 32A dòng rò 30mA bảo vệ chống giật.</li>
+        <li><strong>Lộ ổ cắm sinh hoạt:</strong> RCBO 1P+N 20A 30mA chống giật tuyệt đối an toàn cho trẻ nhỏ.</li>
+        <li><strong>Lộ chiếu sáng LED:</strong> MCB 1P 10A.</li>
+      </ul>
+    `,
+    quote:
+      'Đừng bao giờ tiết kiệm chi phí cho thiết bị bảo vệ. Một chiếc RCBO chất lượng có thể cứu cả mạng người và bảo toàn toàn bộ tài sản trong nhà.',
+    quoteAuthor: 'Kỹ sư Nguyễn Thành An — Chuyên gia An toàn Điện Viễn Đông',
+    status: 'published',
+    isFeatured: true,
+    views: 4890,
+  },
+  {
+    id: 'n3',
+    title: 'Viễn Đông Electric đạt danh hiệu Nhà Phân Phối Xuất Sắc Nhất của ABB năm 2025',
+    slug: 'vien-dong-electric-dat-danh-hieu-npp-xuat-sac-abb-2025',
+    category: 'Tin tức & Sự kiện',
+    tags: ['Sự kiện', 'Viễn Đông', 'Giải thưởng', 'Đối tác'],
+    date: '05/08/2026',
+    author: 'Ban Truyền Thông',
+    readTime: '3 phút',
+    thumb: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&h=450&fit=crop&auto=format',
+    summary:
+      'Giải thưởng ghi nhận nỗ lực vượt bậc trong việc mở rộng mạng lưới đại lý và duy trì dịch vụ giao hàng nhanh chóng, hỗ trợ kỹ thuật tận tâm.',
+    content: `
+      <p>Tại Hội nghị Khách hàng Thường niên ABB 2025, Công ty TNHH Thiết Bị Điện Viễn Đông đã vinh dự được xướng tên ở hạng mục <em>"Nhà Phân Phối Cấp 1 Xuất Sắc Nhất Toàn Quốc"</em>.</p>
+      <p>Với hệ thống kho bãi hiện đại và đội ngũ kỹ thuật giàu kinh nghiệm, Viễn Đông cam kết luôn đồng hành cùng các đại lý và nhà thầu với chính sách chiết khấu tốt nhất.</p>
+    `,
+    status: 'published',
+    isFeatured: false,
+    views: 2450,
+  },
+  {
+    id: 'n4',
+    title: 'Ứng dụng công nghệ chống hồ quang AFDD trong bảo vệ phòng chống cháy nổ',
+    slug: 'ung-dung-cong-nghe-chong-ho-quang-afdd',
+    category: 'Hướng dẫn kỹ thuật',
+    tags: ['AFDD', 'Chống cháy', 'Kỹ thuật', 'ABB'],
+    date: '28/07/2026',
+    author: 'Ban Kỹ Thuật Viễn Đông',
+    readTime: '5 phút',
+    thumb: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=800&h=450&fit=crop&auto=format',
+    summary:
+      'Hơn 60% các vụ cháy nổ nhà ở bắt nguồn từ sự cố phóng tia lửa điện hồ quang ngầm mà aptomat truyền thống không thể phát hiện.',
+    content: `
+      <p>Thiết bị phát hiện sự cố hồ quang (Arc Fault Detection Device - AFDD) của ABB là giải pháp bảo vệ cấp cao nhất hiện nay theo chuẩn IEC 62606.</p>
+      <p>AFDD liên tục phân tích dạng sóng dòng điện bằng vi xử lý thông minh để phát hiện ngay lập tức các tia lửa điện do chuột cắn dây hoặc ốc siết tiếp xúc bị lỏng.</p>
+    `,
+    status: 'published',
+    isFeatured: false,
+    views: 1890,
+  },
+  {
+    id: 'n5',
+    title: 'Chính sách chiết khấu và ưu đãi đặc quyền cho Đại lý Phân phối Viễn Đông năm 2026',
+    slug: 'chinh-sach-chiet-khau-dai-ly-vien-dong-2026',
+    category: 'Chính sách đại lý',
+    tags: ['Đại lý', 'Chiết khấu', 'Chính sách', 'B2B'],
+    date: '20/07/2026',
+    author: 'Phòng Kinh Doanh B2B',
+    readTime: '4 phút',
+    thumb: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&h=450&fit=crop&auto=format',
+    summary:
+      'Chương trình hỗ trợ thưởng doanh số quý, cung cấp bảng mẫu trưng bày sản phẩm (demo board) và đào tạo kỹ thuật miễn phí cho nhân viên đại lý.',
+    content: `
+      <p>Viễn Đông Electric công bố bảng chính sách thương mại dành cho đối tác đại lý cấp 2 và các cửa hàng thiết bị điện dân dụng trên toàn quốc.</p>
+      <p>Liên hệ Hotline <strong>(028) 39435276</strong> hoặc gửi yêu cầu để nhận bảng chiết khấu chi tiết.</p>
+    `,
+    status: 'published',
+    isFeatured: false,
+    views: 3200,
+  },
+]
+
+export const initialQuoteRequests: QuoteRequestItem[] = [
+  {
+    id: 'q1',
+    code: 'VD-849201',
+    createdAt: '18/08/2026 14:30',
+    customerName: 'Trần Văn Hưng',
+    company: 'Công ty CP Xây Dựng Nam Thành',
+    phone: '0908123456',
+    email: 'hung.tran@namthanhcorp.vn',
+    province: 'TP. Hồ Chí Minh',
+    customerType: 'Nhà thầu',
+    note: 'Cần báo giá gấp cho gói cơ điện M&E dự án chung cư 25 tầng tại Quận 7.',
+    items: [
+      { id: 'p1', name: 'MCB 1P 16A ABB SH201-C16', sku: 'SH201-C16', qty: 150 },
+      { id: 'p2', name: 'RCBO 2P 32A 30mA ABB GSH201-AC', sku: 'GSH201-AC-C32', qty: 45 },
+      { id: 'p3', name: 'MCCB 3P 160A ABB Tmax XT2N', sku: 'XT2N-160-TMD', qty: 8 },
+    ],
+    status: 'new',
+  },
+  {
+    id: 'q2',
+    code: 'VD-739102',
+    createdAt: '17/08/2026 09:15',
+    customerName: 'Lê Minh Quân',
+    company: 'Đại lý Điện Dân Dụng Quân Phát',
+    phone: '0913987654',
+    email: 'quanphat.electric@gmail.com',
+    province: 'Bình Dương',
+    customerType: 'Đại lý',
+    note: 'Xin bảng giá chiết khấu đại lý dòng công tắc Framia và Inora màu xám ánh kim.',
+    items: [
+      { id: 'p4', name: 'Công tắc đơn 1 chiều Framia Trắng', sku: 'FRAMIA-SW1-WH', qty: 200 },
+      { id: 'p5', name: 'Ổ cắm đôi 3 chấu đa năng Inora', sku: 'INORA-SK2-GR', qty: 120 },
+    ],
+    status: 'contacted',
+  },
+  {
+    id: 'q3',
+    code: 'VD-628194',
+    createdAt: '15/08/2026 16:45',
+    customerName: 'Phạm Đức Trọng',
+    company: 'Cơ Điện Trọng Phát',
+    phone: '0987654321',
+    email: 'trongphat.me@gmail.com',
+    province: 'Đồng Nai',
+    customerType: 'Thợ điện',
+    note: 'Đã nhận đủ hàng và thanh toán chuyển khoản thành công.',
+    items: [
+      { id: 'p1', name: 'MCB 1P 20A ABB SH201-C20', sku: 'SH201-C20', qty: 30 },
+      { id: 'p6', name: 'Khởi động từ Contactor ABB AX09', sku: 'AX09-30-10', qty: 6 },
+    ],
+    status: 'completed',
+  },
+]
+
+export const initialBannerSlides: BannerSlideItem[] = [
+  {
+    id: 'b1',
+    title: 'Giải Pháp Đóng Cắt & Bảo Vệ Điện ABB Toàn Diện',
+    imageUrl: 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=1920&h=650&fit=crop&auto=format',
+    altText: 'Thiết bị đóng cắt ABB MCB MCCB RCBO',
+    bannerLink: 'products',
+    bannerLinkType: 'internal',
+    buttons: [
+      {
+        id: 'btn1_1',
+        label: 'Xem Danh Mục Sản Phẩm →',
+        actionType: 'internal',
+        targetUrl: 'products',
+        posX: 12,
+        posY: 75,
+        size: 'md',
+        styleType: 'red',
+      },
+      {
+        id: 'btn1_2',
+        label: 'Tải Bảng Giá ABB 2026 (PDF)',
+        actionType: 'external',
+        targetUrl: 'https://viendongelectric.vn/catalogue.pdf',
+        posX: 38,
+        posY: 75,
+        size: 'md',
+        styleType: 'navy',
+      },
+    ],
+    order: 1,
+    isActive: true,
+  },
+  {
+    id: 'b2',
+    title: 'Bộ Sưu Tập Công Tắc & Ổ Cắm Cao Cấp ABB Inora / Framia',
+    imageUrl: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1920&h=650&fit=crop&auto=format',
+    altText: 'Công tắc ổ cắm ABB Inora Framia sang trọng',
+    bannerLink: 'products',
+    bannerLinkType: 'internal',
+    buttons: [
+      {
+        id: 'btn2_1',
+        label: 'Khám Phá Dòng Framia',
+        actionType: 'internal',
+        targetUrl: 'products',
+        posX: 12,
+        posY: 72,
+        size: 'md',
+        styleType: 'red',
+      },
+      {
+        id: 'btn2_2',
+        label: 'Hotline: (028) 39435276',
+        actionType: 'phone',
+        targetUrl: '02839435276',
+        posX: 38,
+        posY: 72,
+        size: 'md',
+        styleType: 'glass',
+      },
+    ],
+    order: 2,
+    isActive: true,
+  },
+  {
+    id: 'b3',
+    title: 'Chính Sách Chiết Khấu Đặc Biệt Dành Cho Đại Lý & Nhà Thầu',
+    imageUrl: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=1920&h=650&fit=crop&auto=format',
+    altText: 'Hệ thống đại lý phân phối Viễn Đông Electric',
+    bannerLink: 'map',
+    bannerLinkType: 'internal',
+    buttons: [
+      {
+        id: 'btn3_1',
+        label: 'Đăng Ký Làm Đại Lý Ngay ➔',
+        actionType: 'internal',
+        targetUrl: 'map',
+        posX: 12,
+        posY: 70,
+        size: 'lg',
+        styleType: 'red',
+      },
+    ],
+    order: 3,
+    isActive: true,
+  },
+]
+
+export const initialSiteSettings: SiteSettings = {
+  heroTitle: 'Thiết bị điện ABB',
+  heroSubtitle: 'Chính hãng — Phân phối cấp 1',
+  heroDescription:
+    'Viễn Đông Electric cung cấp giải pháp toàn diện từ MCB, MCCB, ACB đến công tắc, ổ cắm cao cấp cho các công trình trọng điểm trên toàn quốc.',
+  heroImage: '',
+  hotline: '(028) 39435276',
+  hotlineFormatted: 'tel:+842839435276',
+  email: 'info@viendongelectric.vn',
+  address: 'TP. Hồ Chí Minh, Việt Nam',
+  zaloUrl: 'https://zalo.me/0908123456',
+  catalogueUrl: '#',
+  companyName: 'CÔNG TY TNHH THIẾT BỊ ĐIỆN VIỄN ĐÔNG',
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STORAGE HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
+
+const STORAGE_KEYS = {
+  VIDEOS: 'viendong_videos_v1',
+  VIDEO_CATS: 'viendong_video_cats_v1',
+  NEWS: 'viendong_news_v1',
+  NEWS_CATS: 'viendong_news_cats_v1',
+  QUOTES: 'viendong_quotes_v1',
+  BANNERS: 'viendong_banners_v1',
+  SETTINGS: 'viendong_settings_v1',
+}
+
+export function getStoredVideos(): VideoItem[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.VIDEOS)
+    return raw ? JSON.parse(raw) : initialVideos
+  } catch {
+    return initialVideos
+  }
+}
+
+export function saveStoredVideos(data: VideoItem[]) {
+  try {
+    localStorage.setItem(STORAGE_KEYS.VIDEOS, JSON.stringify(data))
+    window.dispatchEvent(new Event('viendong_storage_update'))
+  } catch (err) {
+    console.error('Failed to save videos', err)
+  }
+}
+
+export function getStoredVideoCategories(): string[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.VIDEO_CATS)
+    return raw ? JSON.parse(raw) : initialVideoCategories
+  } catch {
+    return initialVideoCategories
+  }
+}
+
+export function saveStoredVideoCategories(data: string[]) {
+  try {
+    localStorage.setItem(STORAGE_KEYS.VIDEO_CATS, JSON.stringify(data))
+    window.dispatchEvent(new Event('viendong_storage_update'))
+  } catch (err) {
+    console.error('Failed to save video categories', err)
+  }
+}
+
+export function getStoredNews(): NewsItem[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.NEWS)
+    return raw ? JSON.parse(raw) : initialNews
+  } catch {
+    return initialNews
+  }
+}
+
+export function saveStoredNews(data: NewsItem[]) {
+  try {
+    localStorage.setItem(STORAGE_KEYS.NEWS, JSON.stringify(data))
+    window.dispatchEvent(new Event('viendong_storage_update'))
+  } catch (err) {
+    console.error('Failed to save news', err)
+  }
+}
+
+export function getStoredNewsCategories(): string[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.NEWS_CATS)
+    return raw ? JSON.parse(raw) : initialNewsCategories
+  } catch {
+    return initialNewsCategories
+  }
+}
+
+export function saveStoredNewsCategories(data: string[]) {
+  try {
+    localStorage.setItem(STORAGE_KEYS.NEWS_CATS, JSON.stringify(data))
+    window.dispatchEvent(new Event('viendong_storage_update'))
+  } catch (err) {
+    console.error('Failed to save news categories', err)
+  }
+}
+
+export function getStoredBanners(): BannerSlideItem[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.BANNERS)
+    return raw ? JSON.parse(raw) : initialBannerSlides
+  } catch {
+    return initialBannerSlides
+  }
+}
+
+export function saveStoredBanners(data: BannerSlideItem[]) {
+  try {
+    localStorage.setItem(STORAGE_KEYS.BANNERS, JSON.stringify(data))
+    window.dispatchEvent(new Event('viendong_storage_update'))
+  } catch (err) {
+    console.error('Failed to save banners', err)
+  }
+}
+
+export function getStoredQuotes(): QuoteRequestItem[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.QUOTES)
+    return raw ? JSON.parse(raw) : initialQuoteRequests
+  } catch {
+    return initialQuoteRequests
+  }
+}
+
+export function saveStoredQuotes(data: QuoteRequestItem[]) {
+  try {
+    localStorage.setItem(STORAGE_KEYS.QUOTES, JSON.stringify(data))
+    window.dispatchEvent(new Event('viendong_storage_update'))
+  } catch (err) {
+    console.error('Failed to save quotes', err)
+  }
+}
+
+export function addQuoteRequest(
+  quote: Omit<QuoteRequestItem, 'id' | 'code' | 'createdAt' | 'status'>
+): QuoteRequestItem {
+  const current = getStoredQuotes()
+  const newQuote: QuoteRequestItem = {
+    ...quote,
+    id: 'q_' + Date.now(),
+    code: 'VD-' + Math.floor(100000 + Math.random() * 900000),
+    createdAt: new Date().toLocaleDateString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }),
+    status: 'new',
+  }
+  const updated = [newQuote, ...current]
+  saveStoredQuotes(updated)
+  return newQuote
+}
+
+export function getStoredSiteSettings(): SiteSettings {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.SETTINGS)
+    return raw ? JSON.parse(raw) : initialSiteSettings
+  } catch {
+    return initialSiteSettings
+  }
+}
+
+export function saveStoredSiteSettings(data: SiteSettings) {
+  try {
+    localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(data))
+    window.dispatchEvent(new Event('viendong_storage_update'))
+  } catch (err) {
+    console.error('Failed to save site settings', err)
+  }
+}
+
+export function resetAllToDefault() {
+  localStorage.removeItem(STORAGE_KEYS.VIDEOS)
+  localStorage.removeItem(STORAGE_KEYS.VIDEO_CATS)
+  localStorage.removeItem(STORAGE_KEYS.NEWS)
+  localStorage.removeItem(STORAGE_KEYS.NEWS_CATS)
+  localStorage.removeItem(STORAGE_KEYS.BANNERS)
+  localStorage.removeItem(STORAGE_KEYS.QUOTES)
+  localStorage.removeItem(STORAGE_KEYS.SETTINGS)
+  window.dispatchEvent(new Event('viendong_storage_update'))
+}
