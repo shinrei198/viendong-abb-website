@@ -93,6 +93,20 @@ export interface SiteSettings {
 
 import defaultSiteData from './defaultSiteData.json'
 
+/**
+ * Tự động phân tích và chuyển đổi tiêu đề tiếng Việt có dấu thành tiếng Việt không dấu kèm ký tự _ chuẩn SEO
+ */
+export function createVietnameseSlug(title: string): string {
+  if (!title) return ''
+  return title
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[đĐ]/g, 'd')
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/(^_+|_+$)/g, '')
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // INITIAL / SEED DATA (Synced from defaultSiteData.json)
 // ─────────────────────────────────────────────────────────────────────────────

@@ -24,6 +24,7 @@ import {
   saveAllDataToSourceCode,
   exportAllDataAsJSON,
   importAllDataFromJSON,
+  createVietnameseSlug,
 } from '@/data/siteData'
 import RichTextEditor from '@/components/RichTextEditor'
 
@@ -632,13 +633,7 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
 
     const slug =
       newsForm.slug.trim() ||
-      newsForm.title
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[đĐ]/g, 'd')
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)+/g, '')
+      createVietnameseSlug(newsForm.title)
 
     let updated: NewsItem[]
     if (editingNews) {
@@ -1485,7 +1480,7 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             type="button"
-                            onClick={() => onNavigate('newsDetail', n.id)}
+                            onClick={() => onNavigate('newsDetail', createVietnameseSlug(n.slug || n.title))}
                             className="px-2 py-1 text-[11px] font-semibold border border-gray-300 hover:bg-gray-100 text-gray-700"
                           >
                             Xem

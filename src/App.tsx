@@ -11,7 +11,7 @@ import NewsPage from '@/pages/NewsPage'
 import NewsDetailPage from '@/pages/NewsDetailPage'
 import AdminPage from '@/pages/AdminPage'
 import FloatingButton from '@/components/FloatingButton'
-import { fetchCloudflareSiteData, getStoredNews } from '@/data/siteData'
+import { fetchCloudflareSiteData, getStoredNews, createVietnameseSlug } from '@/data/siteData'
 
 interface CartItem {
   id: string
@@ -42,7 +42,12 @@ function parseRouteFromPath(): { page: Page; id?: string } {
     return { page: 'home' }
   }
 
-  // 2. Products & Product Detail
+  // 2. About / Gioi thieu
+  if (path === '/gioi-thieu' || path === '/about') {
+    return { page: 'about' }
+  }
+
+  // 3. Products & Product Detail
   if (path === '/san-pham' || path === '/products') {
     return { page: 'products' }
   }
@@ -52,7 +57,7 @@ function parseRouteFromPath(): { page: Page; id?: string } {
     return { page: 'productDetail', id }
   }
 
-  // 3. News & News Detail
+  // 4. News & News Detail
   if (path === '/tin-tuc' || path === '/news') {
     return { page: 'news' }
   }
@@ -62,29 +67,28 @@ function parseRouteFromPath(): { page: Page; id?: string } {
     return { page: 'newsDetail', id }
   }
 
-  // 4. Videos
+  // 5. Videos
   if (path === '/video' || path === '/videos') {
     return { page: 'videos' }
   }
 
-  // 5. Distributors / Map / Contact
+  // 6. Distributors / Map / Contact
   if (
     path === '/he-thong-phan-phoi' ||
     path === '/dai-ly' ||
     path === '/map' ||
     path === '/lien-he' ||
-    path === '/contact' ||
-    path === '/about'
+    path === '/contact'
   ) {
     return { page: 'map' }
   }
 
-  // 6. Cart & Quote Request
+  // 7. Cart & Quote Request
   if (path === '/gio-hang' || path === '/cart' || path === '/bao-gia') {
     return { page: 'cart' }
   }
 
-  // 7. Admin Panel
+  // 8. Admin Panel
   if (path === '/admin') {
     return { page: 'admin' }
   }
@@ -97,6 +101,8 @@ function getPathFromRoute(page: Page, id?: string): string {
   switch (page) {
     case 'home':
       return '/'
+    case 'about':
+      return '/gioi-thieu'
     case 'products':
       return '/san-pham'
     case 'productDetail':
@@ -108,7 +114,6 @@ function getPathFromRoute(page: Page, id?: string): string {
     case 'videos':
       return '/video'
     case 'map':
-    case 'about':
       return '/he-thong-phan-phoi'
     case 'cart':
       return '/gio-hang'
@@ -131,6 +136,10 @@ function updateSeoMetadata(page: Page, id?: string) {
     case 'home':
       title = 'Thiết Bị Điện ABB Chính Hãng | Viễn Đông Electric'
       break
+    case 'about':
+      title = 'Giới Thiệu | Viễn Đông Electric — Nhà Phân Phối Thiết Bị Điện ABB'
+      description = 'Thông tin giới thiệu về Công ty TNHH Thiết Bị Điện Viễn Đông.'
+      break
     case 'products':
       title = 'Danh Mục Thiết Bị Điện ABB | Viễn Đông Electric'
       description =
@@ -146,7 +155,14 @@ function updateSeoMetadata(page: Page, id?: string) {
       break
     case 'newsDetail': {
       const allNews = getStoredNews()
-      const current = allNews.find((n) => n.id === id || n.slug === id)
+      const normalize = (s?: string) => (s || '').toLowerCase().replace(/[-_]+/g, '_')
+      const target = normalize(id)
+      const current = allNews.find(
+        (n) =>
+          n.id === id ||
+          normalize(n.slug) === target ||
+          normalize(createVietnameseSlug(n.title)) === target
+      )
       if (current) {
         title = `${current.title} | Viễn Đông Electric`
         description = current.summary || description
@@ -161,7 +177,6 @@ function updateSeoMetadata(page: Page, id?: string) {
         'Xem video thực tế hướng dẫn lắp đặt thiết bị đóng cắt MCB, MCCB, công nghệ chống hồ quang AFDD ABB.'
       break
     case 'map':
-    case 'about':
       title = 'Hệ Thống Phân Phối & Đại Lý ABB Toàn Quốc | Viễn Đông Electric'
       description =
         'Tra cứu danh sách đại lý phân phối thiết bị điện ABB chính hãng của Viễn Đông Electric tại TP.HCM và các tỉnh.'
@@ -216,7 +231,7 @@ export default function App() {
   }, [currentPage, currentArticleId, currentProductId])
 
   const navigate = (page: string, id?: string) => {
-    const targetPage = (page === 'contact' || page === 'about' ? 'map' : page) as Page
+    const targetPage = (page === 'contact' ? 'map' : page) as Page
     const targetId = id || (targetPage === 'productDetail' ? currentProductId : targetPage === 'newsDetail' ? currentArticleId : undefined)
     const newPath = getPathFromRoute(targetPage, targetId)
 
@@ -258,6 +273,32 @@ export default function App() {
     switch (currentPage) {
       case 'home':
         return <HomePage onNavigate={navigate} onAddToCart={addToCart} />
+      case 'about':
+        return (
+          <div className="max-w-3xl mx-auto px-4 py-24 text-center">
+            <div className="w-16 h-16 bg-red-50 text-[#FF000F] rounded-full flex items-center justify-center mx-auto mb-4 border border-red-200">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+              </svg>
+            </div>
+            <h2
+              className="text-3xl font-bold mb-3 font-['Roboto_Condensed'] uppercase tracking-wide"
+              style={{ color: 'var(--navy)' }}
+            >
+              Giới Thiệu Viễn Đông Electric
+            </h2>
+            <p className="text-gray-500 mb-8 text-sm max-w-md mx-auto leading-relaxed">
+              Trang đang được cập nhật nội dung. Thông tin giới thiệu năng lực phân phối và chứng nhận đối tác chính thức ABB sẽ sớm được bổ sung.
+            </p>
+            <button
+              onClick={() => navigate('home')}
+              className="px-6 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90 shadow-sm uppercase tracking-wider"
+              style={{ backgroundColor: 'var(--red)' }}
+            >
+              ← Về trang chủ
+            </button>
+          </div>
+        )
       case 'products':
         return <ProductsPage onNavigate={navigate} onAddToCart={addToCart} />
       case 'productDetail':
@@ -287,7 +328,6 @@ export default function App() {
           />
         )
       case 'map':
-      case 'about':
         return <MapPage onNavigate={navigate} />
       default:
         return (

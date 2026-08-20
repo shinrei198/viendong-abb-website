@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { NewsItem, getStoredNews } from '@/data/siteData'
+import { NewsItem, getStoredNews, createVietnameseSlug } from '@/data/siteData'
 
 interface NewsDetailPageProps {
   articleId: string
@@ -19,7 +19,15 @@ export default function NewsDetailPage({ articleId, onNavigate }: NewsDetailPage
   }, [])
 
   // Find article by id or slug, or fallback
-  const article = allNews.find((n) => n.id === articleId || n.slug === articleId) || allNews[0]
+  const normalizeSlug = (s?: string) => (s || '').toLowerCase().replace(/[-_]+/g, '_')
+  const targetSlug = normalizeSlug(articleId)
+  const article =
+    allNews.find(
+      (n) =>
+        n.id === articleId ||
+        normalizeSlug(n.slug) === targetSlug ||
+        normalizeSlug(createVietnameseSlug(n.title)) === targetSlug
+    ) || allNews[0]
 
   // Find related articles (same category, excluding current)
   const relatedArticles = allNews
@@ -223,7 +231,7 @@ export default function NewsDetailPage({ articleId, onNavigate }: NewsDetailPage
               <div
                 key={item.id}
                 onClick={() => {
-                  onNavigate('newsDetail', item.id)
+                  onNavigate('newsDetail', createVietnameseSlug(item.slug || item.title))
                   window.scrollTo({ top: 0, behavior: 'smooth' })
                 }}
                 className="bg-white overflow-hidden border border-[#e5e5e5] hover:shadow-md transition-all duration-300 group cursor-pointer flex flex-col"

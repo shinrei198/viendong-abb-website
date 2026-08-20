@@ -14,6 +14,7 @@ import {
   getStoredNews,
   getStoredBanners,
   getStoredSiteSettings,
+  createVietnameseSlug,
 } from '@/data/siteData'
 import VideoModal from '@/components/VideoModal'
 import HeroSlider from '@/components/HeroSlider'
@@ -481,7 +482,7 @@ export default function HomePage({ onNavigate, onAddToCart }: HomePageProps) {
             {displayNews.map((news) => (
               <div
                 key={news.id}
-                onClick={() => onNavigate('newsDetail', news.id)}
+                onClick={() => onNavigate('newsDetail', createVietnameseSlug(news.slug || news.title))}
                 className="overflow-hidden bg-white hover:shadow-md transition-all duration-300 group cursor-pointer"
                 style={{ border: '1px solid #e5e5e5' }}
               >

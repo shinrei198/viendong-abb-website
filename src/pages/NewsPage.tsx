@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { NewsItem, getStoredNews, getStoredNewsCategories } from '@/data/siteData'
+import { NewsItem, getStoredNews, getStoredNewsCategories, createVietnameseSlug } from '@/data/siteData'
 import Pagination from '@/components/Pagination'
 
 interface NewsPageProps {
@@ -165,7 +165,7 @@ export default function NewsPage({ onNavigate }: NewsPageProps) {
             {paginatedNews.map((item) => (
               <div
                 key={item.id}
-                onClick={() => onNavigate('newsDetail', item.id)}
+                onClick={() => onNavigate('newsDetail', createVietnameseSlug(item.slug || item.title))}
                 className="bg-white overflow-hidden border border-[#e5e5e5] hover:shadow-md transition-all duration-300 group cursor-pointer flex flex-col"
               >
                 {/* Thumbnail Image */}
