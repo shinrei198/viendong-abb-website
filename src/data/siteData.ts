@@ -129,10 +129,20 @@ export function getStoredVideos(): VideoItem[] {
   }
 }
 
+let syncTimeout: any = null
+export function scheduleCloudflareSync() {
+  if (typeof window === 'undefined') return
+  if (syncTimeout) clearTimeout(syncTimeout)
+  syncTimeout = setTimeout(() => {
+    saveAllDataToSourceCode().catch(() => {})
+  }, 600)
+}
+
 export function saveStoredVideos(data: VideoItem[]) {
   try {
     localStorage.setItem(STORAGE_KEYS.VIDEOS, JSON.stringify(data))
     window.dispatchEvent(new Event('viendong_storage_update'))
+    scheduleCloudflareSync()
   } catch (err) {
     console.error('Failed to save videos', err)
   }
@@ -151,6 +161,7 @@ export function saveStoredVideoCategories(data: string[]) {
   try {
     localStorage.setItem(STORAGE_KEYS.VIDEO_CATS, JSON.stringify(data))
     window.dispatchEvent(new Event('viendong_storage_update'))
+    scheduleCloudflareSync()
   } catch (err) {
     console.error('Failed to save video categories', err)
   }
@@ -169,6 +180,7 @@ export function saveStoredNews(data: NewsItem[]) {
   try {
     localStorage.setItem(STORAGE_KEYS.NEWS, JSON.stringify(data))
     window.dispatchEvent(new Event('viendong_storage_update'))
+    scheduleCloudflareSync()
   } catch (err) {
     console.error('Failed to save news', err)
   }
@@ -187,6 +199,7 @@ export function saveStoredNewsCategories(data: string[]) {
   try {
     localStorage.setItem(STORAGE_KEYS.NEWS_CATS, JSON.stringify(data))
     window.dispatchEvent(new Event('viendong_storage_update'))
+    scheduleCloudflareSync()
   } catch (err) {
     console.error('Failed to save news categories', err)
   }
@@ -205,6 +218,7 @@ export function saveStoredBanners(data: BannerSlideItem[]) {
   try {
     localStorage.setItem(STORAGE_KEYS.BANNERS, JSON.stringify(data))
     window.dispatchEvent(new Event('viendong_storage_update'))
+    scheduleCloudflareSync()
   } catch (err) {
     console.error('Failed to save banners', err)
   }
@@ -223,6 +237,7 @@ export function saveStoredQuotes(data: QuoteRequestItem[]) {
   try {
     localStorage.setItem(STORAGE_KEYS.QUOTES, JSON.stringify(data))
     window.dispatchEvent(new Event('viendong_storage_update'))
+    scheduleCloudflareSync()
   } catch (err) {
     console.error('Failed to save quotes', err)
   }
@@ -263,10 +278,12 @@ export function saveStoredSiteSettings(data: SiteSettings) {
   try {
     localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(data))
     window.dispatchEvent(new Event('viendong_storage_update'))
+    scheduleCloudflareSync()
   } catch (err) {
     console.error('Failed to save site settings', err)
   }
 }
+
 
 export function resetAllToDefault() {
   localStorage.removeItem(STORAGE_KEYS.VIDEOS)
