@@ -27,6 +27,7 @@ import {
   createVietnameseSlug,
 } from '@/data/siteData'
 import RichTextEditor from '@/components/RichTextEditor'
+import ThumbnailCropper, { NewsThumbnailView } from '@/components/ThumbnailCropper'
 
 interface AdminPageProps {
   onNavigate: (page: string, id?: string) => void
@@ -1519,10 +1520,10 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                     <tr key={n.id} className="hover:bg-slate-50 transition-colors">
                       <td className="py-3 px-4">
                         <div className="w-24 h-14 bg-gray-100 overflow-hidden border border-gray-200 relative">
-                          <img
-                            src={n.thumb}
+                          <NewsThumbnailView
+                            thumb={n.thumb}
                             alt={n.title}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full"
                           />
                           {n.isFeatured && (
                             <span className="absolute top-1 left-1 bg-[#FF000F] text-white text-[8px] font-bold px-1 py-0.5">
@@ -3065,18 +3066,12 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                 />
               </div>
 
-              <div>
-                <label className="block font-bold text-gray-700 uppercase mb-1">
-                  Ảnh đại diện bài viết (Thumbnail URL):
-                </label>
-                <input
-                  type="text"
-                  value={newsForm.thumb}
-                  onChange={(e) => setNewsForm({ ...newsForm, thumb: e.target.value })}
-                  placeholder="https://..."
-                  className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:border-[#1B4C98]"
-                />
-              </div>
+              {/* Thumbnail Cropper & Viewport Tool */}
+              <ThumbnailCropper
+                value={newsForm.thumb}
+                onChange={(val) => setNewsForm({ ...newsForm, thumb: val })}
+                label="Ảnh đại diện bài viết (Thumbnail):"
+              />
 
               {/* Rich-Text WYSIWYG Editor */}
               <div>

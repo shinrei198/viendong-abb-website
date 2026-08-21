@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { NewsItem, getStoredNews, createVietnameseSlug } from '@/data/siteData'
+import { NewsThumbnailView } from '@/components/ThumbnailCropper'
 
 interface NewsDetailPageProps {
   articleId: string
@@ -103,11 +104,11 @@ export default function NewsDetailPage({ articleId, onNavigate }: NewsDetailPage
 
         {/* Featured Image */}
         {article.thumb && (
-          <div className="mb-8 overflow-hidden border border-gray-200">
-            <img
-              src={article.thumb}
+          <div className="mb-8 overflow-hidden border border-gray-200 bg-gray-100 max-h-[460px]">
+            <NewsThumbnailView
+              thumb={article.thumb}
               alt={article.title}
-              className="w-full max-h-[460px] object-cover"
+              className="w-full h-80 sm:h-[420px]"
             />
           </div>
         )}
@@ -236,11 +237,12 @@ export default function NewsDetailPage({ articleId, onNavigate }: NewsDetailPage
                 }}
                 className="bg-white overflow-hidden border border-[#e5e5e5] hover:shadow-md transition-all duration-300 group cursor-pointer flex flex-col"
               >
-                <div className="h-44 overflow-hidden bg-[#f0f0f0]">
-                  <img
-                    src={item.thumb}
+                <div className="w-24 h-16 shrink-0 overflow-hidden bg-gray-100 relative">
+                  <NewsThumbnailView
+                    thumb={item.thumb}
                     alt={item.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full"
+                    imgClassName="group-hover:scale-105 transition-transform"
                   />
                 </div>
                 <div className="p-5 flex-1 flex flex-col justify-between">

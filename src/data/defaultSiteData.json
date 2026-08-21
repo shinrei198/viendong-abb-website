@@ -95,6 +95,27 @@
   ],
   "initialNews": [
     {
+      "title": "For Testing OK",
+      "slug": "for_testing_ok",
+      "category": "Sản phẩm mới",
+      "tags": [
+        "ABB",
+        "Thiết bị điện"
+      ],
+      "date": "21/8/2026",
+      "author": "Ban Kỹ Thuật Viễn Đông",
+      "readTime": "4 phút",
+      "thumb": "{\"url\":\"https://www.electrive.com/media/2026/05/abb-om-x-series-1400x933.jpeg\",\"crop\":{\"x\":0,\"y\":17.40067967592462,\"width\":100,\"height\":63.19853102300162,\"aspectRatio\":2.374320860613782}}",
+      "summary": "",
+      "content": "<p>Nhập nội dung chi tiết bài viết tại đây...</p><figure draggable=\"true\" data-crop=\"{&quot;isCropped&quot;:true,&quot;x&quot;:0,&quot;y&quot;:5,&quot;width&quot;:100,&quot;height&quot;:77.1423537699535}\" style=\"width: 100%;\">\n          <div style=\"position: relative; width: 100%; aspect-ratio: 2.16051 / 1; overflow: hidden; border-radius: 3px; border-width: 1px; border-color: rgb(226, 232, 240); box-shadow: rgba(0, 0, 0, 0.08) 0px 4px 12px; background-color: rgb(248, 250, 252);\">\n            <img src=\"https://www.electrive.com/media/2026/05/abb-om-x-series-1400x933.jpeg\" alt=\"\" data-crop=\"{&quot;isCropped&quot;:true,&quot;x&quot;:0,&quot;y&quot;:5,&quot;width&quot;:100,&quot;height&quot;:77.1423537699535}\" referrerpolicy=\"no-referrer\" style=\"position: absolute; width: 100%; height: 129.6304754949666%; max-width: none; max-height: none; left: -0%; top: -6.48152377474833%; object-fit: fill; pointer-events: none;\">\n          </div>\n          <figcaption style=\"font-size: 0.85rem; color: rgb(100, 116, 139); margin-top: 8px; font-style: italic; outline: none; border-bottom: 1px dashed transparent; min-height: 1.2em;\" title=\"Nhấp vào đây để chỉnh sửa chú thích ảnh\">Nhấp vào đây để thêm chú thích cho ảnh...</figcaption>\n        </figure>\n        <p><br></p>",
+      "quote": "",
+      "quoteAuthor": "",
+      "status": "published",
+      "isFeatured": false,
+      "id": "n_1787308655163",
+      "views": 0
+    },
+    {
       "id": "n1",
       "title": "ABB ra mắt dòng thiết bị đóng cắt thông minh thế hệ mới tại Việt Nam",
       "slug": "abb-ra-mat-dong-thiet-bi-dong-cat-thong-minh",

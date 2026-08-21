@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { NewsItem, getStoredNews, getStoredNewsCategories, createVietnameseSlug } from '@/data/siteData'
 import Pagination from '@/components/Pagination'
+import { NewsThumbnailView } from '@/components/ThumbnailCropper'
 
 interface NewsPageProps {
   onNavigate: (page: string, articleId?: string) => void
@@ -170,14 +171,15 @@ export default function NewsPage({ onNavigate }: NewsPageProps) {
               >
                 {/* Thumbnail Image */}
                 <div className="h-48 overflow-hidden bg-[#f5f5f5] relative">
-                  <img
-                    src={item.thumb}
+                  <NewsThumbnailView
+                    thumb={item.thumb}
                     alt={item.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full"
+                    imgClassName="group-hover:scale-105 transition-transform duration-500"
                   />
                   {item.isFeatured && (
                     <span
-                      className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-bold text-white uppercase tracking-wider"
+                      className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-bold text-white uppercase tracking-wider z-10"
                       style={{ backgroundColor: 'var(--red)' }}
                     >
                       Nổi bật

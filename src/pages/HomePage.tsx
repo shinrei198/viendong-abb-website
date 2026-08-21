@@ -16,6 +16,7 @@ import {
   getStoredSiteSettings,
   createVietnameseSlug,
 } from '@/data/siteData'
+import { NewsThumbnailView } from '@/components/ThumbnailCropper'
 import VideoModal from '@/components/VideoModal'
 import HeroSlider from '@/components/HeroSlider'
 
@@ -662,10 +663,11 @@ export default function HomePage({ onNavigate, onAddToCart }: HomePageProps) {
               >
                 <div>
                   <div className="h-44 overflow-hidden bg-[#f0f0f0] relative">
-                    <img
-                      src={news.thumb}
+                    <NewsThumbnailView
+                      thumb={news.thumb}
                       alt={news.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none"
+                      className="w-full h-full"
+                      imgClassName="group-hover:scale-105 transition-transform duration-500 pointer-events-none"
                     />
                     {news.isFeatured && (
                       <span
