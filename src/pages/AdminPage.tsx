@@ -108,13 +108,35 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
     buttons: [],
     order: 1,
     isActive: true,
+    naturalWidth: 1920,
+    naturalHeight: 650,
+    mobileCtaLayout: 'hotspot',
   })
 
   // Selected button and Drag state for visual positioning
   const [selectedBtnIndex, setSelectedBtnIndex] = useState<number | null>(null)
   const [draggingBtnIndex, setDraggingBtnIndex] = useState<number | null>(null)
-  const [previewDeviceMode, setPreviewDeviceMode] = useState<'desktop' | 'mobile'>('desktop')
+  const [previewDeviceMode, setPreviewDeviceMode] = useState<'desktop' | 'laptop' | 'mobile' | 'mobile-sm'>('desktop')
+  const [positionMode, setPositionMode] = useState<'pixel' | 'percent'>('pixel')
   const [showGuides, setShowGuides] = useState<boolean>(true)
+  const [imageNaturalSize, setImageNaturalSize] = useState<{ width: number; height: number }>({ width: 1920, height: 650 })
+
+  // Auto-detect image dimensions when image changes
+  useEffect(() => {
+    if (!bannerForm.imageUrl) return
+    const img = new Image()
+    img.onload = () => {
+      const w = img.naturalWidth || 1920
+      const h = img.naturalHeight || 650
+      setImageNaturalSize({ width: w, height: h })
+      setBannerForm((prev) => ({
+        ...prev,
+        naturalWidth: w,
+        naturalHeight: h,
+      }))
+    }
+    img.src = bannerForm.imageUrl
+  }, [bannerForm.imageUrl])
 
   const sampleBannerImages = [
     {
@@ -146,6 +168,9 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
       buttons: [],
       order: banners.length + 1,
       isActive: true,
+      naturalWidth: 1920,
+      naturalHeight: 650,
+      mobileCtaLayout: 'hotspot',
     })
     setSelectedBtnIndex(null)
     setDraggingBtnIndex(null)
@@ -154,15 +179,28 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
 
   const openEditBanner = (item: BannerSlideItem) => {
     setEditingBanner(item)
+    const natW = item.naturalWidth || 1920
+    const natH = item.naturalHeight || 650
+    setImageNaturalSize({ width: natW, height: natH })
     setBannerForm({
       title: item.title,
       imageUrl: item.imageUrl,
       altText: item.altText || '',
       bannerLink: item.bannerLink || '',
       bannerLinkType: item.bannerLinkType || 'internal',
-      buttons: item.buttons || [],
+      buttons: (item.buttons || []).map((b) => ({
+        ...b,
+        pixelX: b.pixelX ?? Math.round((b.posX / 100) * natW),
+        pixelY: b.pixelY ?? Math.round((b.posY / 100) * natH),
+        origWidth: b.origWidth || natW,
+        origHeight: b.origHeight || natH,
+        mobileAlign: b.mobileAlign || 'auto',
+      })),
       order: item.order,
       isActive: item.isActive,
+      naturalWidth: natW,
+      naturalHeight: natH,
+      mobileCtaLayout: item.mobileCtaLayout || 'hotspot',
     })
     setSelectedBtnIndex(item.buttons && item.buttons.length > 0 ? 0 : null)
     setDraggingBtnIndex(null)
@@ -250,14 +288,19 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
     const rawX = Math.round(((clientX - rect.left) / rect.width) * 100)
     const rawY = Math.round(((clientY - rect.top) / rect.height) * 100)
 
-    // Khóa chặt vị trí nút không vượt qua 2 đường biên cơ sở (BOUND_LEFT và BOUND_RIGHT)
-    const minX = previewDeviceMode === 'desktop' ? BOUND_LEFT : 6
-    const maxX = previewDeviceMode === 'desktop' ? BOUND_RIGHT : 94
+    const isDesktop = previewDeviceMode === 'desktop' || previewDeviceMode === 'laptop'
+    const minX = isDesktop ? BOUND_LEFT : 4
+    const maxX = isDesktop ? BOUND_RIGHT : 96
     const minY = BOUND_TOP
     const maxY = BOUND_BOTTOM
 
     const clampedX = Math.max(minX, Math.min(maxX, rawX))
     const clampedY = Math.max(minY, Math.min(maxY, rawY))
+
+    const natW = imageNaturalSize.width || 1920
+    const natH = imageNaturalSize.height || 650
+    const pxX = Math.round((clampedX / 100) * natW)
+    const pxY = Math.round((clampedY / 100) * natH)
 
     setBannerForm((prev) => {
       const updatedButtons = [...prev.buttons]
@@ -266,6 +309,10 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
           ...updatedButtons[targetBtnIdx],
           posX: clampedX,
           posY: clampedY,
+          pixelX: pxX,
+          pixelY: pxY,
+          origWidth: natW,
+          origHeight: natH,
         }
       }
       return { ...prev, buttons: updatedButtons }
@@ -290,7 +337,7 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
       window.removeEventListener('mousemove', handleWindowMouseMove)
       window.removeEventListener('mouseup', handleWindowMouseUp)
     }
-  }, [draggingBtnIndex, previewDeviceMode])
+  }, [draggingBtnIndex, previewDeviceMode, imageNaturalSize])
 
   const handleCanvasMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!bannerPreviewRef.current) return
@@ -298,10 +345,16 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
     const rawX = Math.round(((e.clientX - rect.left) / rect.width) * 100)
     const rawY = Math.round(((e.clientY - rect.top) / rect.height) * 100)
 
-    const minX = previewDeviceMode === 'desktop' ? BOUND_LEFT : 6
-    const maxX = previewDeviceMode === 'desktop' ? BOUND_RIGHT : 94
+    const isDesktop = previewDeviceMode === 'desktop' || previewDeviceMode === 'laptop'
+    const minX = isDesktop ? BOUND_LEFT : 4
+    const maxX = isDesktop ? BOUND_RIGHT : 96
     const clampedX = Math.max(minX, Math.min(maxX, rawX))
     const clampedY = Math.max(BOUND_TOP, Math.min(BOUND_BOTTOM, rawY))
+
+    const natW = imageNaturalSize.width || 1920
+    const natH = imageNaturalSize.height || 650
+    const pxX = Math.round((clampedX / 100) * natW)
+    const pxY = Math.round((clampedY / 100) * natH)
 
     if (selectedBtnIndex !== null && bannerForm.buttons[selectedBtnIndex]) {
       updateBtnPositionFromCoords(e.clientX, e.clientY, selectedBtnIndex)
@@ -315,8 +368,13 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
         targetUrl: 'products',
         posX: clampedX,
         posY: clampedY,
+        pixelX: pxX,
+        pixelY: pxY,
+        origWidth: natW,
+        origHeight: natH,
         size: 'md',
         styleType: 'red',
+        mobileAlign: 'auto',
       }
       setBannerForm((prev) => {
         const updated = [...prev.buttons, newBtn]
@@ -324,7 +382,7 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
         setDraggingBtnIndex(updated.length - 1)
         return { ...prev, buttons: updated }
       })
-      showToast(`Đã tạo nút mới tại vị trí an toàn (X: ${clampedX}%, Y: ${clampedY}%)`)
+      showToast(`Đã tạo nút mới tại X: ${pxX}px (${clampedX}%), Y: ${pxY}px (${clampedY}%)`)
     }
   }
 
@@ -335,9 +393,10 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
   }
 
   const addNewButton = (style: 'red' | 'navy' | 'white' | 'glass' = 'red') => {
-    const minX = previewDeviceMode === 'desktop' ? BOUND_LEFT : 6
+    const isDesktop = previewDeviceMode === 'desktop' || previewDeviceMode === 'laptop'
+    const minX = isDesktop ? BOUND_LEFT : 4
     const newX = Math.min(
-      previewDeviceMode === 'desktop' ? BOUND_RIGHT - 15 : 80,
+      isDesktop ? BOUND_RIGHT - 15 : 80,
       minX + 5 + bannerForm.buttons.length * 16
     )
 
@@ -346,6 +405,11 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
     else if (style === 'white') defaultLabel = 'Xem Catalogue'
     else if (style === 'glass') defaultLabel = 'Hotline Tư Vấn'
 
+    const natW = imageNaturalSize.width || 1920
+    const natH = imageNaturalSize.height || 650
+    const pxX = Math.round((newX / 100) * natW)
+    const pxY = Math.round((75 / 100) * natH)
+
     const newBtn: BannerButtonOverlay = {
       id: 'btn_' + Date.now(),
       label: defaultLabel,
@@ -353,8 +417,13 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
       targetUrl: style === 'glass' ? '02839435276' : 'products',
       posX: newX,
       posY: 75,
+      pixelX: pxX,
+      pixelY: pxY,
+      origWidth: natW,
+      origHeight: natH,
       size: 'md',
       styleType: style,
+      mobileAlign: 'auto',
     }
     setBannerForm((prev) => {
       const updatedButtons = [...prev.buttons, newBtn]
@@ -378,22 +447,66 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
     field: keyof BannerButtonOverlay,
     val: any
   ) => {
-    let finalVal = val
-    if (field === 'posX') {
-      const minX = previewDeviceMode === 'desktop' ? BOUND_LEFT : 6
-      const maxX = previewDeviceMode === 'desktop' ? BOUND_RIGHT : 94
-      finalVal = Math.max(minX, Math.min(maxX, Number(val)))
-    } else if (field === 'posY') {
-      finalVal = Math.max(BOUND_TOP, Math.min(BOUND_BOTTOM, Number(val)))
-    }
+    const natW = imageNaturalSize.width || 1920
+    const natH = imageNaturalSize.height || 650
+    const isDesktop = previewDeviceMode === 'desktop' || previewDeviceMode === 'laptop'
+    const minX = isDesktop ? BOUND_LEFT : 4
+    const maxX = isDesktop ? BOUND_RIGHT : 96
 
     setBannerForm((prev) => {
       const updatedButtons = [...prev.buttons]
       if (updatedButtons[idx]) {
-        updatedButtons[idx] = { ...updatedButtons[idx], [field]: finalVal }
+        let updatedBtn = { ...updatedButtons[idx] }
+
+        if (field === 'posX') {
+          const clampedX = Math.max(minX, Math.min(maxX, Number(val)))
+          updatedBtn.posX = clampedX
+          updatedBtn.pixelX = Math.round((clampedX / 100) * natW)
+        } else if (field === 'posY') {
+          const clampedY = Math.max(BOUND_TOP, Math.min(BOUND_BOTTOM, Number(val)))
+          updatedBtn.posY = clampedY
+          updatedBtn.pixelY = Math.round((clampedY / 100) * natH)
+        } else if (field === 'pixelX') {
+          const rawPx = Math.max(0, Math.min(natW, Number(val)))
+          updatedBtn.pixelX = rawPx
+          updatedBtn.posX = Math.round((rawPx / natW) * 100)
+        } else if (field === 'pixelY') {
+          const rawPy = Math.max(0, Math.min(natH, Number(val)))
+          updatedBtn.pixelY = rawPy
+          updatedBtn.posY = Math.round((rawPy / natH) * 100)
+        } else {
+          updatedBtn = { ...updatedBtn, [field]: val }
+        }
+
+        updatedButtons[idx] = updatedBtn
       }
       return { ...prev, buttons: updatedButtons }
     })
+  }
+
+  // Quick preset alignment helper
+  const snapButtonTo = (idx: number, preset: 'bottom-left' | 'bottom-right' | 'bottom-center' | 'center-left' | 'center') => {
+    let x = 15
+    let y = 75
+    if (preset === 'bottom-left') {
+      x = 12
+      y = 78
+    } else if (preset === 'bottom-right') {
+      x = 85
+      y = 78
+    } else if (preset === 'bottom-center') {
+      x = 50
+      y = 78
+    } else if (preset === 'center-left') {
+      x = 15
+      y = 50
+    } else if (preset === 'center') {
+      x = 50
+      y = 50
+    }
+    updateButtonField(idx, 'posX', x)
+    updateButtonField(idx, 'posY', y)
+    showToast(`Đã căn vị trí nút: ${preset}`)
   }
 
   // ═════════════════════════════════════════════════════════════════════════════
@@ -1996,10 +2109,13 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
               {/* ═════════════════════════════════════════════════════════════════ */}
               <div className="p-4 bg-slate-900 border border-slate-700 shadow-xl space-y-3">
                 {/* Canvas Controls Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-700 text-white">
-                  <div className="flex items-center gap-3">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2 pb-2 border-b border-slate-700 text-white">
+                  <div className="flex flex-wrap items-center gap-3">
                     <span className="font-bold text-xs uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
-                      <span>🎨</span> Khung Preview Trực Quan (1:1 Khớp 100% Trang Chủ)
+                      <span>🎨</span> Canvas Banner Trực Quan (Khớp 100% Ảnh Gốc & Trang Chủ)
+                    </span>
+                    <span className="text-[11px] font-mono px-2 py-0.5 bg-slate-800 text-cyan-300 border border-slate-600 rounded">
+                      📐 Kích thước ảnh gốc: {imageNaturalSize.width} × {imageNaturalSize.height}px
                     </span>
                     <button
                       type="button"
@@ -2010,12 +2126,13 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                           : 'bg-slate-800 text-gray-400 border-slate-600'
                       }`}
                     >
-                      {showGuides ? '👁️ Đường Biên Cơ Sở: BẬT' : 'Đường Biên: TẮT'}
+                      {showGuides ? '👁️ Đường Biên: BẬT' : 'Đường Biên: TẮT'}
                     </button>
                   </div>
 
                   {/* Device mode + Quick Add Buttons */}
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* Device selector */}
                     <div className="flex bg-slate-800 p-0.5 rounded border border-slate-600 text-[10px]">
                       <button
                         type="button"
@@ -2025,8 +2142,21 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                             ? 'bg-[#1B4C98] text-white font-bold'
                             : 'text-gray-400 hover:text-white'
                         }`}
+                        title="Desktop màn hình chuẩn (1920px)"
                       >
-                        🖥️ Desktop (16:6)
+                        🖥️ Desktop
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPreviewDeviceMode('laptop')}
+                        className={`px-2 py-0.5 rounded transition-colors cursor-pointer ${
+                          previewDeviceMode === 'laptop'
+                            ? 'bg-[#1B4C98] text-white font-bold'
+                            : 'text-gray-400 hover:text-white'
+                        }`}
+                        title="Laptop (1366px)"
+                      >
+                        💻 Laptop
                       </button>
                       <button
                         type="button"
@@ -2036,11 +2166,25 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                             ? 'bg-[#1B4C98] text-white font-bold'
                             : 'text-gray-400 hover:text-white'
                         }`}
+                        title="Mobile iPhone 15 / 16 (393px)"
                       >
-                        📱 Mobile (16:9)
+                        📱 Mobile
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPreviewDeviceMode('mobile-sm')}
+                        className={`px-2 py-0.5 rounded transition-colors cursor-pointer ${
+                          previewDeviceMode === 'mobile-sm'
+                            ? 'bg-[#1B4C98] text-white font-bold'
+                            : 'text-gray-400 hover:text-white'
+                        }`}
+                        title="Mobile nhỏ iPhone SE / Galaxy (375px)"
+                      >
+                        📱 Mini (375px)
                       </button>
                     </div>
 
+                    {/* Button Creator */}
                     <button
                       type="button"
                       onClick={() => addNewButton('red')}
@@ -2073,35 +2217,50 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                 </div>
 
                 {/* HUD STATUS BAR: Displays exact coordinates cleanly without touching buttons */}
-                <div className="px-3 py-1.5 bg-slate-800/80 border border-slate-700 rounded text-[11px] flex flex-wrap items-center justify-between text-gray-300">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-cyan-400">📍 Tọa độ nút đang chọn:</span>
+                <div className="px-3 py-2 bg-slate-800/90 border border-slate-700 rounded text-[11px] flex flex-wrap items-center justify-between text-gray-300 gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-bold text-cyan-400">📍 Nút đang chọn:</span>
                     {selectedBtnIndex !== null && bannerForm.buttons[selectedBtnIndex] ? (
-                      <span className="font-mono text-yellow-300 font-bold bg-black/50 px-2 py-0.5 rounded border border-yellow-500/30">
-                        "{bannerForm.buttons[selectedBtnIndex].label}" ➔ X = {bannerForm.buttons[selectedBtnIndex].posX}% | Y = {bannerForm.buttons[selectedBtnIndex].posY}%
+                      <span className="font-mono text-yellow-300 font-bold bg-black/60 px-2 py-0.5 rounded border border-yellow-500/40">
+                        "{bannerForm.buttons[selectedBtnIndex].label}" ➔ Pixel: ({bannerForm.buttons[selectedBtnIndex].pixelX ?? Math.round((bannerForm.buttons[selectedBtnIndex].posX / 100) * imageNaturalSize.width)}px, {bannerForm.buttons[selectedBtnIndex].pixelY ?? Math.round((bannerForm.buttons[selectedBtnIndex].posY / 100) * imageNaturalSize.height)}px) | Tỉ lệ: ({bannerForm.buttons[selectedBtnIndex].posX}%, {bannerForm.buttons[selectedBtnIndex].posY}%)
                       </span>
                     ) : (
-                      <span className="text-gray-400 italic">Chưa chọn nút nào</span>
+                      <span className="text-gray-400 italic">Chưa chọn nút nào (Nhấn chuột lên ảnh hoặc nút để chỉnh sửa)</span>
                     )}
                   </div>
-                  <div className="text-[10px] text-cyan-300/80 flex items-center gap-1.5">
-                    <span className="inline-block w-2 h-2 rounded-full bg-cyan-400" />
-                    <span>Giới hạn an toàn đường biên: <strong>{BOUND_LEFT}% ➔ {BOUND_RIGHT}%</strong></span>
+
+                  {/* Mode switcher & Presets */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-400">Chế độ định vị:</span>
+                    <button
+                      type="button"
+                      onClick={() => setPositionMode(positionMode === 'pixel' ? 'percent' : 'pixel')}
+                      className="px-2 py-0.5 text-[10px] font-bold bg-slate-700 text-yellow-300 border border-slate-500 rounded cursor-pointer"
+                    >
+                      {positionMode === 'pixel' ? '📏 Định vị Pixel Thực (Chuẩn 1:1)' : '📊 Định vị % (Fluid)'}
+                    </button>
                   </div>
                 </div>
 
-                {/* The Interactive Drag Canvas (Exact 1:1 Aspect Ratio to HeroSlider: 16/6) */}
+                {/* The Interactive Drag Canvas (Rendered at exact natural aspect ratio of the banner image) */}
                 <div
-                  className="w-full flex items-center justify-center p-2 bg-black/50 overflow-hidden"
+                  className="w-full flex items-center justify-center p-3 bg-black/70 overflow-hidden"
                 >
                   <div
                     ref={bannerPreviewRef}
                     onMouseDown={handleCanvasMouseDown}
-                    style={{ containerType: 'inline-size' }}
-                    className={`relative bg-[#1a1a1a] overflow-hidden select-none border-2 border-slate-600 shadow-2xl transition-all duration-300 ${
+                    style={{
+                      containerType: 'inline-size',
+                      aspectRatio: `${imageNaturalSize.width} / ${imageNaturalSize.height}`,
+                    }}
+                    className={`relative bg-[#1a1a1a] select-none border-2 border-slate-600 shadow-2xl transition-all duration-300 ${
                       previewDeviceMode === 'desktop'
-                        ? 'w-full aspect-[16/6]'
-                        : 'w-[380px] max-w-full aspect-[16/9]'
+                        ? 'w-full max-w-[1200px]'
+                        : previewDeviceMode === 'laptop'
+                        ? 'w-[900px] max-w-full'
+                        : previewDeviceMode === 'mobile'
+                        ? 'w-[393px] max-w-full'
+                        : 'w-[375px] max-w-full'
                     }`}
                   >
                     {/* Background Image */}
@@ -2109,7 +2268,7 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                       <img
                         src={bannerForm.imageUrl}
                         alt="Banner Preview"
-                        className="w-full h-full object-cover object-center pointer-events-none select-none"
+                        className="w-full h-full object-contain object-center pointer-events-none select-none"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-500 font-bold text-sm">
@@ -2117,14 +2276,10 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                       </div>
                     )}
 
-
-
-                    {/* ── CONTENT CONTAINER BOUNDARY GUIDES (ĐƯỜNG BIÊN CƠ SỞ CHUẨN NỘI DUNG TRANG WEB) ── */}
+                    {/* ── CONTENT CONTAINER BOUNDARY GUIDES ── */}
                     {showGuides && (
                       <div className="absolute inset-0 pointer-events-none z-10">
-                        {/* Safe active content box outline */}
                         <div className="absolute inset-x-0 inset-y-0 border border-cyan-400/40">
-                          {/* Top & Bottom safe boundary guidelines */}
                           <div
                             style={{ top: `${BOUND_TOP}%` }}
                             className="absolute left-0 right-0 h-px border-t border-dotted border-cyan-400/60"
@@ -2145,33 +2300,32 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                       </div>
                     )}
 
-                    {/* ── 100% CLEAN BUTTONS: ZERO ATTACHED TOOLTIPS, PROPORTIONALLY SCALED VIA CQI (1:1 KHỚP TRANG CHỦ) ── */}
+                    {/* ── 100% CLEAN BUTTONS: PROPORTIONALLY SCALED VIA CONTAINER QUERY (1:1 KHỚP TRANG CHỦ) ── */}
                     {bannerForm.buttons.map((btn, idx) => {
                       const isSelected = selectedBtnIndex === idx
 
-                      // Match exact styles from HeroSlider.tsx
                       let styleClass =
-                        'bg-[#FF000F] text-white border border-red-500 shadow-xl'
+                        'bg-[#FF000F] text-white hover:bg-red-700 shadow-md border-0'
                       if (btn.styleType === 'navy') {
                         styleClass =
-                          'bg-[#1B4C98] text-white border border-blue-400 shadow-xl'
+                          'bg-[#1B4C98] text-white hover:bg-blue-900 shadow-md border-0'
                       } else if (btn.styleType === 'white') {
                         styleClass =
-                          'bg-white text-gray-900 border border-gray-300 shadow-xl'
+                          'bg-white text-gray-900 hover:bg-gray-100 shadow-md border border-gray-300'
                       } else if (btn.styleType === 'glass') {
                         styleClass =
-                          'bg-black/60 backdrop-blur-md text-white border border-white/40 shadow-xl'
+                          'bg-black/75 backdrop-blur-md text-white hover:bg-black/90 shadow-md border border-white/30'
                       }
 
                       // Proportional font size & padding matching container width (1:1 identical to HeroSlider)
-                      let fontSize = 'clamp(9px, 1.05cqi, 15px)'
-                      let padding = 'clamp(3px, 0.45cqi, 9px) clamp(8px, 1.25cqi, 22px)'
+                      let fontSize = 'calc(1.15cqw + 2px)'
+                      let padding = 'calc(0.45cqw + 2px) calc(1.2cqw + 6px)'
                       if (btn.size === 'sm') {
-                        fontSize = 'clamp(8px, 0.85cqi, 12px)'
-                        padding = 'clamp(2px, 0.35cqi, 7px) clamp(6px, 0.95cqi, 16px)'
+                        fontSize = 'calc(0.95cqw + 1px)'
+                        padding = 'calc(0.35cqw + 1px) calc(0.9cqw + 4px)'
                       } else if (btn.size === 'lg') {
-                        fontSize = 'clamp(11px, 1.25cqi, 18px)'
-                        padding = 'clamp(5px, 0.65cqi, 12px) clamp(12px, 1.65cqi, 28px)'
+                        fontSize = 'calc(1.35cqw + 3px)'
+                        padding = 'calc(0.55cqw + 3px) calc(1.5cqw + 8px)'
                       }
 
                       return (
@@ -2185,15 +2339,15 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                             fontSize,
                             padding,
                           }}
-                          className={`absolute z-20 cursor-grab active:cursor-grabbing select-none flex items-center gap-1.5 font-bold tracking-tight rounded-none transition-all whitespace-nowrap ${styleClass} ${
+                          className={`absolute z-20 cursor-grab active:cursor-grabbing select-none flex items-center gap-[0.4cqw] font-bold tracking-tight rounded-[3px] transition-all whitespace-nowrap leading-none ${styleClass} ${
                             isSelected
-                              ? 'outline-3 outline-yellow-400 z-30 shadow-2xl scale-102 ring-2 ring-black'
-                              : 'opacity-95 hover:opacity-100'
+                              ? 'outline-3 outline-yellow-400 z-30 shadow-2xl scale-105 ring-2 ring-black'
+                              : 'opacity-95 hover:opacity-100 hover:scale-102'
                           }`}
                         >
                           <span>{btn.label || 'Nút ' + (idx + 1)}</span>
                           {btn.actionType === 'phone' && (
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                            <svg style={{ width: '1.1cqw', height: '1.1cqw', minWidth: '7px', minHeight: '7px' }} viewBox="0 0 24 24" fill="currentColor">
                               <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
                             </svg>
                           )}
@@ -2204,13 +2358,63 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                 </div>
 
                 {/* Quick Helper Note */}
-                <div className="flex items-center justify-between text-[11px] text-gray-300 px-1">
+                <div className="flex flex-wrap items-center justify-between text-[11px] text-gray-300 px-1 gap-2">
                   <span>
-                    🖱️ <strong>Kéo thả:</strong> Nhấn giữ chuột lên nút để di chuyển trong vùng an toàn giữa 2 đường biên.
+                    🖱️ <strong>Kéo thả:</strong> Nhấn giữ chuột lên nút để định vị chính xác. Tọa độ Pixel và % sẽ tự động đồng bộ.
                   </span>
                   <span>
-                    🎯 <strong>Click ảnh:</strong> Bấm vào vùng trống để tạo nút mới ngay tại điểm đó.
+                    🎯 <strong>Click ảnh:</strong> Bấm vào vùng trống để tạo nhanh nút mới tại điểm bấm.
                   </span>
+                </div>
+              </div>
+
+              {/* ═════════════════════════════════════════════════════════════════ */}
+              {/* MOBILE DISPLAY & CTA AUTO-ALIGN OPTIONS                         */}
+              {/* ═════════════════════════════════════════════════════════════════ */}
+              <div className="p-3 bg-amber-50 border border-amber-300">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                  <span className="font-bold text-amber-900 uppercase text-[11px] flex items-center gap-1.5">
+                    <span>📱</span> Tùy Chọn Hiển Thị Nút CTA Trên Màn Hình Điện Thoại (Mobile Responsive):
+                  </span>
+                  <span className="text-[10px] text-amber-800">
+                    Tự động scale và sắp xếp chống chồng đè khi xem trên iPhone / Android
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {[
+                    {
+                      id: 'hotspot',
+                      title: '🎯 Hotspot Pin (Cố định vị trí chuẩn tỉ lệ)',
+                      desc: 'Nút bám đúng vị trí trên ảnh, tự động scale down kích thước font & padding siêu nhỏ gọn để tránh chồng đè.',
+                    },
+                    {
+                      id: 'bottom-bar',
+                      title: '📊 Bottom Bar (Khối ngang sát đáy banner)',
+                      desc: 'Gom các nút CTA xuống sát mép dưới cùng của banner thành thanh ngang thanh lịch, không che lấp chi tiết poster.',
+                    },
+                  ].map((opt) => (
+                    <label
+                      key={opt.id}
+                      className={`p-2.5 border rounded cursor-pointer transition-all flex flex-col justify-between ${
+                        bannerForm.mobileCtaLayout === opt.id
+                          ? 'border-[#1B4C98] bg-white shadow-sm ring-1 ring-[#1B4C98]'
+                          : 'border-amber-200 bg-amber-50/50 hover:bg-white'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <input
+                          type="radio"
+                          name="mobileCtaLayout"
+                          checked={bannerForm.mobileCtaLayout === opt.id}
+                          onChange={() => setBannerForm({ ...bannerForm, mobileCtaLayout: opt.id as any })}
+                          className="accent-[#1B4C98]"
+                        />
+                        <span className="font-bold text-xs text-gray-900">{opt.title}</span>
+                      </div>
+                      <p className="text-[10px] text-gray-600">{opt.desc}</p>
+                    </label>
+                  ))}
                 </div>
               </div>
 
@@ -2254,16 +2458,61 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                   {selectedBtnIndex !== null && bannerForm.buttons[selectedBtnIndex] && (
                     <div className="p-3 bg-white border border-gray-200 space-y-3">
                       <div className="flex items-center justify-between pb-2 border-b border-gray-100">
-                        <span className="font-bold text-[#1B4C98] text-xs">
-                          Cấu hình: Nút {selectedBtnIndex + 1}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => removeButton(selectedBtnIndex)}
-                          className="text-red-600 hover:text-red-800 font-bold text-xs cursor-pointer"
-                        >
-                          ✕ Xóa nút này
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-[#1B4C98] text-xs">
+                            Cấu hình: Nút {selectedBtnIndex + 1}
+                          </span>
+                          <span className="text-[10px] text-gray-400 font-mono">
+                            ID: {bannerForm.buttons[selectedBtnIndex].id}
+                          </span>
+                        </div>
+
+                        {/* Quick Snap Alignment Presets */}
+                        <div className="flex items-center gap-1">
+                          <span className="text-[10px] text-gray-500 font-semibold mr-1">Căn nhanh:</span>
+                          <button
+                            type="button"
+                            onClick={() => snapButtonTo(selectedBtnIndex, 'bottom-left')}
+                            className="px-1.5 py-0.5 text-[10px] bg-gray-100 hover:bg-gray-200 border rounded cursor-pointer"
+                            title="Góc dưới bên trái"
+                          >
+                            ↙ Trái dưới
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => snapButtonTo(selectedBtnIndex, 'bottom-center')}
+                            className="px-1.5 py-0.5 text-[10px] bg-gray-100 hover:bg-gray-200 border rounded cursor-pointer"
+                            title="Chính giữa bên dưới"
+                          >
+                            ⬇ Giữa dưới
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => snapButtonTo(selectedBtnIndex, 'bottom-right')}
+                            className="px-1.5 py-0.5 text-[10px] bg-gray-100 hover:bg-gray-200 border rounded cursor-pointer"
+                            title="Góc dưới bên phải"
+                          >
+                            ↘ Phải dưới
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => snapButtonTo(selectedBtnIndex, 'center-left')}
+                            className="px-1.5 py-0.5 text-[10px] bg-gray-100 hover:bg-gray-200 border rounded cursor-pointer"
+                            title="Chính giữa bên trái"
+                          >
+                            ⬅ Trái giữa
+                          </button>
+
+                          <div className="h-4 w-px bg-gray-300 mx-1" />
+
+                          <button
+                            type="button"
+                            onClick={() => removeButton(selectedBtnIndex)}
+                            className="text-red-600 hover:text-red-800 font-bold text-xs cursor-pointer ml-1"
+                          >
+                            ✕ Xóa nút
+                          </button>
+                        </div>
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
@@ -2366,14 +2615,21 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                         </div>
                       </div>
 
-                      {/* Precise Numeric Position Sliders with Boundary limits */}
-                      <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-100">
+                      {/* Precise Numeric Position Sliders with Dual Unit (Pixel & %) */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-gray-100 bg-gray-50/70 p-2.5 rounded">
                         <div>
-                          <div className="flex items-center justify-between text-[10px] text-gray-600 mb-1">
-                            <span>Vị trí ngang (Tọa độ X) [Giới hạn {BOUND_LEFT}% - {BOUND_RIGHT}%]:</span>
-                            <span className="font-bold font-mono text-[#1B4C98]">
-                              {bannerForm.buttons[selectedBtnIndex].posX}%
+                          <div className="flex items-center justify-between text-[11px] text-gray-700 mb-1">
+                            <span className="font-semibold">
+                              Vị trí ngang X ({positionMode === 'pixel' ? 'Pixel thực trên ảnh' : 'Tỉ lệ %'}):
                             </span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold font-mono text-[#1B4C98] bg-white px-2 py-0.5 border rounded">
+                                {bannerForm.buttons[selectedBtnIndex].pixelX ?? Math.round((bannerForm.buttons[selectedBtnIndex].posX / 100) * imageNaturalSize.width)} px
+                              </span>
+                              <span className="font-mono text-gray-500 text-[10px]">
+                                ({bannerForm.buttons[selectedBtnIndex].posX}%)
+                              </span>
+                            </div>
                           </div>
                           <input
                             type="range"
@@ -2387,15 +2643,23 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                                 Number(e.target.value)
                               )
                             }
-                            className="w-full accent-[#1B4C98]"
+                            className="w-full accent-[#1B4C98] cursor-pointer"
                           />
                         </div>
+
                         <div>
-                          <div className="flex items-center justify-between text-[10px] text-gray-600 mb-1">
-                            <span>Vị trí dọc (Tọa độ Y) [Giới hạn {BOUND_TOP}% - {BOUND_BOTTOM}%]:</span>
-                            <span className="font-bold font-mono text-[#1B4C98]">
-                              {bannerForm.buttons[selectedBtnIndex].posY}%
+                          <div className="flex items-center justify-between text-[11px] text-gray-700 mb-1">
+                            <span className="font-semibold">
+                              Vị trí dọc Y ({positionMode === 'pixel' ? 'Pixel thực trên ảnh' : 'Tỉ lệ %'}):
                             </span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold font-mono text-[#1B4C98] bg-white px-2 py-0.5 border rounded">
+                                {bannerForm.buttons[selectedBtnIndex].pixelY ?? Math.round((bannerForm.buttons[selectedBtnIndex].posY / 100) * imageNaturalSize.height)} px
+                              </span>
+                              <span className="font-mono text-gray-500 text-[10px]">
+                                ({bannerForm.buttons[selectedBtnIndex].posY}%)
+                              </span>
+                            </div>
                           </div>
                           <input
                             type="range"
@@ -2409,7 +2673,7 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                                 Number(e.target.value)
                               )
                             }
-                            className="w-full accent-[#1B4C98]"
+                            className="w-full accent-[#1B4C98] cursor-pointer"
                           />
                         </div>
                       </div>

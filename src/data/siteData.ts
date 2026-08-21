@@ -60,8 +60,13 @@ export interface BannerButtonOverlay {
   targetUrl: string
   posX: number // Percentage from left (0..100)
   posY: number // Percentage from top (0..100)
+  pixelX?: number // Exact pixel on original image
+  pixelY?: number // Exact pixel on original image
+  origWidth?: number // Original image width when placed
+  origHeight?: number // Original image height when placed
   size: 'sm' | 'md' | 'lg'
   styleType: 'red' | 'navy' | 'white' | 'glass'
+  mobileAlign?: 'auto' | 'pin' | 'stack-bottom' | 'hide'
 }
 
 export interface BannerSlideItem {
@@ -75,6 +80,9 @@ export interface BannerSlideItem {
   buttons: BannerButtonOverlay[]
   order: number
   isActive: boolean
+  naturalWidth?: number
+  naturalHeight?: number
+  mobileCtaLayout?: 'hotspot' | 'bottom-bar'
 }
 
 export interface SiteSettings {

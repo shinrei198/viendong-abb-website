@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import imgMCB from '@/imports/MBB.jpg'
 import imgAFDD from '@/imports/Thie__t_bi__pha_t_hie__n_ho___quang__ie__n_AFDDs.jpg'
 import imgFramia from '@/imports/Framina.jpeg'
@@ -107,7 +107,93 @@ export default function HomePage({ onNavigate, onAddToCart }: HomePageProps) {
   }, [])
 
   const displayVideos = videos.filter((v) => !v.isHidden).slice(0, 8)
-  const displayNews = newsList.filter((n) => n.status === 'published').slice(0, 3)
+  const displayNews = newsList.filter((n) => n.status === 'published').slice(0, 8)
+
+  // Drag to Scroll Refs for Video and News sliders
+  const videoScrollRef = useRef<HTMLDivElement>(null)
+  const newsScrollRef = useRef<HTMLDivElement>(null)
+
+  const [isDraggingVideo, setIsDraggingVideo] = useState(false)
+  const [videoStartX, setVideoStartX] = useState(0)
+  const [videoScrollLeft, setVideoScrollLeft] = useState(0)
+  const wasVideoDraggedRef = useRef(false)
+
+  const [isDraggingNews, setIsDraggingNews] = useState(false)
+  const [newsStartX, setNewsStartX] = useState(0)
+  const [newsScrollLeft, setNewsScrollLeft] = useState(0)
+  const wasNewsDraggedRef = useRef(false)
+
+  // Video Drag Handlers
+  const handleVideoMouseDown = (e: React.MouseEvent) => {
+    if (!videoScrollRef.current) return
+    setIsDraggingVideo(true)
+    wasVideoDraggedRef.current = false
+    setVideoStartX(e.pageX - videoScrollRef.current.offsetLeft)
+    setVideoScrollLeft(videoScrollRef.current.scrollLeft)
+  }
+
+  const handleVideoMouseMove = (e: React.MouseEvent) => {
+    if (!isDraggingVideo || !videoScrollRef.current) return
+    e.preventDefault()
+    const x = e.pageX - videoScrollRef.current.offsetLeft
+    const walk = (x - videoStartX) * 1.5
+    videoScrollRef.current.scrollLeft = videoScrollLeft - walk
+    if (Math.abs(walk) > 6) {
+      wasVideoDraggedRef.current = true
+    }
+  }
+
+  const handleVideoMouseUp = () => {
+    setIsDraggingVideo(false)
+    setTimeout(() => {
+      wasVideoDraggedRef.current = false
+    }, 50)
+  }
+
+  const scrollVideo = (direction: 'left' | 'right') => {
+    if (!videoScrollRef.current) return
+    const scrollAmount = 320
+    videoScrollRef.current.scrollBy({
+      left: direction === 'left' ? -scrollAmount : scrollAmount,
+      behavior: 'smooth',
+    })
+  }
+
+  // News Drag Handlers
+  const handleNewsMouseDown = (e: React.MouseEvent) => {
+    if (!newsScrollRef.current) return
+    setIsDraggingNews(true)
+    wasNewsDraggedRef.current = false
+    setNewsStartX(e.pageX - newsScrollRef.current.offsetLeft)
+    setNewsScrollLeft(newsScrollRef.current.scrollLeft)
+  }
+
+  const handleNewsMouseMove = (e: React.MouseEvent) => {
+    if (!isDraggingNews || !newsScrollRef.current) return
+    e.preventDefault()
+    const x = e.pageX - newsScrollRef.current.offsetLeft
+    const walk = (x - newsStartX) * 1.5
+    newsScrollRef.current.scrollLeft = newsScrollLeft - walk
+    if (Math.abs(walk) > 6) {
+      wasNewsDraggedRef.current = true
+    }
+  }
+
+  const handleNewsMouseUp = () => {
+    setIsDraggingNews(false)
+    setTimeout(() => {
+      wasNewsDraggedRef.current = false
+    }, 50)
+  }
+
+  const scrollNews = (direction: 'left' | 'right') => {
+    if (!newsScrollRef.current) return
+    const scrollAmount = 360
+    newsScrollRef.current.scrollBy({
+      left: direction === 'left' ? -scrollAmount : scrollAmount,
+      behavior: 'smooth',
+    })
+  }
 
   return (
     <div style={{ background: '#fff' }}>
@@ -275,34 +361,78 @@ export default function HomePage({ onNavigate, onAddToCart }: HomePageProps) {
       {/* ── VIDEO SECTION (Matching Hình 1 & Instructions) ─── */}
       <section className="py-20 px-6 bg-white" style={{ borderTop: '1px solid #e5e5e5' }}>
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-end justify-between mb-12">
+          <div className="flex items-end justify-between mb-8">
             <SectionLabel>
               <h2 style={{ fontFamily: font, fontWeight: 700, fontSize: 'clamp(1.8rem, 3vw, 2.6rem)', color: '#1a1a1a', lineHeight: 1.1, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                 Video mới cập nhật
               </h2>
             </SectionLabel>
-            <button
-              onClick={() => onNavigate('videos')}
-              className="text-sm font-medium hover:underline flex items-center gap-1"
-              style={{ color: '#1a1a1a', fontFamily: "'Roboto', sans-serif" }}
-            >
-              Xem tất cả video →
-            </button>
+            <div className="flex items-center gap-4">
+              {/* Slider Navigation Arrows */}
+              <div className="hidden sm:flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => scrollVideo('left')}
+                  className="w-9 h-9 flex items-center justify-center border border-gray-300 bg-white text-gray-700 hover:bg-[#FF000F] hover:text-white hover:border-transparent transition-all shadow-xs active:scale-95 cursor-pointer"
+                  title="Video trước"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => scrollVideo('right')}
+                  className="w-9 h-9 flex items-center justify-center border border-gray-300 bg-white text-gray-700 hover:bg-[#FF000F] hover:text-white hover:border-transparent transition-all shadow-xs active:scale-95 cursor-pointer"
+                  title="Video kế tiếp"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+
+              <button
+                onClick={() => onNavigate('videos')}
+                className="text-sm font-medium hover:underline flex items-center gap-1 text-[#1a1a1a]"
+                style={{ fontFamily: "'Roboto', sans-serif" }}
+              >
+                Xem tất cả video →
+              </button>
+            </div>
           </div>
 
-          <div className="flex gap-5 overflow-x-auto pb-4" style={{ scrollbarWidth: 'none' }}>
+          {/* Interactive Drag & Swipe Video Carousel */}
+          <div
+            ref={videoScrollRef}
+            onMouseDown={handleVideoMouseDown}
+            onMouseMove={handleVideoMouseMove}
+            onMouseUp={handleVideoMouseUp}
+            onMouseLeave={handleVideoMouseUp}
+            className={`flex gap-4 overflow-x-auto pb-4 pt-1 select-none no-scrollbar cursor-${isDraggingVideo ? 'grabbing' : 'grab'}`}
+            style={{
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              scrollSnapType: isDraggingVideo ? 'none' : 'x proximity',
+            }}
+          >
             {displayVideos.map((v) => (
               <div
                 key={v.id}
-                onClick={() => setActiveModalVideo(v)}
+                onClick={() => {
+                  if (!wasVideoDraggedRef.current) {
+                    setActiveModalVideo(v)
+                  }
+                }}
                 className="flex-shrink-0 w-72 bg-white overflow-hidden group cursor-pointer border border-[#e5e5e5] hover:shadow-lg transition-all duration-300 flex flex-col"
+                style={{ scrollSnapAlign: 'start' }}
               >
                 {/* 16:9 Thumbnail with red play button overlay */}
                 <div className="relative w-full aspect-video bg-[#f7f7f7] overflow-hidden">
                   <img
                     src={v.thumb}
                     alt={v.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 pointer-events-none"
                   />
 
                   {/* Featured Red Badge Top-Left */}
@@ -316,7 +446,7 @@ export default function HomePage({ onNavigate, onAddToCart }: HomePageProps) {
                   )}
 
                   <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/35 transition-colors">
-                    {/* Centered Red Play Square Button (as in Image 1) */}
+                    {/* Centered Red Play Square Button */}
                     <div
                       className="w-11 h-9 flex items-center justify-center shadow-md group-hover:scale-110 active:scale-95 transition-transform duration-200"
                       style={{ backgroundColor: '#FF000F' }}
@@ -332,7 +462,7 @@ export default function HomePage({ onNavigate, onAddToCart }: HomePageProps) {
                   </span>
                 </div>
 
-                {/* Info block (Image 1: Category on left in #a5a5a5, Date on right in ABB red, Title below) */}
+                {/* Info block */}
                 <div className="p-3.5 flex-1 flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between gap-2 mb-1.5">
@@ -464,57 +594,106 @@ export default function HomePage({ onNavigate, onAddToCart }: HomePageProps) {
       {/* ── NEWS (Matching Hình 2) ────────────────────────── */}
       <section className="py-20 px-6 bg-white">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-end justify-between mb-12">
+          <div className="flex items-end justify-between mb-8">
             <SectionLabel>
               <h2 style={{ fontFamily: font, fontWeight: 700, fontSize: 'clamp(1.8rem, 3vw, 2.6rem)', color: '#1a1a1a', lineHeight: 1.1 }}>
                 Tin tức & Kỹ thuật
               </h2>
             </SectionLabel>
-            <button
-              onClick={() => onNavigate('news')}
-              className="text-sm font-medium hover:underline flex items-center gap-1"
-              style={{ color: '#1a1a1a', fontFamily: "'Roboto', sans-serif" }}
-            >
-              Xem tất cả tin tức →
-            </button>
+            <div className="flex items-center gap-4">
+              {/* Slider Navigation Arrows */}
+              <div className="hidden sm:flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => scrollNews('left')}
+                  className="w-9 h-9 flex items-center justify-center border border-gray-300 bg-white text-gray-700 hover:bg-[#FF000F] hover:text-white hover:border-transparent transition-all shadow-xs active:scale-95 cursor-pointer"
+                  title="Tin tức trước"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => scrollNews('right')}
+                  className="w-9 h-9 flex items-center justify-center border border-gray-300 bg-white text-gray-700 hover:bg-[#FF000F] hover:text-white hover:border-transparent transition-all shadow-xs active:scale-95 cursor-pointer"
+                  title="Tin tức kế tiếp"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+
+              <button
+                onClick={() => onNavigate('news')}
+                className="text-sm font-medium hover:underline flex items-center gap-1 text-[#1a1a1a]"
+                style={{ fontFamily: "'Roboto', sans-serif" }}
+              >
+                Xem tất cả tin tức →
+              </button>
+            </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+          {/* Interactive Drag & Swipe News Carousel */}
+          <div
+            ref={newsScrollRef}
+            onMouseDown={handleNewsMouseDown}
+            onMouseMove={handleNewsMouseMove}
+            onMouseUp={handleNewsMouseUp}
+            onMouseLeave={handleNewsMouseUp}
+            className={`flex gap-5 overflow-x-auto pb-4 pt-1 select-none no-scrollbar cursor-${isDraggingNews ? 'grabbing' : 'grab'}`}
+            style={{
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              scrollSnapType: isDraggingNews ? 'none' : 'x proximity',
+            }}
+          >
             {displayNews.map((news) => (
               <div
                 key={news.id}
-                onClick={() => onNavigate('newsDetail', createVietnameseSlug(news.slug || news.title))}
-                className="overflow-hidden bg-white hover:shadow-md transition-all duration-300 group cursor-pointer"
-                style={{ border: '1px solid #e5e5e5' }}
+                onClick={() => {
+                  if (!wasNewsDraggedRef.current) {
+                    onNavigate('newsDetail', createVietnameseSlug(news.slug || news.title))
+                  }
+                }}
+                className="flex-shrink-0 w-80 overflow-hidden bg-white hover:shadow-md transition-all duration-300 group cursor-pointer flex flex-col justify-between"
+                style={{ border: '1px solid #e5e5e5', scrollSnapAlign: 'start' }}
               >
-                <div className="h-44 overflow-hidden bg-[#f0f0f0] relative">
-                  <img
-                    src={news.thumb}
-                    alt={news.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  {news.isFeatured && (
-                    <span
-                      className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-bold text-white uppercase tracking-wider shadow-sm z-10"
-                      style={{ backgroundColor: 'var(--red)' }}
-                    >
-                      Nổi bật
-                    </span>
-                  )}
-                </div>
-                <div className="p-5">
-                  <div className="flex items-center gap-2 mb-3">
-                    <span
-                      className="text-[10px] font-bold px-2 py-0.5 uppercase tracking-wide"
-                      style={{ backgroundColor: '#f7f7f7', color: '#555' }}
-                    >
-                      {news.category}
-                    </span>
-                    <span className="text-[10px] text-gray-400">{news.date}</span>
+                <div>
+                  <div className="h-44 overflow-hidden bg-[#f0f0f0] relative">
+                    <img
+                      src={news.thumb}
+                      alt={news.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none"
+                    />
+                    {news.isFeatured && (
+                      <span
+                        className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-bold text-white uppercase tracking-wider shadow-sm z-10"
+                        style={{ backgroundColor: 'var(--red)' }}
+                      >
+                        Nổi bật
+                      </span>
+                    )}
                   </div>
-                  <h3 className="font-bold text-gray-900 text-sm leading-snug group-hover:text-[#FF000F] transition-colors line-clamp-2" style={{ fontFamily: "'Roboto', sans-serif" }}>
-                    {news.title}
-                  </h3>
-                  <p className="text-xs text-red-600 font-medium mt-3 group-hover:underline">
+                  <div className="p-5">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span
+                        className="text-[10px] font-bold px-2 py-0.5 uppercase tracking-wide"
+                        style={{ backgroundColor: '#f7f7f7', color: '#555' }}
+                      >
+                        {news.category}
+                      </span>
+                      <span className="text-[10px] text-gray-400">{news.date}</span>
+                    </div>
+                    <h3 className="font-bold text-gray-900 text-sm leading-snug group-hover:text-[#FF000F] transition-colors line-clamp-2" style={{ fontFamily: "'Roboto', sans-serif" }}>
+                      {news.title}
+                    </h3>
+                  </div>
+                </div>
+
+                <div className="px-5 pb-5">
+                  <p className="text-xs text-red-600 font-medium group-hover:underline">
                     Đọc thêm →
                   </p>
                 </div>

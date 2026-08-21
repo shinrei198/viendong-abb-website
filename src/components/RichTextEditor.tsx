@@ -103,8 +103,11 @@ export default function RichTextEditor({
     setImageModalOpen(true)
   }
 
-  const handleInsertImageSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleInsertImageSubmit = (e?: React.SyntheticEvent) => {
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
     if (!imageUrlInput.trim()) {
       alert('Vui lòng chọn ảnh hoặc nhập URL hình ảnh')
       return
@@ -143,8 +146,11 @@ export default function RichTextEditor({
     setLinkModalOpen(true)
   }
 
-  const handleInsertLinkSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleInsertLinkSubmit = (e?: React.SyntheticEvent) => {
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
     if (!linkUrlInput.trim()) return
 
     const url = linkUrlInput.trim()
@@ -161,13 +167,6 @@ export default function RichTextEditor({
     setLinkTextInput('')
     setLinkModalOpen(false)
   }
-
-  const sampleImages = [
-    { label: 'Tủ điện MCCB', url: 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=800&h=450&fit=crop&auto=format' },
-    { label: 'Hội thảo ABB', url: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&h=450&fit=crop&auto=format' },
-    { label: 'Công tắc Framia', url: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=800&h=450&fit=crop&auto=format' },
-    { label: 'Trung tâm dữ liệu', url: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&h=450&fit=crop&auto=format' },
-  ]
 
   return (
     <div className="border border-gray-300 bg-white shadow-sm flex flex-col font-['Roboto'] relative">
@@ -402,8 +401,11 @@ export default function RichTextEditor({
 
       {/* ── MODAL: CHÈN HÌNH ẢNH ──────────────────────────────────────────────── */}
       {imageModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
-          <div className="bg-white w-full max-w-lg border border-gray-300 shadow-2xl p-5 flex flex-col text-xs">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="bg-white w-full max-w-lg border border-gray-300 shadow-2xl p-5 flex flex-col text-xs" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between pb-3 border-b border-gray-200 mb-4">
               <h4 className="text-sm font-bold text-[#1B4C98] uppercase flex items-center gap-1.5">
                 <span>🖼️</span> Chèn hình ảnh vào nội dung bài viết
@@ -411,7 +413,7 @@ export default function RichTextEditor({
               <button
                 type="button"
                 onClick={() => setImageModalOpen(false)}
-                className="text-gray-400 hover:text-gray-700 font-bold text-base"
+                className="text-gray-400 hover:text-gray-700 font-bold text-base cursor-pointer"
               >
                 ✕
               </button>
@@ -421,7 +423,7 @@ export default function RichTextEditor({
               <button
                 type="button"
                 onClick={() => setImageTab('url')}
-                className={`px-3 py-1.5 text-xs font-bold rounded ${
+                className={`px-3 py-1.5 text-xs font-bold rounded cursor-pointer ${
                   imageTab === 'url' ? 'bg-[#1B4C98] text-white' : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
@@ -430,7 +432,7 @@ export default function RichTextEditor({
               <button
                 type="button"
                 onClick={() => setImageTab('upload')}
-                className={`px-3 py-1.5 text-xs font-bold rounded ${
+                className={`px-3 py-1.5 text-xs font-bold rounded cursor-pointer ${
                   imageTab === 'upload' ? 'bg-[#1B4C98] text-white' : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
@@ -438,7 +440,7 @@ export default function RichTextEditor({
               </button>
             </div>
 
-            <form onSubmit={handleInsertImageSubmit} className="space-y-4">
+            <div className="space-y-4">
               {imageTab === 'url' ? (
                 <div>
                   <label className="block font-bold text-gray-700 mb-1">
@@ -449,25 +451,9 @@ export default function RichTextEditor({
                     required
                     value={imageUrlInput}
                     onChange={(e) => setImageUrlInput(e.target.value)}
-                    placeholder="https://images.unsplash.com/..."
+                    placeholder="https://images.unsplash.com/... hoặc dán link ảnh trực tiếp"
                     className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:border-[#1B4C98]"
                   />
-                  {/* Sample presets */}
-                  <div className="mt-2">
-                    <p className="text-[10px] text-gray-500 font-semibold mb-1">Ảnh mẫu tham khảo:</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {sampleImages.map((s) => (
-                        <button
-                          key={s.label}
-                          type="button"
-                          onClick={() => setImageUrlInput(s.url)}
-                          className="px-2 py-0.5 text-[10px] bg-gray-100 text-gray-700 hover:bg-red-50 hover:text-[#FF000F] border border-gray-200 transition-colors"
-                        >
-                          {s.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
                 </div>
               ) : (
                 <div>
@@ -507,30 +493,34 @@ export default function RichTextEditor({
                 <button
                   type="button"
                   onClick={() => setImageModalOpen(false)}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-100 font-semibold"
+                  className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-100 font-semibold cursor-pointer"
                 >
                   Hủy
                 </button>
                 <button
-                  type="submit"
-                  className="px-5 py-2 font-bold text-white bg-[#FF000F] hover:opacity-90 transition-opacity"
+                  type="button"
+                  onClick={(e) => handleInsertImageSubmit(e)}
+                  className="px-5 py-2 font-bold text-white bg-[#FF000F] hover:opacity-90 transition-opacity cursor-pointer"
                 >
                   Chèn vào bài viết
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}
 
       {/* ── MODAL: CHÈN LINK ────────────────────────────────────────────────── */}
       {linkModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
-          <div className="bg-white w-full max-w-md border border-gray-300 shadow-2xl p-5 flex flex-col text-xs">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="bg-white w-full max-w-md border border-gray-300 shadow-2xl p-5 flex flex-col text-xs" onClick={(e) => e.stopPropagation()}>
             <h4 className="text-sm font-bold text-[#1B4C98] uppercase pb-2 border-b border-gray-200 mb-4">
               Chèn đường dẫn liên kết (Link)
             </h4>
-            <form onSubmit={handleInsertLinkSubmit} className="space-y-3">
+            <div className="space-y-3">
               <div>
                 <label className="block font-bold text-gray-700 mb-1">Văn bản hiển thị:</label>
                 <input
@@ -556,18 +546,19 @@ export default function RichTextEditor({
                 <button
                   type="button"
                   onClick={() => setLinkModalOpen(false)}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-100 font-semibold"
+                  className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-100 font-semibold cursor-pointer"
                 >
                   Hủy
                 </button>
                 <button
-                  type="submit"
-                  className="px-5 py-2 font-bold text-white bg-[#1B4C98] hover:opacity-90"
+                  type="button"
+                  onClick={(e) => handleInsertLinkSubmit(e)}
+                  className="px-5 py-2 font-bold text-white bg-[#1B4C98] hover:opacity-90 cursor-pointer"
                 >
                   Chèn link
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}
