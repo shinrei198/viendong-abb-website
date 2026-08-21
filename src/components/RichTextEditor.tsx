@@ -115,15 +115,15 @@ export default function RichTextEditor({
 
     const caption = imageCaptionInput.trim()
     const imageHtml = `
-      <figure style="margin: 24px 0; text-align: center;">
-        <img src="${imageUrlInput}" alt="${caption}" style="max-width: 100%; height: auto; display: inline-block; border: 1px solid #e2e8f0; border-radius: 2px;" />
+      <figure draggable="true" style="margin: 28px auto; text-align: center; max-width: 70%; display: block; cursor: grab;">
+        <img src="${imageUrlInput}" alt="${caption}" style="max-width: 100%; height: auto; display: block; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 3px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);" />
         ${
           caption
-            ? `<figcaption style="font-size: 0.85rem; color: #64748b; margin-top: 8px; font-style: italic;">${caption}</figcaption>`
+            ? `<figcaption style="font-size: 0.85rem; color: #64748b; margin-top: 8px; font-style: italic; text-align: center;">${caption}</figcaption>`
             : ''
         }
       </figure>
-      <p></p>
+      <p><br></p>
     `
 
     if (editorRef.current) {
