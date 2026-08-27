@@ -6,6 +6,7 @@ import imgInora from '@/imports/Inora.jpg'
 import imgSurgeArrest from '@/imports/Thie__t_bi___o_ng_ca__t_MCB.jpg'
 import imgZita from '@/imports/Zita.png'
 import imgVelet from '@/imports/Velet.png'
+import logoABB from '@/imports/abb-seeklogo.png'
 import {
   VideoItem,
   NewsItem,
@@ -207,7 +208,7 @@ export default function HomePage({ onNavigate, onAddToCart }: HomePageProps) {
       <section className="bg-white py-4" style={{ borderTop: '3px solid var(--red)', borderBottom: '1px solid #e5e5e5' }}>
         <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-14 h-8 flex items-center justify-center bg-red-600 text-white font-black text-sm tracking-wider flex-shrink-0">ABB</div>
+            <img src={logoABB} alt="ABB Logo" className="h-7 w-auto object-contain flex-shrink-0" />
             <div>
               <p className="text-sm font-bold text-gray-900" style={{ fontFamily: "'Roboto', sans-serif" }}>
                 Viễn Đông Electric — Nhà phân phối chính thức của ABB tại Việt Nam
