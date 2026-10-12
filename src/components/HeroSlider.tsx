@@ -14,6 +14,32 @@ export default function HeroSlider({ banners, onNavigate }: HeroSliderProps) {
   const [isPaused, setIsPaused] = useState(false)
   const [progress, setProgress] = useState(0)
 
+  // Container measurement for adaptive layout
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [containerDim, setContainerDim] = useState<{ width: number; height: number }>({ width: 0, height: 0 })
+
+  useEffect(() => {
+    if (!containerRef.current) return
+    const el = containerRef.current
+    const updateSize = () => {
+      if (el) {
+        setContainerDim({ width: el.clientWidth, height: el.clientHeight })
+      }
+    }
+    updateSize()
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setContainerDim({ width: entry.contentRect.width, height: entry.contentRect.height })
+      }
+    })
+    ro.observe(el)
+    window.addEventListener('resize', updateSize)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', updateSize)
+    }
+  }, [])
+
   // Drag / Swipe States
   const [isDragging, setIsDragging] = useState(false)
   const [dragDeltaX, setDragDeltaX] = useState(0)
@@ -149,6 +175,7 @@ export default function HeroSlider({ banners, onNavigate }: HeroSliderProps) {
 
   return (
     <div
+      ref={containerRef}
       className="relative w-full bg-[#1a1a1a] select-none overflow-hidden group"
       style={{
         containerType: 'inline-size',
@@ -178,87 +205,50 @@ export default function HeroSlider({ banners, onNavigate }: HeroSliderProps) {
           className="w-full h-full object-cover object-center pointer-events-none transition-all duration-700 select-none"
         />
 
-        {/* ── INTERACTIVE HOTSPOT CTA BUTTONS (ABB BRAND VISUAL GUIDELINE) ── */}
-        {currentBanner.buttons &&
-          currentBanner.buttons.map((btn) => {
-            // Button style presets matching ABB Brand Guideline (như nút Đăng ký đại lý)
-            let styleClass =
-              'bg-[#FF000F] text-white hover:bg-red-700 shadow-md border-0'
-            if (btn.styleType === 'navy') {
-              styleClass =
-                'bg-[#1B4C98] text-white hover:bg-blue-900 shadow-md border-0'
-            } else if (btn.styleType === 'white') {
-              styleClass =
-                'bg-white text-gray-900 hover:bg-gray-100 shadow-md border border-gray-300'
-            } else if (btn.styleType === 'glass') {
-              styleClass =
-                'bg-black/75 backdrop-blur-md text-white hover:bg-black/90 shadow-md border border-white/30'
-            }
-
-            // Proportional font size & padding matching container width (tỉ lệ chuẩn ABB)
-            let fontSize = 'calc(1.15cqw + 2px)'
-            let padding = 'calc(0.45cqw + 2px) calc(1.2cqw + 6px)'
-            if (btn.size === 'sm') {
-              fontSize = 'calc(0.95cqw + 1px)'
-              padding = 'calc(0.35cqw + 1px) calc(0.9cqw + 4px)'
-            } else if (btn.size === 'lg') {
-              fontSize = 'calc(1.35cqw + 3px)'
-              padding = 'calc(0.55cqw + 3px) calc(1.5cqw + 8px)'
-            }
-
-            // Mobile display hiding if bottom-bar is chosen
-            const isBottomBar = currentBanner.mobileCtaLayout === 'bottom-bar'
-            const visibilityClass = isBottomBar ? 'hidden sm:flex' : 'flex'
-
-            return (
-              <button
-                key={btn.id}
-                type="button"
-                onClick={(e) => handleButtonClick(e, btn)}
+        {/* ── CTA BUTTONS (ANCHORED TO VD LOGO, 20% FROM BOTTOM, 33px GAP) ── */}
+        {currentBanner.buttons && currentBanner.buttons.length > 0 && (
+          <div className="absolute inset-0 pointer-events-none z-20">
+            <div className="max-w-7xl mx-auto px-4 h-full relative">
+              <div
+                className="absolute flex items-center pointer-events-auto"
                 style={{
-                  left: `${btn.posX}%`,
-                  top: `${btn.posY}%`,
-                  transform: 'translate(-50%, -50%)',
-                  fontSize,
-                  padding,
+                  left: '16px',
+                  bottom: '20%',
+                  transform: 'translateY(50%)',
+                  gap: '33px',
                 }}
-                className={`absolute z-20 rounded-[3px] font-bold tracking-tight transition-all duration-150 hover:opacity-95 active:scale-95 cursor-pointer items-center gap-[0.4cqw] whitespace-nowrap leading-none ${styleClass} ${visibilityClass}`}
               >
-                <span>{btn.label}</span>
-                {btn.actionType === 'phone' && (
-                  <svg style={{ width: '1.1cqw', height: '1.1cqw', minWidth: '7px', minHeight: '7px' }} viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
-                  </svg>
-                )}
-              </button>
-            )
-          })}
+                {currentBanner.buttons.slice(0, 2).map((btn) => {
+                  let styleClass = 'bg-[#FF000F] text-white hover:bg-red-700 shadow-md border-0'
+                  if (btn.styleType === 'navy') {
+                    styleClass = 'bg-[#1B4C98] text-white hover:bg-blue-900 shadow-md border-0'
+                  } else if (btn.styleType === 'white') {
+                    styleClass = 'bg-white text-gray-900 hover:bg-gray-100 shadow-md border border-gray-300'
+                  }
 
-        {/* ── MOBILE DEDICATED BOTTOM BAR (Sát mép dưới cùng, trong suốt thanh lịch) ── */}
-        {currentBanner.buttons && currentBanner.buttons.length > 0 && currentBanner.mobileCtaLayout === 'bottom-bar' && (
-          <div className="sm:hidden absolute inset-x-0 bottom-0 z-25 flex items-center justify-center gap-2 p-1.5 bg-gradient-to-t from-black/80 via-black/50 to-transparent">
-            {currentBanner.buttons.map((btn) => {
-              let styleClass = 'bg-[#FF000F] text-white hover:bg-red-700 shadow-md border-0'
-              if (btn.styleType === 'navy') styleClass = 'bg-[#1B4C98] text-white hover:bg-blue-900 shadow-md border-0'
-              else if (btn.styleType === 'white') styleClass = 'bg-white text-gray-900 hover:bg-gray-100 shadow-md border border-gray-300'
-              else if (btn.styleType === 'glass') styleClass = 'bg-black/75 text-white border border-white/40 shadow-md'
-
-              return (
-                <button
-                  key={`mob_${btn.id}`}
-                  type="button"
-                  onClick={(e) => handleButtonClick(e, btn)}
-                  className={`px-3.5 py-1.5 text-[11px] font-bold rounded-[3px] tracking-tight shadow-md flex items-center justify-center gap-1 cursor-pointer active:scale-95 transition-all ${styleClass}`}
-                >
-                  <span className="truncate">{btn.label}</span>
-                  {btn.actionType === 'phone' && (
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
-                    </svg>
-                  )}
-                </button>
-              )
-            })}
+                  // Default size (+15% compared to baseline)
+                  return (
+                    <button
+                      key={btn.id}
+                      type="button"
+                      onClick={(e) => handleButtonClick(e, btn)}
+                      style={{
+                        fontSize: 'clamp(11.5px, 1.1cqw + 1px, 15px)',
+                        padding: 'clamp(5px, 0.4cqw + 2.3px, 9.2px) clamp(9.2px, 1.04cqw + 6.9px, 18.4px)',
+                      }}
+                      className={`rounded-[4px] font-bold tracking-tight transition-all duration-150 hover:opacity-95 active:scale-95 cursor-pointer flex items-center gap-1.5 whitespace-nowrap leading-none ${styleClass}`}
+                    >
+                      <span>{btn.label}</span>
+                      {btn.actionType === 'phone' && (
+                        <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
+                        </svg>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
           </div>
         )}
       </div>

@@ -29,8 +29,8 @@ interface HomePageProps {
 const categories = [
   { name: 'MCB · RCCB · RCBO', desc: 'Dòng SH200, GSH201 — 111 sản phẩm', count: 111, img: imgMCB },
   { name: 'Thiết bị bảo vệ chống hồ quang – AFDD', desc: 'S-ARC1, DS-ARC1 — an toàn tuyệt đối', count: 24, img: imgAFDD },
-  { name: 'Công tắc & Ổ cắm Framia', desc: '3 màu Trắng · Xám · Vàng — 30 sản phẩm', count: 30, img: imgFramia },
-  { name: 'Công tắc & Ổ cắm Inora', desc: 'Thiết kế hiện đại — 19 sản phẩm', count: 19, img: imgInora },
+  { name: 'Công tắc ABB', desc: 'Velet, Mayple, Zita, Acus — 110 sản phẩm', count: 110, img: imgVelet },
+  { name: 'Ổ cắm điện ABB', desc: 'Đơn, đôi, USB Type-C & đa năng — 120 sản phẩm', count: 120, img: imgZita },
   { name: 'Chống sét lan truyền', desc: 'OVR, OVR T1-T2 — bảo vệ thiết bị điện', count: 32, img: imgSurgeArrest },
   { name: 'ACB – Máy cắt không khí', desc: 'Emax2 E1.2→E4.2 — 50 sản phẩm', count: 50, img: 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=600&h=420&fit=crop&auto=format' },
 ]
@@ -546,11 +546,11 @@ export default function HomePage({ onNavigate, onAddToCart }: HomePageProps) {
               Đăng ký làm đại lý
             </button>
             <button
-              onClick={() => onNavigate('map')}
-              className="px-8 py-3.5 font-medium transition-all hover:bg-gray-200"
+              onClick={() => onNavigate('about')}
+              className="px-8 py-3.5 font-medium transition-all hover:bg-gray-100"
               style={{ border: '1px solid #d5d5d5', color: '#1a1a1a', background: 'white' }}
             >
-              Xem hệ thống phân phối
+              Về Viễn Đông Electric
             </button>
           </div>
         </div>

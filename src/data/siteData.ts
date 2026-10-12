@@ -99,7 +99,32 @@ export interface SiteSettings {
   companyName: string
 }
 
+export interface ProductVariant {
+  color: string
+  colorCode: string
+  hex: string
+  sku: string
+  image: string
+  enabled: boolean
+}
+
+export interface ProductItem {
+  id: string
+  name: string
+  baseSku: string
+  series: 'VELET 120' | 'MAYPLE 120' | 'MAYPLE' | 'VELET' | 'ZITA' | 'ACUS'
+  category: 'faceplate' | 'socket' | 'switch' | 'media-socket' | 'other' | 'accessories' | 'breaker'
+  subCategory?: string
+  specs: string
+  pack?: number
+  badge?: string
+  inStock: boolean
+  description?: string
+  variants: ProductVariant[]
+}
+
 import defaultSiteData from './defaultSiteData.json'
+import initialProductsData from './productsABB2026.json'
 
 /**
  * Tự động phân tích và chuyển đổi tiêu đề tiếng Việt có dấu thành tiếng Việt không dấu kèm ký tự _ chuẩn SEO
@@ -126,6 +151,7 @@ export const initialNews: NewsItem[] = defaultSiteData.initialNews as NewsItem[]
 export const initialQuoteRequests: QuoteRequestItem[] = defaultSiteData.initialQuoteRequests as QuoteRequestItem[]
 export const initialBannerSlides: BannerSlideItem[] = defaultSiteData.initialBannerSlides as BannerSlideItem[]
 export const initialSiteSettings: SiteSettings = defaultSiteData.initialSiteSettings as SiteSettings
+export const initialProducts: ProductItem[] = ((defaultSiteData as any).initialProducts || initialProductsData) as ProductItem[]
 
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -140,6 +166,26 @@ const STORAGE_KEYS = {
   QUOTES: 'viendong_quotes_v1',
   BANNERS: 'viendong_banners_v1',
   SETTINGS: 'viendong_settings_v1',
+  PRODUCTS: 'viendong_products_v1',
+}
+
+export function getStoredProducts(): ProductItem[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.PRODUCTS)
+    return raw ? JSON.parse(raw) : initialProducts
+  } catch {
+    return initialProducts
+  }
+}
+
+export function saveStoredProducts(data: ProductItem[]) {
+  try {
+    localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(data))
+    window.dispatchEvent(new Event('viendong_storage_update'))
+    scheduleCloudflareSync()
+  } catch (err) {
+    console.error('Failed to save products', err)
+  }
 }
 
 export function getStoredVideos(): VideoItem[] {
@@ -315,6 +361,7 @@ export function resetAllToDefault() {
   localStorage.removeItem(STORAGE_KEYS.BANNERS)
   localStorage.removeItem(STORAGE_KEYS.QUOTES)
   localStorage.removeItem(STORAGE_KEYS.SETTINGS)
+  localStorage.removeItem(STORAGE_KEYS.PRODUCTS)
   window.dispatchEvent(new Event('viendong_storage_update'))
 }
 
@@ -327,6 +374,7 @@ export function getCurrentFullSiteData() {
     initialQuoteRequests: getStoredQuotes(),
     initialBannerSlides: getStoredBanners(),
     initialSiteSettings: getStoredSiteSettings(),
+    initialProducts: getStoredProducts(),
   }
 }
 
@@ -338,7 +386,7 @@ export async function fetchCloudflareSiteData(): Promise<boolean> {
     const res = await fetch('/api/site-data')
     if (res.ok) {
       const data = await res.json()
-      if (data && data.exists !== false && (data.initialVideos || data.initialNews || data.initialBannerSlides)) {
+      if (data && data.exists !== false && (data.initialVideos || data.initialNews || data.initialBannerSlides || data.initialProducts)) {
         importAllDataFromJSON(data)
         return true
       }
@@ -422,6 +470,7 @@ export function importAllDataFromJSON(jsonData: any): boolean {
     if (jsonData.initialBannerSlides) saveStoredBanners(jsonData.initialBannerSlides)
     if (jsonData.initialQuoteRequests) saveStoredQuotes(jsonData.initialQuoteRequests)
     if (jsonData.initialSiteSettings) saveStoredSiteSettings(jsonData.initialSiteSettings)
+    if (jsonData.initialProducts) saveStoredProducts(jsonData.initialProducts)
     window.dispatchEvent(new Event('viendong_storage_update'))
     return true
   } catch (err) {

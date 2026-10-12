@@ -25,15 +25,20 @@ import {
   exportAllDataAsJSON,
   importAllDataFromJSON,
   createVietnameseSlug,
+  ProductItem,
+  getStoredProducts,
+  saveStoredProducts,
 } from '@/data/siteData'
+import AdminProductsTab from '@/components/AdminProductsTab'
 import RichTextEditor from '@/components/RichTextEditor'
 import ThumbnailCropper, { NewsThumbnailView } from '@/components/ThumbnailCropper'
+import { calculateAdaptiveButtonPositions } from '@/utils/bannerLayout'
 
 interface AdminPageProps {
   onNavigate: (page: string, id?: string) => void
 }
 
-type TabType = 'banners' | 'videos' | 'news' | 'quotes' | 'settings'
+type TabType = 'banners' | 'products' | 'videos' | 'news' | 'quotes' | 'settings'
 
 interface ConfirmDialogState {
   isOpen: boolean
@@ -60,6 +65,7 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
   const [newsCats, setNewsCats] = useState<string[]>(getStoredNewsCategories())
   const [quotes, setQuotes] = useState<QuoteRequestItem[]>(getStoredQuotes())
   const [settings, setSettings] = useState<SiteSettings>(getStoredSiteSettings())
+  const [products, setProducts] = useState<ProductItem[]>(getStoredProducts())
 
   const [notification, setNotification] = useState<string | null>(null)
 
@@ -85,6 +91,7 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
     setNewsCats(getStoredNewsCategories())
     setQuotes(getStoredQuotes())
     setSettings(getStoredSiteSettings())
+    setProducts(getStoredProducts())
   }
 
   useEffect(() => {
@@ -166,15 +173,24 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
       altText: '',
       bannerLink: 'products',
       bannerLinkType: 'internal',
-      buttons: [],
+      buttons: [
+        {
+          id: 'btn_' + Date.now(),
+          label: 'Xem Chi Tiết →',
+          actionType: 'internal',
+          targetUrl: 'products',
+          size: 'sm',
+          styleType: 'red',
+          posX: 15,
+          posY: 80,
+        },
+      ],
       order: banners.length + 1,
       isActive: true,
       naturalWidth: 1920,
       naturalHeight: 650,
       mobileCtaLayout: 'hotspot',
     })
-    setSelectedBtnIndex(null)
-    setDraggingBtnIndex(null)
     setBannerModalOpen(true)
   }
 
@@ -183,28 +199,40 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
     const natW = item.naturalWidth || 1920
     const natH = item.naturalHeight || 650
     setImageNaturalSize({ width: natW, height: natH })
+
+    let initialButtons: BannerButtonOverlay[] = (item.buttons || []).slice(0, 2).map((b) => ({
+      ...b,
+      size: 'sm' as const,
+      styleType: (b.styleType === 'navy' || b.styleType === 'white') ? b.styleType : ('red' as const),
+    }))
+    if (initialButtons.length === 0) {
+      initialButtons = [
+        {
+          id: 'btn_' + Date.now(),
+          label: 'Xem Chi Tiết →',
+          actionType: 'internal',
+          targetUrl: 'products',
+          size: 'sm',
+          styleType: 'red',
+          posX: 15,
+          posY: 80,
+        },
+      ]
+    }
+
     setBannerForm({
       title: item.title,
       imageUrl: item.imageUrl,
       altText: item.altText || '',
       bannerLink: item.bannerLink || '',
       bannerLinkType: item.bannerLinkType || 'internal',
-      buttons: (item.buttons || []).map((b) => ({
-        ...b,
-        pixelX: b.pixelX ?? Math.round((b.posX / 100) * natW),
-        pixelY: b.pixelY ?? Math.round((b.posY / 100) * natH),
-        origWidth: b.origWidth || natW,
-        origHeight: b.origHeight || natH,
-        mobileAlign: b.mobileAlign || 'auto',
-      })),
+      buttons: initialButtons,
       order: item.order,
       isActive: item.isActive,
       naturalWidth: natW,
       naturalHeight: natH,
       mobileCtaLayout: item.mobileCtaLayout || 'hotspot',
     })
-    setSelectedBtnIndex(item.buttons && item.buttons.length > 0 ? 0 : null)
-    setDraggingBtnIndex(null)
     setBannerModalOpen(true)
   }
 
@@ -282,165 +310,32 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
     showToast('Đã thay đổi thứ tự hiển thị banner!')
   }
 
-  // ── STRICT SAFE BOUNDARY POSITION CLAMPING & SMOOTH GLOBAL DRAGGING ────────
-  const updateBtnPositionFromCoords = (clientX: number, clientY: number, targetBtnIdx: number) => {
-    if (!bannerPreviewRef.current) return
-    const rect = bannerPreviewRef.current.getBoundingClientRect()
-    const rawX = Math.round(((clientX - rect.left) / rect.width) * 100)
-    const rawY = Math.round(((clientY - rect.top) / rect.height) * 100)
-
-    const isDesktop = previewDeviceMode === 'desktop' || previewDeviceMode === 'laptop'
-    const minX = isDesktop ? BOUND_LEFT : 4
-    const maxX = isDesktop ? BOUND_RIGHT : 96
-    const minY = BOUND_TOP
-    const maxY = BOUND_BOTTOM
-
-    const clampedX = Math.max(minX, Math.min(maxX, rawX))
-    const clampedY = Math.max(minY, Math.min(maxY, rawY))
-
-    const natW = imageNaturalSize.width || 1920
-    const natH = imageNaturalSize.height || 650
-    const pxX = Math.round((clampedX / 100) * natW)
-    const pxY = Math.round((clampedY / 100) * natH)
-
-    setBannerForm((prev) => {
-      const updatedButtons = [...prev.buttons]
-      if (updatedButtons[targetBtnIdx]) {
-        updatedButtons[targetBtnIdx] = {
-          ...updatedButtons[targetBtnIdx],
-          posX: clampedX,
-          posY: clampedY,
-          pixelX: pxX,
-          pixelY: pxY,
-          origWidth: natW,
-          origHeight: natH,
-        }
-      }
-      return { ...prev, buttons: updatedButtons }
-    })
-  }
-
-  // Window-level mouse tracking during drag
-  useEffect(() => {
-    if (draggingBtnIndex === null) return
-
-    const handleWindowMouseMove = (e: MouseEvent) => {
-      updateBtnPositionFromCoords(e.clientX, e.clientY, draggingBtnIndex)
-    }
-
-    const handleWindowMouseUp = () => {
-      setDraggingBtnIndex(null)
-    }
-
-    window.addEventListener('mousemove', handleWindowMouseMove)
-    window.addEventListener('mouseup', handleWindowMouseUp)
-    return () => {
-      window.removeEventListener('mousemove', handleWindowMouseMove)
-      window.removeEventListener('mouseup', handleWindowMouseUp)
-    }
-  }, [draggingBtnIndex, previewDeviceMode, imageNaturalSize])
-
-  const handleCanvasMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!bannerPreviewRef.current) return
-    const rect = bannerPreviewRef.current.getBoundingClientRect()
-    const rawX = Math.round(((e.clientX - rect.left) / rect.width) * 100)
-    const rawY = Math.round(((e.clientY - rect.top) / rect.height) * 100)
-
-    const isDesktop = previewDeviceMode === 'desktop' || previewDeviceMode === 'laptop'
-    const minX = isDesktop ? BOUND_LEFT : 4
-    const maxX = isDesktop ? BOUND_RIGHT : 96
-    const clampedX = Math.max(minX, Math.min(maxX, rawX))
-    const clampedY = Math.max(BOUND_TOP, Math.min(BOUND_BOTTOM, rawY))
-
-    const natW = imageNaturalSize.width || 1920
-    const natH = imageNaturalSize.height || 650
-    const pxX = Math.round((clampedX / 100) * natW)
-    const pxY = Math.round((clampedY / 100) * natH)
-
-    if (selectedBtnIndex !== null && bannerForm.buttons[selectedBtnIndex]) {
-      updateBtnPositionFromCoords(e.clientX, e.clientY, selectedBtnIndex)
-      setDraggingBtnIndex(selectedBtnIndex)
-    } else {
-      // Create new button at safe clamped point
-      const newBtn: BannerButtonOverlay = {
-        id: 'btn_' + Date.now(),
-        label: 'Khám Phá Ngay →',
-        actionType: 'internal',
-        targetUrl: 'products',
-        posX: clampedX,
-        posY: clampedY,
-        pixelX: pxX,
-        pixelY: pxY,
-        origWidth: natW,
-        origHeight: natH,
-        size: 'md',
-        styleType: 'red',
-        mobileAlign: 'auto',
-      }
-      setBannerForm((prev) => {
-        const updated = [...prev.buttons, newBtn]
-        setSelectedBtnIndex(updated.length - 1)
-        setDraggingBtnIndex(updated.length - 1)
-        return { ...prev, buttons: updated }
-      })
-      showToast(`Đã tạo nút mới tại X: ${pxX}px (${clampedX}%), Y: ${pxY}px (${clampedY}%)`)
-    }
-  }
-
-  const handleButtonMouseDown = (e: React.MouseEvent, idx: number) => {
-    e.stopPropagation()
-    setSelectedBtnIndex(idx)
-    setDraggingBtnIndex(idx)
-  }
-
-  const addNewButton = (style: 'red' | 'navy' | 'white' | 'glass' = 'red') => {
-    const isDesktop = previewDeviceMode === 'desktop' || previewDeviceMode === 'laptop'
-    const minX = isDesktop ? BOUND_LEFT : 4
-    const newX = Math.min(
-      isDesktop ? BOUND_RIGHT - 15 : 80,
-      minX + 5 + bannerForm.buttons.length * 16
-    )
-
-    let defaultLabel = 'Xem Chi Tiết →'
-    if (style === 'navy') defaultLabel = 'Tải Báo Giá PDF'
-    else if (style === 'white') defaultLabel = 'Xem Catalogue'
-    else if (style === 'glass') defaultLabel = 'Hotline Tư Vấn'
-
-    const natW = imageNaturalSize.width || 1920
-    const natH = imageNaturalSize.height || 650
-    const pxX = Math.round((newX / 100) * natW)
-    const pxY = Math.round((75 / 100) * natH)
-
+  // ── BANNER BUTTON ACTIONS (FIXED ANCHOR TO VD LOGO, 20% BOTTOM, 33px GAP, DEFAULT SIZE +15%) ──
+  const addSecondButton = () => {
+    if (bannerForm.buttons.length >= 2) return
     const newBtn: BannerButtonOverlay = {
       id: 'btn_' + Date.now(),
-      label: defaultLabel,
-      actionType: style === 'glass' ? 'phone' : 'internal',
-      targetUrl: style === 'glass' ? '02839435276' : 'products',
-      posX: newX,
-      posY: 75,
-      pixelX: pxX,
-      pixelY: pxY,
-      origWidth: natW,
-      origHeight: natH,
-      size: 'md',
-      styleType: style,
-      mobileAlign: 'auto',
+      label: 'Liên Hệ Báo Giá',
+      actionType: 'internal',
+      targetUrl: 'about',
+      size: 'sm',
+      styleType: 'navy',
+      posX: 35,
+      posY: 80,
     }
-    setBannerForm((prev) => {
-      const updatedButtons = [...prev.buttons, newBtn]
-      setSelectedBtnIndex(updatedButtons.length - 1)
-      return { ...prev, buttons: updatedButtons }
-    })
-    showToast(`Đã thêm ${style === 'white' ? 'Nút Trắng' : style === 'navy' ? 'Nút Xanh' : 'Nút Đỏ'} mới!`)
+    setBannerForm((prev) => ({
+      ...prev,
+      buttons: [...prev.buttons.slice(0, 1), newBtn],
+    }))
+    showToast('Đã chèn thêm Nút 2 (cách Nút 1 33px)!')
   }
 
-  const removeButton = (idx: number) => {
-    setBannerForm((prev) => {
-      const updatedButtons = prev.buttons.filter((_, i) => i !== idx)
-      setSelectedBtnIndex(updatedButtons.length > 0 ? 0 : null)
-      return { ...prev, buttons: updatedButtons }
-    })
-    showToast('Đã xóa nút CTA!')
+  const removeSecondButton = () => {
+    setBannerForm((prev) => ({
+      ...prev,
+      buttons: prev.buttons.slice(0, 1),
+    }))
+    showToast('Đã xóa Nút 2, chỉ giữ lại 1 nút duy nhất!')
   }
 
   const updateButtonField = (
@@ -448,66 +343,13 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
     field: keyof BannerButtonOverlay,
     val: any
   ) => {
-    const natW = imageNaturalSize.width || 1920
-    const natH = imageNaturalSize.height || 650
-    const isDesktop = previewDeviceMode === 'desktop' || previewDeviceMode === 'laptop'
-    const minX = isDesktop ? BOUND_LEFT : 4
-    const maxX = isDesktop ? BOUND_RIGHT : 96
-
     setBannerForm((prev) => {
       const updatedButtons = [...prev.buttons]
       if (updatedButtons[idx]) {
-        let updatedBtn = { ...updatedButtons[idx] }
-
-        if (field === 'posX') {
-          const clampedX = Math.max(minX, Math.min(maxX, Number(val)))
-          updatedBtn.posX = clampedX
-          updatedBtn.pixelX = Math.round((clampedX / 100) * natW)
-        } else if (field === 'posY') {
-          const clampedY = Math.max(BOUND_TOP, Math.min(BOUND_BOTTOM, Number(val)))
-          updatedBtn.posY = clampedY
-          updatedBtn.pixelY = Math.round((clampedY / 100) * natH)
-        } else if (field === 'pixelX') {
-          const rawPx = Math.max(0, Math.min(natW, Number(val)))
-          updatedBtn.pixelX = rawPx
-          updatedBtn.posX = Math.round((rawPx / natW) * 100)
-        } else if (field === 'pixelY') {
-          const rawPy = Math.max(0, Math.min(natH, Number(val)))
-          updatedBtn.pixelY = rawPy
-          updatedBtn.posY = Math.round((rawPy / natH) * 100)
-        } else {
-          updatedBtn = { ...updatedBtn, [field]: val }
-        }
-
-        updatedButtons[idx] = updatedBtn
+        updatedButtons[idx] = { ...updatedButtons[idx], [field]: val }
       }
       return { ...prev, buttons: updatedButtons }
     })
-  }
-
-  // Quick preset alignment helper
-  const snapButtonTo = (idx: number, preset: 'bottom-left' | 'bottom-right' | 'bottom-center' | 'center-left' | 'center') => {
-    let x = 15
-    let y = 75
-    if (preset === 'bottom-left') {
-      x = 12
-      y = 78
-    } else if (preset === 'bottom-right') {
-      x = 85
-      y = 78
-    } else if (preset === 'bottom-center') {
-      x = 50
-      y = 78
-    } else if (preset === 'center-left') {
-      x = 15
-      y = 50
-    } else if (preset === 'center') {
-      x = 50
-      y = 50
-    }
-    updateButtonField(idx, 'posX', x)
-    updateButtonField(idx, 'posY', y)
-    showToast(`Đã căn vị trí nút: ${preset}`)
   }
 
   // ═════════════════════════════════════════════════════════════════════════════
@@ -1146,6 +988,7 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
         <div className="bg-white border-b border-gray-200 shadow-sm flex flex-wrap mb-6">
           {[
             { id: 'banners', label: `Quản lý Banner Slider (${banners.filter((b) => b.isActive).length})`, icon: '🎠' },
+            { id: 'products', label: `Quản lý Sản phẩm (${products.length})`, icon: '⚡' },
             { id: 'videos', label: `Quản lý Video (${videos.length})`, icon: '📹' },
             { id: 'news', label: `Quản lý Tin tức (${news.length})`, icon: '📰' },
             {
@@ -1169,6 +1012,20 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
             </button>
           ))}
         </div>
+
+        {/* ═════════════════════════════════════════════════════════════════════ */}
+        {/* TAB PRODUCTS: QUẢN LÝ SẢN PHẨM ABB */}
+        {/* ═════════════════════════════════════════════════════════════════════ */}
+        {activeTab === 'products' && (
+          <AdminProductsTab
+            products={products}
+            onProductsUpdated={setProducts}
+            showToast={showToast}
+            openConfirm={(title, message, onConfirm) =>
+              setConfirmDialog({ isOpen: true, title, message, onConfirm })
+            }
+          />
+        )}
 
         {/* ═════════════════════════════════════════════════════════════════════ */}
         {/* TAB 0: QUẢN LÝ BANNER SLIDER */}
@@ -2106,150 +1963,60 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
               </div>
 
               {/* ═════════════════════════════════════════════════════════════════ */}
-              {/* 1:1 LIVE WYSIWYG INTERACTIVE CANVAS WITH CONTENT GUIDES        */}
+              {/* 1:1 LIVE WYSIWYG PREVIEW (ANCHORED TO VD LOGO, 20% FROM BOTTOM) */}
               {/* ═════════════════════════════════════════════════════════════════ */}
               <div className="p-4 bg-slate-900 border border-slate-700 shadow-xl space-y-3">
                 {/* Canvas Controls Header */}
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2 pb-2 border-b border-slate-700 text-white">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span className="font-bold text-xs uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
-                      <span>🎨</span> Canvas Banner Trực Quan (Khớp 100% Ảnh Gốc & Trang Chủ)
-                    </span>
-                    <span className="text-[11px] font-mono px-2 py-0.5 bg-slate-800 text-cyan-300 border border-slate-600 rounded">
-                      📐 Kích thước ảnh gốc: {imageNaturalSize.width} × {imageNaturalSize.height}px
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setShowGuides(!showGuides)}
-                      className={`px-2 py-0.5 text-[10px] font-bold rounded border cursor-pointer ${
-                        showGuides
-                          ? 'bg-cyan-500/20 text-cyan-300 border-cyan-400'
-                          : 'bg-slate-800 text-gray-400 border-slate-600'
-                      }`}
-                    >
-                      {showGuides ? '👁️ Đường Biên: BẬT' : 'Đường Biên: TẮT'}
-                    </button>
-                  </div>
-
-                  {/* Device mode + Quick Add Buttons */}
-                  <div className="flex flex-wrap items-center gap-2">
-                    {/* Device selector */}
-                    <div className="flex bg-slate-800 p-0.5 rounded border border-slate-600 text-[10px]">
-                      <button
-                        type="button"
-                        onClick={() => setPreviewDeviceMode('desktop')}
-                        className={`px-2 py-0.5 rounded transition-colors cursor-pointer ${
-                          previewDeviceMode === 'desktop'
-                            ? 'bg-[#1B4C98] text-white font-bold'
-                            : 'text-gray-400 hover:text-white'
-                        }`}
-                        title="Desktop màn hình chuẩn (1920px)"
-                      >
-                        🖥️ Desktop
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setPreviewDeviceMode('laptop')}
-                        className={`px-2 py-0.5 rounded transition-colors cursor-pointer ${
-                          previewDeviceMode === 'laptop'
-                            ? 'bg-[#1B4C98] text-white font-bold'
-                            : 'text-gray-400 hover:text-white'
-                        }`}
-                        title="Laptop (1366px)"
-                      >
-                        💻 Laptop
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setPreviewDeviceMode('mobile')}
-                        className={`px-2 py-0.5 rounded transition-colors cursor-pointer ${
-                          previewDeviceMode === 'mobile'
-                            ? 'bg-[#1B4C98] text-white font-bold'
-                            : 'text-gray-400 hover:text-white'
-                        }`}
-                        title="Mobile iPhone 15 / 16 (393px)"
-                      >
-                        📱 Mobile
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setPreviewDeviceMode('mobile-sm')}
-                        className={`px-2 py-0.5 rounded transition-colors cursor-pointer ${
-                          previewDeviceMode === 'mobile-sm'
-                            ? 'bg-[#1B4C98] text-white font-bold'
-                            : 'text-gray-400 hover:text-white'
-                        }`}
-                        title="Mobile nhỏ iPhone SE / Galaxy (375px)"
-                      >
-                        📱 Mini (375px)
-                      </button>
-                    </div>
-
-                    {/* Button Creator */}
-                    <button
-                      type="button"
-                      onClick={() => addNewButton('red')}
-                      className="px-2.5 py-1 text-[11px] font-bold text-white bg-[#FF000F] hover:bg-red-700 shadow-xs cursor-pointer"
-                    >
-                      + Nút Đỏ
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => addNewButton('navy')}
-                      className="px-2.5 py-1 text-[11px] font-bold text-white bg-[#1B4C98] hover:bg-blue-900 shadow-xs cursor-pointer"
-                    >
-                      + Nút Xanh
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => addNewButton('white')}
-                      className="px-2.5 py-1 text-[11px] font-bold text-gray-900 bg-white hover:bg-gray-100 border border-gray-300 shadow-xs cursor-pointer"
-                    >
-                      + Nút Trắng
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => addNewButton('glass')}
-                      className="px-2.5 py-1 text-[11px] font-bold text-white bg-slate-700 hover:bg-slate-600 border border-slate-500 shadow-xs cursor-pointer"
-                    >
-                      + Nút Kính
-                    </button>
-                  </div>
-                </div>
-
-                {/* HUD STATUS BAR: Displays exact coordinates cleanly without touching buttons */}
-                <div className="px-3 py-2 bg-slate-800/90 border border-slate-700 rounded text-[11px] flex flex-wrap items-center justify-between text-gray-300 gap-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-bold text-cyan-400">📍 Nút đang chọn:</span>
-                    {selectedBtnIndex !== null && bannerForm.buttons[selectedBtnIndex] ? (
-                      <span className="font-mono text-yellow-300 font-bold bg-black/60 px-2 py-0.5 rounded border border-yellow-500/40">
-                        "{bannerForm.buttons[selectedBtnIndex].label}" ➔ Pixel: ({bannerForm.buttons[selectedBtnIndex].pixelX ?? Math.round((bannerForm.buttons[selectedBtnIndex].posX / 100) * imageNaturalSize.width)}px, {bannerForm.buttons[selectedBtnIndex].pixelY ?? Math.round((bannerForm.buttons[selectedBtnIndex].posY / 100) * imageNaturalSize.height)}px) | Tỉ lệ: ({bannerForm.buttons[selectedBtnIndex].posX}%, {bannerForm.buttons[selectedBtnIndex].posY}%)
-                      </span>
-                    ) : (
-                      <span className="text-gray-400 italic">Chưa chọn nút nào (Nhấn chuột lên ảnh hoặc nút để chỉnh sửa)</span>
-                    )}
-                  </div>
-
-                  {/* Mode switcher & Presets */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-700 text-white">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-400">Chế độ định vị:</span>
-                    <button
-                      type="button"
-                      onClick={() => setPositionMode(positionMode === 'pixel' ? 'percent' : 'pixel')}
-                      className="px-2 py-0.5 text-[10px] font-bold bg-slate-700 text-yellow-300 border border-slate-500 rounded cursor-pointer"
-                    >
-                      {positionMode === 'pixel' ? '📏 Định vị Pixel Thực (Chuẩn 1:1)' : '📊 Định vị % (Fluid)'}
-                    </button>
+                    <span className="font-bold text-xs uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                      <span>🎨</span> Xem Trước Banner Khớp 100% Trang Chủ
+                    </span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 bg-slate-800 text-cyan-300 border border-slate-600 rounded">
+                      {imageNaturalSize.width} × {imageNaturalSize.height}px
+                    </span>
+                  </div>
+
+                  {/* Device selector */}
+                  <div className="flex bg-slate-800 p-0.5 rounded border border-slate-600 text-[10px]">
+                    {[
+                      { id: 'desktop', label: '🖥️ Desktop' },
+                      { id: 'laptop', label: '💻 Laptop' },
+                      { id: 'mobile', label: '📱 Mobile' },
+                    ].map((d) => (
+                      <button
+                        key={d.id}
+                        type="button"
+                        onClick={() => setPreviewDeviceMode(d.id as any)}
+                        className={`px-2.5 py-0.5 rounded transition-colors cursor-pointer ${
+                          previewDeviceMode === d.id
+                            ? 'bg-[#1B4C98] text-white font-bold'
+                            : 'text-gray-400 hover:text-white'
+                        }`}
+                      >
+                        {d.label}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
-                {/* The Interactive Drag Canvas (Rendered at exact natural aspect ratio of the banner image) */}
-                <div
-                  className="w-full flex items-center justify-center p-3 bg-black/70 overflow-hidden"
-                >
+                {/* Info guide bar */}
+                <div className="px-3 py-2 bg-slate-800/90 border border-slate-700 rounded text-[11px] text-gray-300 flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span>
+                      <strong>Quy chuẩn định vị:</strong> Nút 1 neo thẳng hàng Logo VD ở Header, cách cạnh dưới <strong>20%</strong>. Nút 2 cách Nút 1 <strong>33px</strong> trên cùng hàng. Kích thước mặc định (+15%).
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-yellow-300 font-mono">
+                    {bannerForm.buttons.length} nút đang hiển thị
+                  </span>
+                </div>
+
+                {/* Canvas Container */}
+                <div className="w-full flex items-center justify-center p-3 bg-black/70 overflow-hidden">
                   <div
                     ref={bannerPreviewRef}
-                    onMouseDown={handleCanvasMouseDown}
                     style={{
                       containerType: 'inline-size',
                       aspectRatio: `${imageNaturalSize.width} / ${imageNaturalSize.height}`,
@@ -2259,9 +2026,7 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                         ? 'w-full max-w-[1200px]'
                         : previewDeviceMode === 'laptop'
                         ? 'w-[900px] max-w-full'
-                        : previewDeviceMode === 'mobile'
-                        ? 'w-[393px] max-w-full'
-                        : 'w-[375px] max-w-full'
+                        : 'w-[393px] max-w-full'
                     }`}
                   >
                     {/* Background Image */}
@@ -2269,7 +2034,7 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                       <img
                         src={bannerForm.imageUrl}
                         alt="Banner Preview"
-                        className="w-full h-full object-contain object-center pointer-events-none select-none"
+                        className="w-full h-full object-cover object-center pointer-events-none select-none"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-500 font-bold text-sm">
@@ -2277,411 +2042,284 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                       </div>
                     )}
 
-                    {/* ── CONTENT CONTAINER BOUNDARY GUIDES ── */}
-                    {showGuides && (
-                      <div className="absolute inset-0 pointer-events-none z-10">
-                        <div className="absolute inset-x-0 inset-y-0 border border-cyan-400/40">
+                    {/* Anchored CTA Buttons (Exact match to HeroSlider) */}
+                    {bannerForm.buttons && bannerForm.buttons.length > 0 && (
+                      <div className="absolute inset-0 pointer-events-none z-20">
+                        <div className="max-w-7xl mx-auto px-4 h-full relative">
                           <div
-                            style={{ top: `${BOUND_TOP}%` }}
-                            className="absolute left-0 right-0 h-px border-t border-dotted border-cyan-400/60"
-                          />
-                          <div
-                            style={{ top: `${BOUND_BOTTOM}%` }}
-                            className="absolute left-0 right-0 h-px border-b border-dotted border-cyan-400/60"
-                          />
+                            className="absolute flex items-center pointer-events-auto"
+                            style={{
+                              left: '16px',
+                              bottom: '20%',
+                              transform: 'translateY(50%)',
+                              gap: '33px',
+                            }}
+                          >
+                            {bannerForm.buttons.slice(0, 2).map((btn, idx) => {
+                              let styleClass = 'bg-[#FF000F] text-white hover:bg-red-700 shadow-md border-0'
+                              if (btn.styleType === 'navy') {
+                                styleClass = 'bg-[#1B4C98] text-white hover:bg-blue-900 shadow-md border-0'
+                              } else if (btn.styleType === 'white') {
+                                styleClass = 'bg-white text-gray-900 hover:bg-gray-100 shadow-md border border-gray-300'
+                              }
+
+                              return (
+                                <button
+                                  key={btn.id}
+                                  type="button"
+                                  style={{
+                                    fontSize: 'clamp(11.5px, 1.1cqw + 1px, 15px)',
+                                    padding: 'clamp(5px, 0.4cqw + 2.3px, 9.2px) clamp(9.2px, 1.04cqw + 6.9px, 18.4px)',
+                                  }}
+                                  className={`rounded-[4px] font-bold tracking-tight shadow-md flex items-center gap-1.5 whitespace-nowrap leading-none ${styleClass}`}
+                                >
+                                  <span>{btn.label || `Nút ${idx + 1}`}</span>
+                                  {btn.actionType === 'phone' && (
+                                    <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                                      <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
+                                    </svg>
+                                  )}
+                                </button>
+                              )
+                            })}
+                          </div>
                         </div>
                       </div>
                     )}
-
-                    {/* Dragging crosshair guide lines */}
-                    {draggingBtnIndex !== null && (
-                      <div className="absolute inset-0 pointer-events-none z-15">
-                        <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/20 border-dashed" />
-                        <div className="absolute top-1/2 left-0 right-0 h-px bg-white/20 border-dashed" />
-                      </div>
-                    )}
-
-                    {/* ── 100% CLEAN BUTTONS: PROPORTIONALLY SCALED VIA CONTAINER QUERY (1:1 KHỚP TRANG CHỦ) ── */}
-                    {bannerForm.buttons.map((btn, idx) => {
-                      const isSelected = selectedBtnIndex === idx
-
-                      let styleClass =
-                        'bg-[#FF000F] text-white hover:bg-red-700 shadow-md border-0'
-                      if (btn.styleType === 'navy') {
-                        styleClass =
-                          'bg-[#1B4C98] text-white hover:bg-blue-900 shadow-md border-0'
-                      } else if (btn.styleType === 'white') {
-                        styleClass =
-                          'bg-white text-gray-900 hover:bg-gray-100 shadow-md border border-gray-300'
-                      } else if (btn.styleType === 'glass') {
-                        styleClass =
-                          'bg-black/75 backdrop-blur-md text-white hover:bg-black/90 shadow-md border border-white/30'
-                      }
-
-                      // Proportional font size & padding matching container width (1:1 identical to HeroSlider)
-                      let fontSize = 'calc(1.15cqw + 2px)'
-                      let padding = 'calc(0.45cqw + 2px) calc(1.2cqw + 6px)'
-                      if (btn.size === 'sm') {
-                        fontSize = 'calc(0.95cqw + 1px)'
-                        padding = 'calc(0.35cqw + 1px) calc(0.9cqw + 4px)'
-                      } else if (btn.size === 'lg') {
-                        fontSize = 'calc(1.35cqw + 3px)'
-                        padding = 'calc(0.55cqw + 3px) calc(1.5cqw + 8px)'
-                      }
-
-                      return (
-                        <div
-                          key={btn.id}
-                          onMouseDown={(e) => handleButtonMouseDown(e, idx)}
-                          style={{
-                            left: `${btn.posX}%`,
-                            top: `${btn.posY}%`,
-                            transform: 'translate(-50%, -50%)',
-                            fontSize,
-                            padding,
-                          }}
-                          className={`absolute z-20 cursor-grab active:cursor-grabbing select-none flex items-center gap-[0.4cqw] font-bold tracking-tight rounded-[3px] transition-all whitespace-nowrap leading-none ${styleClass} ${
-                            isSelected
-                              ? 'outline-3 outline-yellow-400 z-30 shadow-2xl scale-105 ring-2 ring-black'
-                              : 'opacity-95 hover:opacity-100 hover:scale-102'
-                          }`}
-                        >
-                          <span>{btn.label || 'Nút ' + (idx + 1)}</span>
-                          {btn.actionType === 'phone' && (
-                            <svg style={{ width: '1.1cqw', height: '1.1cqw', minWidth: '7px', minHeight: '7px' }} viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
-                            </svg>
-                          )}
-                        </div>
-                      )
-                    })}
                   </div>
-                </div>
-
-                {/* Quick Helper Note */}
-                <div className="flex flex-wrap items-center justify-between text-[11px] text-gray-300 px-1 gap-2">
-                  <span>
-                    🖱️ <strong>Kéo thả:</strong> Nhấn giữ chuột lên nút để định vị chính xác. Tọa độ Pixel và % sẽ tự động đồng bộ.
-                  </span>
-                  <span>
-                    🎯 <strong>Click ảnh:</strong> Bấm vào vùng trống để tạo nhanh nút mới tại điểm bấm.
-                  </span>
                 </div>
               </div>
 
               {/* ═════════════════════════════════════════════════════════════════ */}
-              {/* MOBILE DISPLAY & CTA AUTO-ALIGN OPTIONS                         */}
+              {/* CTA BUTTONS CONFIGURATION (SIZE SM, 3 COLORS, MAX 2 BUTTONS)    */}
               {/* ═════════════════════════════════════════════════════════════════ */}
-              <div className="p-3 bg-amber-50 border border-amber-300">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-                  <span className="font-bold text-amber-900 uppercase text-[11px] flex items-center gap-1.5">
-                    <span>📱</span> Tùy Chọn Hiển Thị Nút CTA Trên Màn Hình Điện Thoại (Mobile Responsive):
+              <div className="p-4 bg-gray-50 border border-gray-300 space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-gray-800 uppercase text-xs flex items-center gap-2">
+                    <span>🔘</span> Cấu Hình Nút CTA Trên Banner (Cố Định Size Nhỏ)
                   </span>
-                  <span className="text-[10px] text-amber-800">
-                    Tự động scale và sắp xếp chống chồng đè khi xem trên iPhone / Android
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {[
-                    {
-                      id: 'hotspot',
-                      title: '🎯 Hotspot Pin (Cố định vị trí chuẩn tỉ lệ)',
-                      desc: 'Nút bám đúng vị trí trên ảnh, tự động scale down kích thước font & padding siêu nhỏ gọn để tránh chồng đè.',
-                    },
-                    {
-                      id: 'bottom-bar',
-                      title: '📊 Bottom Bar (Khối ngang sát đáy banner)',
-                      desc: 'Gom các nút CTA xuống sát mép dưới cùng của banner thành thanh ngang thanh lịch, không che lấp chi tiết poster.',
-                    },
-                  ].map((opt) => (
-                    <label
-                      key={opt.id}
-                      className={`p-2.5 border rounded cursor-pointer transition-all flex flex-col justify-between ${
-                        bannerForm.mobileCtaLayout === opt.id
-                          ? 'border-[#1B4C98] bg-white shadow-sm ring-1 ring-[#1B4C98]'
-                          : 'border-amber-200 bg-amber-50/50 hover:bg-white'
-                      }`}
+                  {bannerForm.buttons.length < 2 && (
+                    <button
+                      type="button"
+                      onClick={addSecondButton}
+                      className="px-3 py-1.5 text-xs font-bold text-white bg-[#1B4C98] hover:bg-blue-900 rounded shadow-xs flex items-center gap-1 cursor-pointer"
                     >
-                      <div className="flex items-center gap-2 mb-1">
-                        <input
-                          type="radio"
-                          name="mobileCtaLayout"
-                          checked={bannerForm.mobileCtaLayout === opt.id}
-                          onChange={() => setBannerForm({ ...bannerForm, mobileCtaLayout: opt.id as any })}
-                          className="accent-[#1B4C98]"
-                        />
-                        <span className="font-bold text-xs text-gray-900">{opt.title}</span>
-                      </div>
-                      <p className="text-[10px] text-gray-600">{opt.desc}</p>
-                    </label>
-                  ))}
+                      <span>+</span> Chèn thêm 1 button khác (Nút 2)
+                    </button>
+                  )}
                 </div>
-              </div>
 
-              {/* ═════════════════════════════════════════════════════════════════ */}
-              {/* BUTTON PROPERTIES INSPECTOR & LIST                             */}
-              {/* ═════════════════════════════════════════════════════════════════ */}
-              {bannerForm.buttons.length > 0 && (
-                <div className="p-4 bg-gray-50 border border-gray-300 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-gray-800 uppercase text-xs">
-                      Chi Tiết Thuộc Tính Nút CTA Đang Chọn:
-                    </span>
-                    <span className="text-[11px] text-gray-500">
-                      Tổng số nút: <strong>{bannerForm.buttons.length}</strong>
-                    </span>
-                  </div>
-
-                  {/* Tabs of Buttons */}
-                  <div className="flex flex-wrap gap-1.5 pb-2 border-b border-gray-200">
-                    {bannerForm.buttons.map((btn, idx) => (
-                      <button
-                        key={btn.id}
-                        type="button"
-                        onClick={() => setSelectedBtnIndex(idx)}
-                        className={`px-3 py-1.5 text-xs font-bold rounded flex items-center gap-1.5 transition-all cursor-pointer ${
-                          selectedBtnIndex === idx
-                            ? 'bg-[#1B4C98] text-white shadow-sm'
-                            : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'
-                        }`}
-                      >
-                        <span>🔘</span>
-                        <span>{btn.label || `Nút ${idx + 1}`}</span>
-                        <span className="text-[9px] font-mono opacity-80">
-                          (X:{btn.posX}%, Y:{btn.posY}%)
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Active Selected Button Property Editor */}
-                  {selectedBtnIndex !== null && bannerForm.buttons[selectedBtnIndex] && (
-                    <div className="p-3 bg-white border border-gray-200 space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* BUTTON 1 */}
+                  {bannerForm.buttons[0] && (
+                    <div className="p-4 bg-white border-2 border-blue-200 rounded-lg shadow-xs space-y-3">
                       <div className="flex items-center justify-between pb-2 border-b border-gray-100">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-[#1B4C98] text-xs">
-                            Cấu hình: Nút {selectedBtnIndex + 1}
-                          </span>
-                          <span className="text-[10px] text-gray-400 font-mono">
-                            ID: {bannerForm.buttons[selectedBtnIndex].id}
-                          </span>
-                        </div>
-
-                        {/* Quick Snap Alignment Presets */}
-                        <div className="flex items-center gap-1">
-                          <span className="text-[10px] text-gray-500 font-semibold mr-1">Căn nhanh:</span>
-                          <button
-                            type="button"
-                            onClick={() => snapButtonTo(selectedBtnIndex, 'bottom-left')}
-                            className="px-1.5 py-0.5 text-[10px] bg-gray-100 hover:bg-gray-200 border rounded cursor-pointer"
-                            title="Góc dưới bên trái"
-                          >
-                            ↙ Trái dưới
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => snapButtonTo(selectedBtnIndex, 'bottom-center')}
-                            className="px-1.5 py-0.5 text-[10px] bg-gray-100 hover:bg-gray-200 border rounded cursor-pointer"
-                            title="Chính giữa bên dưới"
-                          >
-                            ⬇ Giữa dưới
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => snapButtonTo(selectedBtnIndex, 'bottom-right')}
-                            className="px-1.5 py-0.5 text-[10px] bg-gray-100 hover:bg-gray-200 border rounded cursor-pointer"
-                            title="Góc dưới bên phải"
-                          >
-                            ↘ Phải dưới
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => snapButtonTo(selectedBtnIndex, 'center-left')}
-                            className="px-1.5 py-0.5 text-[10px] bg-gray-100 hover:bg-gray-200 border rounded cursor-pointer"
-                            title="Chính giữa bên trái"
-                          >
-                            ⬅ Trái giữa
-                          </button>
-
-                          <div className="h-4 w-px bg-gray-300 mx-1" />
-
-                          <button
-                            type="button"
-                            onClick={() => removeButton(selectedBtnIndex)}
-                            className="text-red-600 hover:text-red-800 font-bold text-xs cursor-pointer ml-1"
-                          >
-                            ✕ Xóa nút
-                          </button>
-                        </div>
+                        <span className="font-bold text-xs text-[#1B4C98] flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-[#1B4C98]" />
+                          Nút 1 (Neo thẳng hàng Logo VD · Cách đáy 20%)
+                        </span>
+                        <span className="text-[10px] font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                          Size: Mặc định (+15%)
+                        </span>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-                        <div>
-                          <label className="block text-[10px] font-bold text-gray-600 mb-0.5">
-                            Tên hiển thị trên nút:
-                          </label>
-                          <input
-                            type="text"
-                            value={bannerForm.buttons[selectedBtnIndex].label}
-                            onChange={(e) =>
-                              updateButtonField(selectedBtnIndex, 'label', e.target.value)
-                            }
-                            className="w-full px-2.5 py-1.5 border border-gray-300 text-xs font-bold text-gray-900"
-                          />
-                        </div>
+                      <div>
+                        <label className="block text-[11px] font-bold text-gray-700 mb-1">
+                          Nội dung hiển thị trên nút:
+                        </label>
+                        <input
+                          type="text"
+                          value={bannerForm.buttons[0].label}
+                          onChange={(e) => updateButtonField(0, 'label', e.target.value)}
+                          placeholder="Ví dụ: Xem Danh Mục Sản Phẩm →"
+                          className="w-full px-3 py-2 border border-gray-300 text-xs font-bold text-gray-900 focus:outline-none focus:border-[#1B4C98]"
+                        />
+                      </div>
 
+                      <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-[10px] font-bold text-gray-600 mb-0.5">
-                            Hành động khi bấm:
+                          <label className="block text-[10px] font-bold text-gray-600 mb-1">
+                            Màu sắc (3 màu):
                           </label>
                           <select
-                            value={bannerForm.buttons[selectedBtnIndex].actionType}
-                            onChange={(e) =>
-                              updateButtonField(selectedBtnIndex, 'actionType', e.target.value)
-                            }
-                            className="w-full px-2.5 py-1.5 border border-gray-300 text-xs bg-white"
+                            value={bannerForm.buttons[0].styleType || 'red'}
+                            onChange={(e) => updateButtonField(0, 'styleType', e.target.value)}
+                            className="w-full px-2.5 py-1.5 border border-gray-300 text-xs bg-white font-bold"
                           >
-                            <option value="internal">Trang nội bộ website</option>
-                            <option value="external">Link ngoài / Tải file PDF</option>
-                            <option value="phone">Gọi điện Hotline</option>
-                            <option value="zalo">Chat Zalo</option>
+                            <option value="red">🔴 Đỏ ABB</option>
+                            <option value="navy">🔵 Xanh Viễn Đông</option>
+                            <option value="white">⚪ Trắng tinh</option>
                           </select>
                         </div>
 
                         <div>
-                          <label className="block text-[10px] font-bold text-gray-600 mb-0.5">
-                            Đích đến (Trang / URL / SĐT):
+                          <label className="block text-[10px] font-bold text-gray-600 mb-1">
+                            Hành động:
                           </label>
-                          {bannerForm.buttons[selectedBtnIndex].actionType === 'internal' ? (
-                            <select
-                              value={bannerForm.buttons[selectedBtnIndex].targetUrl}
-                              onChange={(e) =>
-                                updateButtonField(selectedBtnIndex, 'targetUrl', e.target.value)
-                              }
-                              className="w-full px-2.5 py-1.5 border border-gray-300 text-xs bg-white"
-                            >
-                              <option value="products">Trang Sản Phẩm ABB</option>
-                              <option value="cart">Trang Giỏ Hàng & Báo Giá</option>
-                              <option value="map">Hệ Thống Đại Lý & Phân Phối</option>
-                              <option value="videos">Trang Video</option>
-                              <option value="news">Trang Tin Tức</option>
-                            </select>
-                          ) : (
-                            <input
-                              type="text"
-                              value={bannerForm.buttons[selectedBtnIndex].targetUrl}
-                              onChange={(e) =>
-                                updateButtonField(selectedBtnIndex, 'targetUrl', e.target.value)
-                              }
-                              placeholder={
-                                bannerForm.buttons[selectedBtnIndex].actionType === 'phone'
-                                  ? '02839435276'
-                                  : 'https://...'
-                              }
-                              className="w-full px-2.5 py-1.5 border border-gray-300 text-xs"
-                            />
-                          )}
-                        </div>
-
-                        <div>
-                          <label className="block text-[10px] font-bold text-gray-600 mb-0.5">
-                            Màu sắc & Kích thước:
-                          </label>
-                          <div className="flex gap-1.5">
-                            <select
-                              value={bannerForm.buttons[selectedBtnIndex].styleType}
-                              onChange={(e) =>
-                                updateButtonField(selectedBtnIndex, 'styleType', e.target.value)
-                              }
-                              className="w-1/2 px-2 py-1.5 border border-gray-300 text-xs bg-white font-semibold"
-                            >
-                              <option value="red">Đỏ ABB</option>
-                              <option value="navy">Xanh Viễn Đông</option>
-                              <option value="white">Trắng tinh</option>
-                              <option value="glass">Kính mờ</option>
-                            </select>
-                            <select
-                              value={bannerForm.buttons[selectedBtnIndex].size}
-                              onChange={(e) =>
-                                updateButtonField(selectedBtnIndex, 'size', e.target.value)
-                              }
-                              className="w-1/2 px-2 py-1.5 border border-gray-300 text-xs bg-white font-semibold"
-                            >
-                              <option value="sm">Nhỏ</option>
-                              <option value="md">Vừa</option>
-                              <option value="lg">Lớn</option>
-                            </select>
-                          </div>
+                          <select
+                            value={bannerForm.buttons[0].actionType}
+                            onChange={(e) => updateButtonField(0, 'actionType', e.target.value)}
+                            className="w-full px-2.5 py-1.5 border border-gray-300 text-xs bg-white"
+                          >
+                            <option value="internal">Trang nội bộ</option>
+                            <option value="external">Link ngoài / PDF</option>
+                            <option value="phone">Gọi Hotline</option>
+                            <option value="zalo">Chat Zalo</option>
+                          </select>
                         </div>
                       </div>
 
-                      {/* Precise Numeric Position Sliders with Dual Unit (Pixel & %) */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-gray-100 bg-gray-50/70 p-2.5 rounded">
-                        <div>
-                          <div className="flex items-center justify-between text-[11px] text-gray-700 mb-1">
-                            <span className="font-semibold">
-                              Vị trí ngang X ({positionMode === 'pixel' ? 'Pixel thực trên ảnh' : 'Tỉ lệ %'}):
-                            </span>
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold font-mono text-[#1B4C98] bg-white px-2 py-0.5 border rounded">
-                                {bannerForm.buttons[selectedBtnIndex].pixelX ?? Math.round((bannerForm.buttons[selectedBtnIndex].posX / 100) * imageNaturalSize.width)} px
-                              </span>
-                              <span className="font-mono text-gray-500 text-[10px]">
-                                ({bannerForm.buttons[selectedBtnIndex].posX}%)
-                              </span>
-                            </div>
-                          </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-600 mb-1">
+                          Đích đến (Trang / Đường dẫn / SĐT):
+                        </label>
+                        {bannerForm.buttons[0].actionType === 'internal' ? (
+                          <select
+                            value={bannerForm.buttons[0].targetUrl}
+                            onChange={(e) => updateButtonField(0, 'targetUrl', e.target.value)}
+                            className="w-full px-2.5 py-1.5 border border-gray-300 text-xs bg-white"
+                          >
+                            <option value="products">Trang Sản Phẩm ABB</option>
+                            <option value="about">Trang Giới Thiệu Doanh Nghiệp</option>
+                            <option value="cart">Trang Yêu Cầu Báo Giá</option>
+                            <option value="videos">Trang Video Kỹ Thuật</option>
+                            <option value="news">Trang Tin Tức</option>
+                          </select>
+                        ) : (
                           <input
-                            type="range"
-                            min={BOUND_LEFT}
-                            max={BOUND_RIGHT}
-                            value={bannerForm.buttons[selectedBtnIndex].posX}
-                            onChange={(e) =>
-                              updateButtonField(
-                                selectedBtnIndex,
-                                'posX',
-                                Number(e.target.value)
-                              )
+                            type="text"
+                            value={bannerForm.buttons[0].targetUrl}
+                            onChange={(e) => updateButtonField(0, 'targetUrl', e.target.value)}
+                            placeholder={
+                              bannerForm.buttons[0].actionType === 'phone'
+                                ? '02839435276'
+                                : 'https://...'
                             }
-                            className="w-full accent-[#1B4C98] cursor-pointer"
+                            className="w-full px-2.5 py-1.5 border border-gray-300 text-xs"
                           />
-                        </div>
-
-                        <div>
-                          <div className="flex items-center justify-between text-[11px] text-gray-700 mb-1">
-                            <span className="font-semibold">
-                              Vị trí dọc Y ({positionMode === 'pixel' ? 'Pixel thực trên ảnh' : 'Tỉ lệ %'}):
-                            </span>
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold font-mono text-[#1B4C98] bg-white px-2 py-0.5 border rounded">
-                                {bannerForm.buttons[selectedBtnIndex].pixelY ?? Math.round((bannerForm.buttons[selectedBtnIndex].posY / 100) * imageNaturalSize.height)} px
-                              </span>
-                              <span className="font-mono text-gray-500 text-[10px]">
-                                ({bannerForm.buttons[selectedBtnIndex].posY}%)
-                              </span>
-                            </div>
-                          </div>
-                          <input
-                            type="range"
-                            min={BOUND_TOP}
-                            max={BOUND_BOTTOM}
-                            value={bannerForm.buttons[selectedBtnIndex].posY}
-                            onChange={(e) =>
-                              updateButtonField(
-                                selectedBtnIndex,
-                                'posY',
-                                Number(e.target.value)
-                              )
-                            }
-                            className="w-full accent-[#1B4C98] cursor-pointer"
-                          />
-                        </div>
+                        )}
                       </div>
                     </div>
                   )}
+
+                  {/* BUTTON 2 (OPTIONAL) */}
+                  {bannerForm.buttons[1] ? (
+                    <div className="p-4 bg-white border-2 border-emerald-200 rounded-lg shadow-xs space-y-3">
+                      <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+                        <span className="font-bold text-xs text-emerald-800 flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-emerald-600" />
+                          Nút 2 (Cách Nút 1 33px trên cùng hàng)
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                            Size: Mặc định (+15%)
+                          </span>
+                          <button
+                            type="button"
+                            onClick={removeSecondButton}
+                            className="text-red-600 hover:text-red-800 text-xs font-bold cursor-pointer"
+                            title="Xóa Nút 2 để chỉ giữ lại 1 nút"
+                          >
+                            ✕ Xóa Nút 2
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-gray-700 mb-1">
+                          Nội dung hiển thị trên nút:
+                        </label>
+                        <input
+                          type="text"
+                          value={bannerForm.buttons[1].label}
+                          onChange={(e) => updateButtonField(1, 'label', e.target.value)}
+                          placeholder="Ví dụ: Tải Bảng Giá PDF"
+                          className="w-full px-3 py-2 border border-gray-300 text-xs font-bold text-gray-900 focus:outline-none focus:border-[#1B4C98]"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[10px] font-bold text-gray-600 mb-1">
+                            Màu sắc (3 màu):
+                          </label>
+                          <select
+                            value={bannerForm.buttons[1].styleType || 'navy'}
+                            onChange={(e) => updateButtonField(1, 'styleType', e.target.value)}
+                            className="w-full px-2.5 py-1.5 border border-gray-300 text-xs bg-white font-bold"
+                          >
+                            <option value="red">🔴 Đỏ ABB</option>
+                            <option value="navy">🔵 Xanh Viễn Đông</option>
+                            <option value="white">⚪ Trắng tinh</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-bold text-gray-600 mb-1">
+                            Hành động:
+                          </label>
+                          <select
+                            value={bannerForm.buttons[1].actionType}
+                            onChange={(e) => updateButtonField(1, 'actionType', e.target.value)}
+                            className="w-full px-2.5 py-1.5 border border-gray-300 text-xs bg-white"
+                          >
+                            <option value="internal">Trang nội bộ</option>
+                            <option value="external">Link ngoài / PDF</option>
+                            <option value="phone">Gọi Hotline</option>
+                            <option value="zalo">Chat Zalo</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-600 mb-1">
+                          Đích đến (Trang / Đường dẫn / SĐT):
+                        </label>
+                        {bannerForm.buttons[1].actionType === 'internal' ? (
+                          <select
+                            value={bannerForm.buttons[1].targetUrl}
+                            onChange={(e) => updateButtonField(1, 'targetUrl', e.target.value)}
+                            className="w-full px-2.5 py-1.5 border border-gray-300 text-xs bg-white"
+                          >
+                            <option value="products">Trang Sản Phẩm ABB</option>
+                            <option value="about">Trang Giới Thiệu Doanh Nghiệp</option>
+                            <option value="cart">Trang Yêu Cầu Báo Giá</option>
+                            <option value="videos">Trang Video Kỹ Thuật</option>
+                            <option value="news">Trang Tin Tức</option>
+                          </select>
+                        ) : (
+                          <input
+                            type="text"
+                            value={bannerForm.buttons[1].targetUrl}
+                            onChange={(e) => updateButtonField(1, 'targetUrl', e.target.value)}
+                            placeholder={
+                              bannerForm.buttons[1].actionType === 'phone'
+                                ? '02839435276'
+                                : 'https://...'
+                            }
+                            className="w-full px-2.5 py-1.5 border border-gray-300 text-xs"
+                          />
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-6 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-center space-y-2 bg-white/50">
+                      <span className="text-gray-400 text-2xl">➕</span>
+                      <p className="text-xs font-bold text-gray-700">Chưa kích hoạt Nút 2</p>
+                      <p className="text-[11px] text-gray-500 max-w-xs">
+                        Banner hiện chỉ hiển thị 1 nút duy nhất. Bạn có thể nhấn bên dưới để chèn thêm Nút thứ 2.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={addSecondButton}
+                        className="px-4 py-2 text-xs font-bold text-white bg-[#1B4C98] hover:bg-blue-900 rounded shadow-xs cursor-pointer mt-1"
+                      >
+                        + Chèn thêm Nút 2 (cách Nút 1 33px)
+                      </button>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
 
               {/* Active Toggle */}
               <div className="flex items-center gap-2 pt-1">

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Công cụ kiểm tra & Chuẩn hóa chiều xoay ảnh sản phẩm ABB</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .rotate-90-deg { transform: rotate(90deg); }
+    .rotate-180-deg { transform: rotate(180deg); }
+    .rotate-270-deg { transform: rotate(270deg); }
+  </style>
+</head>
+<body class="bg-gray-100 text-gray-800 p-6">
+  <div class="max-w-7xl mx-auto">
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 mb-6 flex items-center justify-between">
+      <div>
+        <h1 class="text-xl font-extrabold text-[#0055A4] uppercase">
+          Kiểm tra & Chuẩn hóa chiều xoay hình ảnh ABB
+        </h1>
+        <p class="text-xs text-gray-500 mt-1">
+          Quy tắc: Logo ABB hoặc chữ trên mặt sản phẩm (16A, L, N, Max 1000W...) phải luôn hướng lên và đọc xuôi ngang từ trái sang phải.
+        </p>
+      </div>
+      <div class="flex items-center gap-3">
+        <button id="btnSave" class="px-5 py-2.5 bg-[#FF000F] hover:bg-red-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all">
+          💾 Xuất danh sách góc xoay cần sửa
+        </button>
+      </div>
+    </div>
+
+    <!-- Series Tabs -->
+    <div class="flex gap-2 mb-6 overflow-x-auto pb-2" id="seriesTabs"></div>
+
+    <!-- Products Grid -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4" id="productsGrid"></div>
+  </div>
+
+  <script>
+    let allProducts = [];
+    let currentSeries = 'VELET 120';
+    let rotationMap = {}; // { [baseSku]: 90 | 180 | 270 }
+
+    async function init() {
+      // Load products JSON
+      const res = await fetch('/src/data/productsABB2026.json');
+      allProducts = await res.json();
+
+      // Render Series tabs
+      const seriesList = ['VELET 120', 'MAYPLE 120', 'MAYPLE', 'VELET', 'ZITA', 'ACUS'];
+      const tabsContainer = document.getElementById('seriesTabs');
+      tabsContainer.innerHTML = seriesList.map(s => `
+        <button onclick="switchSeries('${s}')" id="tab-${s}" class="px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+          s === currentSeries ? 'bg-[#0055A4] text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+        }">
+          ${s} (${allProducts.filter(p => p.series === s).length})
+        </button>
+      `).join('');
+
+      renderGrid();
+    }
+
+    function switchSeries(s) {
+      currentSeries = s;
+      document.querySelectorAll('#seriesTabs button').forEach(b => {
+        b.className = 'px-4 py-2 rounded-xl text-xs font-bold transition-all bg-white text-gray-700 border border-gray-200 hover:bg-gray-50';
+      });
+      document.getElementById('tab-' + s).className = 'px-4 py-2 rounded-xl text-xs font-bold transition-all bg-[#0055A4] text-white shadow-sm';
+      renderGrid();
+    }
+
+    function setRotation(baseSku, deg) {
+      if (deg === 0) {
+        delete rotationMap[baseSku];
+      } else {
+        rotationMap[baseSku] = deg;
+      }
+      renderGrid();
+    }
+
+    function renderGrid() {
+      const filtered = allProducts.filter(p => p.series === currentSeries);
+      const grid = document.getElementById('productsGrid');
+
+      grid.innerHTML = filtered.map(p => {
+        const v = (p.variants && p.variants.find(v => v.enabled)) || (p.variants && p.variants[0]);
+        const img = v ? v.image : '';
+        const rot = rotationMap[p.baseSku] || 0;
+
+        let rotClass = '';
+        if (rot === 90) rotClass = 'rotate-90-deg';
+        else if (rot === 180) rotClass = 'rotate-180-deg';
+        else if (rot === 270) rotClass = 'rotate-270-deg';
+
+        return `
+          <div class="bg-white rounded-2xl p-3 border ${rot !== 0 ? 'border-[#FF000F] ring-2 ring-red-100' : 'border-gray-200'} shadow-xs flex flex-col justify-between">
+            <div>
+              <div class="aspect-square bg-gray-50 rounded-xl mb-2 flex items-center justify-center p-2 overflow-hidden border border-gray-100 relative">
+                ${rot !== 0 ? `<span class="absolute top-2 left-2 z-10 px-2 py-0.5 text-[9px] font-bold text-white bg-red-600 rounded-md">Xoay ${rot}°</span>` : ''}
+                <img src="${img}" class="w-full h-full object-contain transition-transform duration-200 ${rotClass}" alt="${p.name}">
+              </div>
+              <h4 class="text-xs font-bold text-gray-900 line-clamp-2 mb-1">${p.name}</h4>
+              <p class="text-[10px] font-mono text-gray-500 mb-2">${p.baseSku}</p>
+            </div>
+
+            <div class="pt-2 border-t border-gray-100">
+              <div class="text-[10px] text-gray-500 font-medium mb-1">Chọn góc xoay:</div>
+              <div class="grid grid-cols-4 gap-1 text-[10px] font-bold">
+                <button onclick="setRotation('${p.baseSku}', 0)" class="py-1 rounded border ${rot === 0 ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-50 text-gray-600 hover:bg-gray-100'}">0°</button>
+                <button onclick="setRotation('${p.baseSku}', 90)" class="py-1 rounded border ${rot === 90 ? 'bg-red-600 text-white border-red-600' : 'bg-gray-50 text-gray-600 hover:bg-gray-100'}">90°</button>
+                <button onclick="setRotation('${p.baseSku}', 180)" class="py-1 rounded border ${rot === 180 ? 'bg-red-600 text-white border-red-600' : 'bg-gray-50 text-gray-600 hover:bg-gray-100'}">180°</button>
+                <button onclick="setRotation('${p.baseSku}', 270)" class="py-1 rounded border ${rot === 270 ? 'bg-red-600 text-white border-red-600' : 'bg-gray-50 text-gray-600 hover:bg-gray-100'}">270°</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    document.getElementById('btnSave').onclick = () => {
+      const jsonStr = JSON.stringify(rotationMap, null, 2);
+      console.log('Rotation Map:', jsonStr);
+      navigator.clipboard.writeText(jsonStr);
+      alert('Đã sao chép danh sách góc xoay vào bộ nhớ tạm (Clipboard)! ' + Object.keys(rotationMap).length + ' sản phẩm cần xoay.');
+    };
+
+    window.onload = init;
+  </script>
+</body>
+</html>

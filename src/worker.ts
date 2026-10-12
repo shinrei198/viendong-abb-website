@@ -1,6 +1,6 @@
 export interface Env {
-  ASSETS: Fetcher
-  VIENDONG_KV?: KVNamespace
+  ASSETS: any
+  VIENDONG_KV?: any
 }
 
 export default {

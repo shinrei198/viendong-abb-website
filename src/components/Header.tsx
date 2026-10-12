@@ -3,7 +3,7 @@ import logoColor from '@/imports/logo_color.png'
 
 interface HeaderProps {
   currentPage: string
-  onNavigate: (page: string) => void
+  onNavigate: (page: string, categoryId?: string) => void
   cartCount: number
 }
 
@@ -16,21 +16,21 @@ const navItems = [
 ]
 
 const productCategories = [
-  { name: 'MCB · RCCB · RCBO', sub: 'SH200, GSH201', count: 111 },
-  { name: 'MCCB – Cầu dao tự động khối', sub: 'Tmax T1-T6, Tmax XT', count: 200 },
-  { name: 'Công tắc & Ổ cắm Framia', sub: 'Trắng · Xám · Vàng', count: 30 },
-  { name: 'Công tắc & Ổ cắm Inora', sub: 'Thiết kế hiện đại', count: 19 },
-  { name: 'Khởi động từ & Rờ le nhiệt', sub: 'AX Contactor, TA Thermal Relay', count: 65 },
-  { name: 'ACB – Máy cắt không khí', sub: 'Emax2 E1.2–E4.2', count: 50 },
+  { id: 'faceplate', name: 'Mặt che', sub: 'Velet 120, Mayple 120', count: 35 },
+  { id: 'socket', name: 'Ổ cắm', sub: 'Velet, Mayple, Zita, Acus...', count: 120 },
+  { id: 'switch', name: 'Công tắc', sub: 'Velet, Mayple, Zita, Acus...', count: 110 },
+  { id: 'media-socket', name: 'Ổ cắm TV, Mạng, Điện thoại', sub: 'Velet, Mayple, Zita, Acus...', count: 45 },
+  { id: 'accessories', name: 'Thiết bị và phụ kiện khác', sub: 'Velet, Mayple, Zita, Acus...', count: 60 },
+  { id: 'breaker', name: 'Cầu dao', sub: 'Cầu dao tự động & chống rò', count: 150, isBreaker: true },
 ]
 
 const catIcons = [
-  'M4 4h16v2H4zm0 4h16v2H4zm0 4h10v2H4zm0 4h6v2H4z',
-  'M3 6l3-3h12l3 3v12l-3 3H6l-3-3V6zm3 0v12h12V6H6zm2 2h8v2H8V8zm0 4h8v2H8v-2z',
-  'M9 3H5a2 2 0 00-2 2v4m0 0h18M3 9v10a2 2 0 002 2h14a2 2 0 002-2V9',
-  'M12 22c0 0 8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
-  'M13 2L3 14h9l-1 8 10-12h-9l1-8z',
-  'M12 2a5 5 0 110 10A5 5 0 0112 2zm0 12c-5 0-8 2.5-8 4v2h16v-2c0-1.5-3-4-8-4z',
+  'M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm4 4h8v8H8V8z',
+  'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-3 8h2v5H9v-5zm6 0h2v5h-2v-5z',
+  'M4 7h16a5 5 0 010 10H4A5 5 0 014 7zm12 2a3 3 0 100 6 3 3 0 000-6z',
+  'M3 5h18v11H3V5zm5 14h8m-4-3v3',
+  'M4 21v-7m0-4V3m8 18v-9m0-4V3m8 18v-5m0-4V3M1 14h6m2-6h6m2 8h6',
+  'M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z',
 ]
 
 export default function Header({ currentPage, onNavigate, cartCount }: HeaderProps) {
@@ -148,8 +148,15 @@ export default function Header({ currentPage, onNavigate, cartCount }: HeaderPro
                       <div className="grid grid-cols-2">
                         {productCategories.map((cat, i) => (
                           <button
-                            key={cat.name}
-                            onClick={() => { onNavigate('products'); setProductsOpen(false) }}
+                            key={cat.id}
+                            onClick={() => {
+                              if (cat.isBreaker) {
+                                onNavigate('products')
+                              } else {
+                                onNavigate('products', cat.id)
+                              }
+                              setProductsOpen(false)
+                            }}
                             className="flex items-start gap-3 px-5 py-4 text-left hover:bg-blue-50 transition-colors"
                             style={{
                               borderBottom: i < 4 ? '1px solid #f0f4f8' : 'none',
@@ -182,14 +189,6 @@ export default function Header({ currentPage, onNavigate, cartCount }: HeaderPro
                 )}
               </div>
             ))}
-
-            <button
-              onClick={() => onNavigate('map')}
-              className="px-3 py-2 text-sm font-medium transition-all rounded"
-              style={{ color: currentPage === 'map' ? 'var(--red)' : 'var(--navy)' }}
-            >
-              Hệ thống phân phối
-            </button>
           </nav>
 
           {/* Right actions */}
@@ -253,20 +252,20 @@ export default function Header({ currentPage, onNavigate, cartCount }: HeaderPro
                 {item.label}
               </button>
             ))}
-            <button
-              onClick={() => { onNavigate('map'); setMobileOpen(false) }}
-              className="w-full text-left px-2 py-2.5 text-sm font-medium border-b border-gray-50"
-              style={{ color: currentPage === 'map' ? 'var(--red)' : 'var(--navy)' }}
-            >
-              Hệ thống phân phối
-            </button>
             {/* Mobile product categories */}
             <div className="pt-2 pb-1">
               <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 px-2 mb-1">Danh mục sản phẩm</p>
               {productCategories.map((cat) => (
                 <button
-                  key={cat.name}
-                  onClick={() => { onNavigate('products'); setMobileOpen(false) }}
+                  key={cat.id}
+                  onClick={() => {
+                    if (cat.isBreaker) {
+                      onNavigate('products')
+                    } else {
+                      onNavigate('products', cat.id)
+                    }
+                    setMobileOpen(false)
+                  }}
                   className="w-full flex items-center justify-between px-2 py-2 text-sm border-b border-gray-50 hover:bg-blue-50 transition-colors"
                   style={{ color: 'var(--navy)' }}
                 >

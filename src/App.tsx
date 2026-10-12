@@ -5,6 +5,7 @@ import HomePage from '@/pages/HomePage'
 import ProductsPage from '@/pages/ProductsPage'
 import ProductDetailPage from '@/pages/ProductDetailPage'
 import CartPage from '@/pages/CartPage'
+import AboutPage from '@/pages/AboutPage'
 import MapPage from '@/pages/MapPage'
 import VideosPage from '@/pages/VideosPage'
 import NewsPage from '@/pages/NewsPage'
@@ -72,7 +73,7 @@ function parseRouteFromPath(): { page: Page; id?: string } {
     return { page: 'videos' }
   }
 
-  // 6. Distributors / Map / Contact
+  // 6. Distributors / Map / Contact -> redirect to 'about'
   if (
     path === '/he-thong-phan-phoi' ||
     path === '/dai-ly' ||
@@ -80,7 +81,7 @@ function parseRouteFromPath(): { page: Page; id?: string } {
     path === '/lien-he' ||
     path === '/contact'
   ) {
-    return { page: 'map' }
+    return { page: 'about' }
   }
 
   // 7. Cart & Quote Request
@@ -114,7 +115,7 @@ function getPathFromRoute(page: Page, id?: string): string {
     case 'videos':
       return '/video'
     case 'map':
-      return '/he-thong-phan-phoi'
+      return '/gioi-thieu'
     case 'cart':
       return '/gio-hang'
     case 'admin':
@@ -137,8 +138,9 @@ function updateSeoMetadata(page: Page, id?: string) {
       title = 'Thiết Bị Điện ABB Chính Hãng | Viễn Đông Electric'
       break
     case 'about':
-      title = 'Giới Thiệu | Viễn Đông Electric — Nhà Phân Phối Thiết Bị Điện ABB'
-      description = 'Thông tin giới thiệu về Công ty TNHH Thiết Bị Điện Viễn Đông.'
+      title = 'Giới Thiệu Doanh Nghiệp | Công Ty TNHH Thiết Bị Điện Viễn Đông'
+      description =
+        'Công ty TNHH Thiết Bị Điện Viễn Đông - Nhà phân phối chính thức thiết bị điện ABB Thụy Sĩ hàng đầu tại Việt Nam. Tầm nhìn, sứ mệnh và giá trị cốt lõi.'
       break
     case 'products':
       title = 'Danh Mục Thiết Bị Điện ABB | Viễn Đông Electric'
@@ -203,6 +205,7 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>(initialRoute.page)
   const [currentProductId, setCurrentProductId] = useState<string>(initialRoute.id || 'p1')
   const [currentArticleId, setCurrentArticleId] = useState<string>(initialRoute.id || 'n1')
+  const [selectedCategory, setSelectedCategory] = useState<string | undefined>()
   const [cart, setCart] = useState<CartItem[]>([])
 
   // Initialize data from Cloudflare KV and sync route on mount
@@ -240,7 +243,9 @@ export default function App() {
     }
 
     setCurrentPage(targetPage)
-    if (targetPage === 'productDetail' && id) {
+    if (targetPage === 'products') {
+      setSelectedCategory(id)
+    } else if (targetPage === 'productDetail' && id) {
       setCurrentProductId(id)
     } else if (targetPage === 'newsDetail' && id) {
       setCurrentArticleId(id)
@@ -274,33 +279,9 @@ export default function App() {
       case 'home':
         return <HomePage onNavigate={navigate} onAddToCart={addToCart} />
       case 'about':
-        return (
-          <div className="max-w-3xl mx-auto px-4 py-24 text-center">
-            <div className="w-16 h-16 bg-red-50 text-[#FF000F] rounded-full flex items-center justify-center mx-auto mb-4 border border-red-200">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
-              </svg>
-            </div>
-            <h2
-              className="text-3xl font-bold mb-3 font-['Roboto_Condensed'] uppercase tracking-wide"
-              style={{ color: 'var(--navy)' }}
-            >
-              Giới Thiệu Viễn Đông Electric
-            </h2>
-            <p className="text-gray-500 mb-8 text-sm max-w-md mx-auto leading-relaxed">
-              Trang đang được cập nhật nội dung. Thông tin giới thiệu năng lực phân phối và chứng nhận đối tác chính thức ABB sẽ sớm được bổ sung.
-            </p>
-            <button
-              onClick={() => navigate('home')}
-              className="px-6 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90 shadow-sm uppercase tracking-wider"
-              style={{ backgroundColor: 'var(--red)' }}
-            >
-              ← Về trang chủ
-            </button>
-          </div>
-        )
+        return <AboutPage onNavigate={navigate} />
       case 'products':
-        return <ProductsPage onNavigate={navigate} onAddToCart={addToCart} />
+        return <ProductsPage onNavigate={navigate} onAddToCart={addToCart} initialCategory={selectedCategory} />
       case 'productDetail':
         return (
           <ProductDetailPage
