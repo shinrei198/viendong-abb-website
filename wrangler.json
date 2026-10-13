@@ -12,5 +12,17 @@
       "binding": "VIENDONG_KV",
       "id": "81f19f5af04f4cd1994f8e3b6db01cb9"
     }
-  ]
+  ],
+  "r2_buckets": [
+    {
+      "binding": "MEDIA",
+      "bucket_name": "viendong-media"
+    }
+  ],
+  "images": {
+    "binding": "IMAGES"
+  },
+  "cache": {
+    "enabled": true
+  }
 }

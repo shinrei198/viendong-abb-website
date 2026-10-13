@@ -42,7 +42,7 @@ export interface QuoteRequestItem {
   phone: string
   email: string
   province: string
-  customerType: 'Đại lý' | 'Nhà thầu' | 'Thợ điện' | 'Doanh nghiệp' | 'Khách lẻ'
+  customerType: 'Đại lý' | 'Nhà thầu' | 'Thợ điện' | 'Doanh nghiệp' | 'Khách lẻ' | 'Khác'
   note: string
   items: {
     id: string
@@ -99,6 +99,47 @@ export interface SiteSettings {
   companyName: string
 }
 
+export type HomeBenefitIcon = 'shield' | 'truck' | 'support' | 'price'
+
+export interface HomeCategoryItem {
+  id: string
+  name: string
+  description: string
+  count: number
+  imageUrl: string
+  targetCategory: string
+  isActive: boolean
+}
+
+export interface HomeBenefitItem {
+  id: string
+  title: string
+  description: string
+  icon: HomeBenefitIcon
+  isActive: boolean
+}
+
+export interface HomePageContent {
+  partnerTitle: string
+  partnerSubtitle: string
+  categorySectionTitle: string
+  categories: HomeCategoryItem[]
+  featuredSectionTitle: string
+  featuredProductIds: string[]
+  videoSectionTitle: string
+  whyTitle: string
+  whySubtitle: string
+  benefits: HomeBenefitItem[]
+  ctaTitle: string
+  ctaDescription: string
+  ctaPrimaryLabel: string
+  ctaPrimaryUrl: string
+  ctaSecondaryLabel: string
+  supportTitle: string
+  supportDescription: string
+  newsSectionTitle: string
+}
+
 export interface ProductVariant {
   color: string
   colorCode: string
@@ -112,7 +153,7 @@ export interface ProductItem {
   id: string
   name: string
   baseSku: string
-  series: 'VELET 120' | 'MAYPLE 120' | 'MAYPLE' | 'VELET' | 'ZITA' | 'ACUS'
+  series: 'VELET 120' | 'MAYPLE 120' | 'MAYPLE' | 'VELET' | 'ZITA' | 'ACUS' | 'GSH200' | 'SH200' | 'SH200L'
   category: 'faceplate' | 'socket' | 'switch' | 'media-socket' | 'other' | 'accessories' | 'breaker'
   subCategory?: string
   specs: string
@@ -120,11 +161,13 @@ export interface ProductItem {
   badge?: string
   inStock: boolean
   description?: string
+  gallery?: string[]
   variants: ProductVariant[]
 }
 
 import defaultSiteData from './defaultSiteData.json'
 import initialProductsData from './productsABB2026.json'
+import { sanitizePlainText, sanitizeRichHtml } from '@/utils/sanitize'
 
 /**
  * Tự động phân tích và chuyển đổi tiêu đề tiếng Việt có dấu thành tiếng Việt không dấu kèm ký tự _ chuẩn SEO
@@ -152,6 +195,44 @@ export const initialQuoteRequests: QuoteRequestItem[] = defaultSiteData.initialQ
 export const initialBannerSlides: BannerSlideItem[] = defaultSiteData.initialBannerSlides as BannerSlideItem[]
 export const initialSiteSettings: SiteSettings = defaultSiteData.initialSiteSettings as SiteSettings
 export const initialProducts: ProductItem[] = ((defaultSiteData as any).initialProducts || initialProductsData) as ProductItem[]
+export const initialHomePageContent: HomePageContent = ((defaultSiteData as any).initialHomePageContent || {
+  partnerTitle: 'Viễn Đông Electric — Nhà phân phối chính thức của ABB tại Việt Nam',
+  partnerSubtitle: 'Authorized Distribution Partner · Hỗ trợ & Bảo hành chính hãng',
+  categorySectionTitle: 'Danh mục sản phẩm',
+  categories: [
+    { id: 'home-cat-breaker', name: 'MCB · RCCB · RCBO', description: 'Dòng SH200, GSH201 — 111 sản phẩm', count: 111, imageUrl: '', targetCategory: 'breaker', isActive: true },
+    { id: 'home-cat-afdd', name: 'Thiết bị bảo vệ chống hồ quang – AFDD', description: 'S-ARC1, DS-ARC1 — an toàn tuyệt đối', count: 24, imageUrl: '', targetCategory: 'breaker', isActive: true },
+    { id: 'home-cat-switch', name: 'Công tắc ABB', description: 'Velet, Mayple, Zita, Acus — 110 sản phẩm', count: 110, imageUrl: '', targetCategory: 'switch', isActive: true },
+    { id: 'home-cat-socket', name: 'Ổ cắm điện ABB', description: 'Đơn, đôi, USB Type-C & đa năng — 120 sản phẩm', count: 120, imageUrl: '', targetCategory: 'socket', isActive: true },
+    { id: 'home-cat-surge', name: 'Chống sét lan truyền', description: 'OVR, OVR T1-T2 — bảo vệ thiết bị điện', count: 32, imageUrl: '', targetCategory: 'accessories', isActive: true },
+  ],
+  featuredSectionTitle: 'Sản phẩm nổi bật',
+  featuredProductIds: [
+    'prod-velet120-4tyx505221-0',
+    'prod-mayple120-4tyx506221-42',
+    'prod-mayple-4tya502111-82',
+    'prod-velet-4tya503111-107',
+    'prod-zita-4tya501111-146',
+    'prod-acus-4tya500111-1',
+  ],
+  videoSectionTitle: 'Video mới cập nhật',
+  whyTitle: 'Tại sao chọn Viễn Đông?',
+  whySubtitle: 'Đối tác tin cậy của hàng nghìn đại lý và nhà thầu điện trên toàn quốc',
+  benefits: [
+    { id: 'benefit-authentic', title: 'Hàng chính hãng 100%', description: 'Nhập trực tiếp từ ABB với đầy đủ chứng từ và tem kiểm định.', icon: 'shield', isActive: true },
+    { id: 'benefit-delivery', title: 'Giao hàng toàn quốc', description: 'Phủ khắp 63 tỉnh thành, nhanh trong 24–48 giờ.', icon: 'truck', isActive: true },
+    { id: 'benefit-support', title: 'Hỗ trợ kỹ thuật 24/7', description: 'Đội ngũ kỹ sư điện tư vấn và giải đáp mọi thắc mắc.', icon: 'support', isActive: true },
+    { id: 'benefit-price', title: 'Giá đại lý tốt nhất', description: 'Chính sách chiết khấu linh hoạt cho đại lý, nhà thầu và dự án.', icon: 'price', isActive: true },
+  ],
+  ctaTitle: 'Trở thành đại lý phân phối của Viễn Đông',
+  ctaDescription: 'Tiếp cận toàn bộ danh mục ABB với chính sách chiết khấu tốt nhất thị trường.',
+  ctaPrimaryLabel: 'Đăng ký làm đại lý',
+  ctaPrimaryUrl: 'mailto:info@viendongelectric.vn?subject=Đăng ký làm đại lý',
+  ctaSecondaryLabel: 'Về Viễn Đông Electric',
+  supportTitle: 'Chúng tôi sẵn sàng hỗ trợ bạn',
+  supportDescription: 'Hãy liên hệ với Viễn Đông nếu bạn cần tư vấn về sản phẩm, chương trình ưu đãi hoặc cách thức hợp tác bạn nhé!',
+  newsSectionTitle: 'Tin tức & Kỹ thuật',
+}) as HomePageContent
 
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -167,12 +248,33 @@ const STORAGE_KEYS = {
   BANNERS: 'viendong_banners_v1',
   SETTINGS: 'viendong_settings_v1',
   PRODUCTS: 'viendong_products_v1',
+  PRODUCTS_SEED_VERSION: 'viendong_products_seed_version',
+  HOME_PAGE: 'viendong_home_page_v1',
+}
+
+const CURRENT_PRODUCT_SEED_VERSION = 'breaker-images-2026-10-13'
+
+function mergeSeededBreakerProducts(products: ProductItem[]): ProductItem[] {
+  const existingIds = new Set(products.map((product) => product.id))
+  const missingBreakers = initialProducts.filter(
+    (product) => product.category === 'breaker' && !existingIds.has(product.id)
+  )
+  return missingBreakers.length ? [...products, ...missingBreakers] : products
 }
 
 export function getStoredProducts(): ProductItem[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.PRODUCTS)
-    return raw ? JSON.parse(raw) : initialProducts
+    if (!raw) return initialProducts
+    const stored = JSON.parse(raw) as ProductItem[]
+    if (!Array.isArray(stored)) return initialProducts
+    if (localStorage.getItem(STORAGE_KEYS.PRODUCTS_SEED_VERSION) !== CURRENT_PRODUCT_SEED_VERSION) {
+      const merged = mergeSeededBreakerProducts(stored)
+      localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(merged))
+      localStorage.setItem(STORAGE_KEYS.PRODUCTS_SEED_VERSION, CURRENT_PRODUCT_SEED_VERSION)
+      return merged
+    }
+    return stored
   } catch {
     return initialProducts
   }
@@ -246,7 +348,15 @@ export function getStoredNews(): NewsItem[] {
 
 export function saveStoredNews(data: NewsItem[]) {
   try {
-    localStorage.setItem(STORAGE_KEYS.NEWS, JSON.stringify(data))
+    const sanitized = data.map((item) => ({
+      ...item,
+      title: sanitizePlainText(item.title, 300),
+      summary: sanitizePlainText(item.summary, 1000),
+      quote: item.quote ? sanitizePlainText(item.quote, 1000) : undefined,
+      quoteAuthor: item.quoteAuthor ? sanitizePlainText(item.quoteAuthor, 200) : undefined,
+      content: sanitizeRichHtml(item.content),
+    }))
+    localStorage.setItem(STORAGE_KEYS.NEWS, JSON.stringify(sanitized))
     window.dispatchEvent(new Event('viendong_storage_update'))
     scheduleCloudflareSync()
   } catch (err) {
@@ -333,6 +443,70 @@ export function addQuoteRequest(
   return newQuote
 }
 
+type QuoteSubmission = Omit<QuoteRequestItem, 'id' | 'code' | 'createdAt' | 'status'>
+
+export async function submitQuoteRequest(quote: QuoteSubmission, idempotencyKey: string): Promise<QuoteRequestItem> {
+  try {
+    const response = await fetch('/api/quotes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...quote, idempotencyKey }),
+    })
+    const result = await response.json()
+    if (!response.ok || !result?.success || !result?.quote) throw new Error(result?.message || 'Không thể gửi yêu cầu báo giá.')
+    return result.quote as QuoteRequestItem
+  } catch (error) {
+    if (import.meta.env.DEV) return addQuoteRequest(quote)
+    throw error
+  }
+}
+
+export async function fetchQuoteRequests(): Promise<QuoteRequestItem[]> {
+  try {
+    const response = await fetch('/api/quotes')
+    const result = await response.json()
+    if (!response.ok || !result?.success || !Array.isArray(result.quotes)) throw new Error('Không thể tải yêu cầu báo giá.')
+    return result.quotes as QuoteRequestItem[]
+  } catch (error) {
+    if (import.meta.env.DEV) return getStoredQuotes()
+    throw error
+  }
+}
+
+export async function updateRemoteQuoteStatus(id: string, status: QuoteRequestItem['status']): Promise<QuoteRequestItem> {
+  try {
+    const response = await fetch(`/api/quotes/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    })
+    const result = await response.json()
+    if (!response.ok || !result?.success || !result?.quote) throw new Error(result?.message || 'Không thể cập nhật yêu cầu báo giá.')
+    return result.quote as QuoteRequestItem
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      const updated = getStoredQuotes().map((quote) => quote.id === id ? { ...quote, status } : quote)
+      saveStoredQuotes(updated)
+      return updated.find((quote) => quote.id === id) as QuoteRequestItem
+    }
+    throw error
+  }
+}
+
+export async function deleteRemoteQuote(id: string): Promise<void> {
+  try {
+    const response = await fetch(`/api/quotes/${encodeURIComponent(id)}`, { method: 'DELETE' })
+    const result = await response.json().catch(() => null)
+    if (!response.ok || !result?.success) throw new Error(result?.message || 'Không thể xóa yêu cầu báo giá.')
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      saveStoredQuotes(getStoredQuotes().filter((quote) => quote.id !== id))
+      return
+    }
+    throw error
+  }
+}
+
 export function getStoredSiteSettings(): SiteSettings {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.SETTINGS)
@@ -352,6 +526,26 @@ export function saveStoredSiteSettings(data: SiteSettings) {
   }
 }
 
+export function getStoredHomePageContent(): HomePageContent {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.HOME_PAGE)
+    if (!raw) return initialHomePageContent
+    return { ...initialHomePageContent, ...JSON.parse(raw) }
+  } catch {
+    return initialHomePageContent
+  }
+}
+
+export function saveStoredHomePageContent(data: HomePageContent) {
+  try {
+    localStorage.setItem(STORAGE_KEYS.HOME_PAGE, JSON.stringify(data))
+    window.dispatchEvent(new Event('viendong_storage_update'))
+    scheduleCloudflareSync()
+  } catch (err) {
+    console.error('Failed to save home page content', err)
+  }
+}
+
 
 export function resetAllToDefault() {
   localStorage.removeItem(STORAGE_KEYS.VIDEOS)
@@ -362,11 +556,15 @@ export function resetAllToDefault() {
   localStorage.removeItem(STORAGE_KEYS.QUOTES)
   localStorage.removeItem(STORAGE_KEYS.SETTINGS)
   localStorage.removeItem(STORAGE_KEYS.PRODUCTS)
+  localStorage.removeItem(STORAGE_KEYS.PRODUCTS_SEED_VERSION)
+  localStorage.removeItem(STORAGE_KEYS.HOME_PAGE)
   window.dispatchEvent(new Event('viendong_storage_update'))
+  scheduleCloudflareSync()
 }
 
 export function getCurrentFullSiteData() {
   return {
+    schemaVersion: 2,
     initialVideoCategories: getStoredVideoCategories(),
     initialVideos: getStoredVideos(),
     initialNewsCategories: getStoredNewsCategories(),
@@ -375,6 +573,7 @@ export function getCurrentFullSiteData() {
     initialBannerSlides: getStoredBanners(),
     initialSiteSettings: getStoredSiteSettings(),
     initialProducts: getStoredProducts(),
+    initialHomePageContent: getStoredHomePageContent(),
   }
 }
 
@@ -449,31 +648,95 @@ export async function saveAllDataToSourceCode(): Promise<{ success: boolean; mes
 }
 
 /** Download complete current site data as a JSON file */
-export function exportAllDataAsJSON() {
-  const data = getCurrentFullSiteData()
-  const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(data, null, 2))
+export function exportAllDataAsJSON(overrides: Partial<ReturnType<typeof getCurrentFullSiteData>> = {}) {
+  const data = { ...getCurrentFullSiteData(), ...overrides, exportedAt: new Date().toISOString() }
+  const blobUrl = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json;charset=utf-8' }))
   const downloadAnchor = document.createElement('a')
-  downloadAnchor.setAttribute('href', dataStr)
+  downloadAnchor.setAttribute('href', blobUrl)
   downloadAnchor.setAttribute('download', `viendong_sitedata_${new Date().toISOString().slice(0, 10)}.json`)
   document.body.appendChild(downloadAnchor)
   downloadAnchor.click()
   downloadAnchor.remove()
+  setTimeout(() => URL.revokeObjectURL(blobUrl), 1000)
+}
+
+export async function importRemoteQuotes(quotes: QuoteRequestItem[]): Promise<void> {
+  if (!Array.isArray(quotes) || quotes.length === 0) return
+  try {
+    const response = await fetch('/api/quotes/import', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ quotes }),
+    })
+    const result = await response.json()
+    if (!response.ok || !result?.success) throw new Error(result?.message || 'Không thể nhập dữ liệu báo giá.')
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      saveStoredQuotes(quotes)
+      return
+    }
+    throw error
+  }
 }
 
 /** Import and apply site data from JSON file */
 export function importAllDataFromJSON(jsonData: any): boolean {
+  if (!jsonData || typeof jsonData !== 'object' || Array.isArray(jsonData)) return false
+
+  // Accept both the current portable backup format and the older Settings-tab format.
+  const normalized = {
+    initialVideos: jsonData.initialVideos ?? jsonData.videos,
+    initialVideoCategories: jsonData.initialVideoCategories ?? jsonData.videoCats,
+    initialNews: jsonData.initialNews ?? jsonData.news,
+    initialNewsCategories: jsonData.initialNewsCategories ?? jsonData.newsCats,
+    initialBannerSlides: jsonData.initialBannerSlides ?? jsonData.banners,
+    initialQuoteRequests: jsonData.initialQuoteRequests ?? jsonData.quotes,
+    initialSiteSettings: jsonData.initialSiteSettings ?? jsonData.settings,
+    initialProducts: Array.isArray(jsonData.initialProducts ?? jsonData.products)
+      ? mergeSeededBreakerProducts(jsonData.initialProducts ?? jsonData.products)
+      : jsonData.initialProducts ?? jsonData.products,
+    initialHomePageContent: jsonData.initialHomePageContent ?? jsonData.homePageContent,
+  }
+
+  const entries: Array<[string, unknown, 'array' | 'object']> = [
+    [STORAGE_KEYS.VIDEOS, normalized.initialVideos, 'array'],
+    [STORAGE_KEYS.VIDEO_CATS, normalized.initialVideoCategories, 'array'],
+    [STORAGE_KEYS.NEWS, Array.isArray(normalized.initialNews) ? normalized.initialNews.map((item: NewsItem) => ({
+      ...item,
+      title: sanitizePlainText(item?.title, 300),
+      summary: sanitizePlainText(item?.summary, 1000),
+      content: sanitizeRichHtml(item?.content),
+    })) : normalized.initialNews, 'array'],
+    [STORAGE_KEYS.NEWS_CATS, normalized.initialNewsCategories, 'array'],
+    [STORAGE_KEYS.BANNERS, normalized.initialBannerSlides, 'array'],
+    [STORAGE_KEYS.QUOTES, normalized.initialQuoteRequests, 'array'],
+    [STORAGE_KEYS.SETTINGS, normalized.initialSiteSettings, 'object'],
+    [STORAGE_KEYS.PRODUCTS, normalized.initialProducts, 'array'],
+    [STORAGE_KEYS.HOME_PAGE, normalized.initialHomePageContent, 'object'],
+  ].filter(([, value]) => value !== undefined) as Array<[string, unknown, 'array' | 'object']>
+
+  if (entries.length === 0) return false
+  if (entries.some(([, value, kind]) => kind === 'array' ? !Array.isArray(value) : !value || typeof value !== 'object' || Array.isArray(value))) {
+    return false
+  }
+
+  const previousValues = new Map<string, string | null>()
   try {
-    if (jsonData.initialVideos) saveStoredVideos(jsonData.initialVideos)
-    if (jsonData.initialVideoCategories) saveStoredVideoCategories(jsonData.initialVideoCategories)
-    if (jsonData.initialNews) saveStoredNews(jsonData.initialNews)
-    if (jsonData.initialNewsCategories) saveStoredNewsCategories(jsonData.initialNewsCategories)
-    if (jsonData.initialBannerSlides) saveStoredBanners(jsonData.initialBannerSlides)
-    if (jsonData.initialQuoteRequests) saveStoredQuotes(jsonData.initialQuoteRequests)
-    if (jsonData.initialSiteSettings) saveStoredSiteSettings(jsonData.initialSiteSettings)
-    if (jsonData.initialProducts) saveStoredProducts(jsonData.initialProducts)
+    entries.forEach(([key, value]) => {
+      previousValues.set(key, localStorage.getItem(key))
+      localStorage.setItem(key, JSON.stringify(value))
+    })
+    if (normalized.initialProducts !== undefined) {
+      localStorage.setItem(STORAGE_KEYS.PRODUCTS_SEED_VERSION, CURRENT_PRODUCT_SEED_VERSION)
+    }
     window.dispatchEvent(new Event('viendong_storage_update'))
+    scheduleCloudflareSync()
     return true
   } catch (err) {
+    previousValues.forEach((value, key) => {
+      if (value === null) localStorage.removeItem(key)
+      else localStorage.setItem(key, value)
+    })
     console.error('Failed to import data', err)
     return false
   }

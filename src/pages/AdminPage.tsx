@@ -17,28 +17,37 @@ import {
   getStoredBanners,
   saveStoredBanners,
   getStoredQuotes,
-  saveStoredQuotes,
+  fetchQuoteRequests,
+  updateRemoteQuoteStatus,
+  deleteRemoteQuote,
   getStoredSiteSettings,
   saveStoredSiteSettings,
   resetAllToDefault,
   saveAllDataToSourceCode,
   exportAllDataAsJSON,
   importAllDataFromJSON,
+  importRemoteQuotes,
   createVietnameseSlug,
   ProductItem,
   getStoredProducts,
   saveStoredProducts,
+  HomePageContent,
+  getStoredHomePageContent,
+  saveStoredHomePageContent,
 } from '@/data/siteData'
 import AdminProductsTab from '@/components/AdminProductsTab'
+import AdminHomePageTab from '@/components/AdminHomePageTab'
 import RichTextEditor from '@/components/RichTextEditor'
 import ThumbnailCropper, { NewsThumbnailView } from '@/components/ThumbnailCropper'
 import { calculateAdaptiveButtonPositions } from '@/utils/bannerLayout'
+import { uploadMedia } from '@/utils/mediaUpload'
+import { isSafeContentUrl, sanitizePlainText, sanitizeRichHtml } from '@/utils/sanitize'
 
 interface AdminPageProps {
   onNavigate: (page: string, id?: string) => void
 }
 
-type TabType = 'banners' | 'products' | 'videos' | 'news' | 'quotes' | 'settings'
+type TabType = 'homepage' | 'banners' | 'products' | 'videos' | 'news' | 'quotes' | 'settings'
 
 interface ConfirmDialogState {
   isOpen: boolean
@@ -66,8 +75,11 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
   const [quotes, setQuotes] = useState<QuoteRequestItem[]>(getStoredQuotes())
   const [settings, setSettings] = useState<SiteSettings>(getStoredSiteSettings())
   const [products, setProducts] = useState<ProductItem[]>(getStoredProducts())
+  const [homePageContent, setHomePageContent] = useState<HomePageContent>(getStoredHomePageContent())
 
   const [notification, setNotification] = useState<string | null>(null)
+  const [isUploadingBanner, setIsUploadingBanner] = useState(false)
+  const [isUploadingVideoThumb, setIsUploadingVideoThumb] = useState(false)
 
   // Custom In-App Confirmation Modal
   const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogState>({
@@ -89,15 +101,22 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
     setVideoCats(getStoredVideoCategories())
     setNews(getStoredNews())
     setNewsCats(getStoredNewsCategories())
-    setQuotes(getStoredQuotes())
+    if (import.meta.env.DEV) setQuotes(getStoredQuotes())
     setSettings(getStoredSiteSettings())
     setProducts(getStoredProducts())
+    setHomePageContent(getStoredHomePageContent())
   }
 
   useEffect(() => {
     const handleUpdate = () => refreshData()
     window.addEventListener('viendong_storage_update', handleUpdate)
     return () => window.removeEventListener('viendong_storage_update', handleUpdate)
+  }, [])
+
+  useEffect(() => {
+    fetchQuoteRequests()
+      .then(setQuotes)
+      .catch((error) => showToast(error instanceof Error ? error.message : 'Không thể tải yêu cầu báo giá.'))
   }, [])
 
   // ═════════════════════════════════════════════════════════════════════════════
@@ -327,7 +346,7 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
       ...prev,
       buttons: [...prev.buttons.slice(0, 1), newBtn],
     }))
-    showToast('Đã chèn thêm Nút 2 (cách Nút 1 33px)!')
+    showToast('Đã chèn thêm Nút 2!')
   }
 
   const removeSecondButton = () => {
@@ -590,18 +609,28 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
     const slug =
       newsForm.slug.trim() ||
       createVietnameseSlug(newsForm.title)
+    const safeNewsForm = {
+      ...newsForm,
+      title: sanitizePlainText(newsForm.title, 300),
+      author: sanitizePlainText(newsForm.author, 150),
+      summary: sanitizePlainText(newsForm.summary, 1500),
+      quote: sanitizePlainText(newsForm.quote, 1000),
+      quoteAuthor: sanitizePlainText(newsForm.quoteAuthor, 150),
+      content: sanitizeRichHtml(newsForm.content),
+      thumb: isSafeContentUrl(newsForm.thumb) ? newsForm.thumb : '',
+    }
 
     let updated: NewsItem[]
     if (editingNews) {
       updated = news.map((n) =>
         n.id === editingNews.id
-          ? { ...newsForm, id: editingNews.id, tags: processedTags, slug }
+          ? { ...safeNewsForm, id: editingNews.id, tags: processedTags, slug }
           : n
       )
       showToast('Đã cập nhật bài viết thành công!')
     } else {
       const newN: NewsItem = {
-        ...newsForm,
+        ...safeNewsForm,
         id: 'n_' + Date.now(),
         slug,
         tags: processedTags,
@@ -681,14 +710,15 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
   // ═════════════════════════════════════════════════════════════════════════════
   const [selectedQuote, setSelectedQuote] = useState<QuoteRequestItem | null>(null)
 
-  const updateQuoteStatus = (id: string, status: QuoteRequestItem['status']) => {
-    const updated = quotes.map((q) => (q.id === id ? { ...q, status } : q))
-    saveStoredQuotes(updated)
-    setQuotes(updated)
-    if (selectedQuote && selectedQuote.id === id) {
-      setSelectedQuote({ ...selectedQuote, status })
+  const updateQuoteStatus = async (id: string, status: QuoteRequestItem['status']) => {
+    try {
+      const updatedQuote = await updateRemoteQuoteStatus(id, status)
+      setQuotes((current) => current.map((quote) => quote.id === id ? updatedQuote : quote))
+      if (selectedQuote?.id === id) setSelectedQuote(updatedQuote)
+      showToast('Đã cập nhật trạng thái đơn báo giá!')
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Không thể cập nhật đơn báo giá.')
     }
-    showToast('Đã cập nhật trạng thái đơn báo giá!')
   }
 
   const handleDeleteQuoteConfirm = (id: string, code: string) => {
@@ -696,13 +726,17 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
       isOpen: true,
       title: 'Xác nhận xóa phiếu báo giá',
       message: `Bạn có muốn xóa phiếu yêu cầu mã "${code}" không?`,
-      onConfirm: () => {
-        const updated = quotes.filter((q) => q.id !== id)
-        saveStoredQuotes(updated)
-        setQuotes(updated)
-        setSelectedQuote(null)
-        setConfirmDialog((prev) => ({ ...prev, isOpen: false }))
-        showToast('Đã xóa đơn báo giá!')
+      onConfirm: async () => {
+        try {
+          await deleteRemoteQuote(id)
+          setQuotes((current) => current.filter((quote) => quote.id !== id))
+          setSelectedQuote(null)
+          setConfirmDialog((prev) => ({ ...prev, isOpen: false }))
+          showToast('Đã xóa đơn báo giá!')
+        } catch (error) {
+          setConfirmDialog((prev) => ({ ...prev, isOpen: false }))
+          showToast(error instanceof Error ? error.message : 'Không thể xóa đơn báo giá.')
+        }
       },
     })
   }
@@ -712,11 +746,26 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
   // ═════════════════════════════════════════════════════════════════════════════
   const [settingsForm, setSettingsForm] = useState<SiteSettings>(settings)
 
+  useEffect(() => {
+    setSettingsForm(settings)
+  }, [settings])
+
   const handleSaveSettings = (e: React.FormEvent) => {
     e.preventDefault()
     saveStoredSiteSettings(settingsForm)
     setSettings(settingsForm)
     showToast('Đã lưu cấu hình website thành công!')
+  }
+
+  const handleSaveHomePageContent = (content: HomePageContent) => {
+    saveStoredHomePageContent(content)
+    setHomePageContent(content)
+  }
+
+  const handleFeaturedProductsUpdated = (featuredProductIds: string[]) => {
+    const updated = { ...homePageContent, featuredProductIds: [...new Set(featuredProductIds)].slice(0, 6) }
+    saveStoredHomePageContent(updated)
+    setHomePageContent(updated)
   }
 
   const handleResetData = () => {
@@ -735,25 +784,7 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
   }
 
   const handleExportBackup = () => {
-    const backupData = {
-      banners,
-      videos,
-      videoCats,
-      news,
-      newsCats,
-      quotes,
-      settings,
-      exportedAt: new Date().toISOString(),
-    }
-    const blob = new Blob([JSON.stringify(backupData, null, 2)], {
-      type: 'application/json',
-    })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `VienDong_ABB_Backup_${new Date().toISOString().slice(0, 10)}.json`
-    a.click()
-    URL.revokeObjectURL(url)
+    exportAllDataAsJSON({ initialQuoteRequests: quotes })
     showToast('Đã xuất file sao lưu dữ liệu thành công!')
   }
 
@@ -782,12 +813,15 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
     const file = e.target.files?.[0]
     if (!file) return
     const reader = new FileReader()
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       try {
         const parsed = JSON.parse(event.target?.result as string)
         const success = importAllDataFromJSON(parsed)
         if (success) {
+          const importedQuotes = parsed.initialQuoteRequests ?? parsed.quotes
+          if (Array.isArray(importedQuotes)) await importRemoteQuotes(importedQuotes)
           refreshData()
+          setQuotes(await fetchQuoteRequests())
           showToast('Đã nạp dữ liệu từ file JSON thành công!')
         } else {
           showToast('File JSON không đúng định dạng!')
@@ -800,8 +834,25 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
     e.target.value = ''
   }
 
+  const adminNavigation: Array<{ id: TabType; label: string; icon: string; badge?: number }> = [
+    { id: 'homepage', label: 'Nội dung Trang chủ', icon: '⌂' },
+    { id: 'banners', label: 'Banner Slider', icon: '▣', badge: banners.filter((banner) => banner.isActive).length },
+    { id: 'products', label: 'Sản phẩm', icon: '⚡', badge: products.length },
+    { id: 'videos', label: 'Video', icon: '▶', badge: videos.length },
+    { id: 'news', label: 'Tin tức', icon: '▤', badge: news.length },
+    { id: 'quotes', label: 'Yêu cầu Báo giá', icon: '◫', badge: quotes.filter((quote) => quote.status === 'new').length },
+    { id: 'settings', label: 'Cài đặt Website', icon: '⚙' },
+  ]
+
+  const selectAdminTab = (tab: TabType) => {
+    setActiveTab(tab)
+    window.requestAnimationFrame(() => {
+      document.getElementById('admin-content-top')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  }
+
   return (
-    <div className="bg-[#f1f5f9] min-h-screen font-['Roboto'] pb-16">
+    <div className="admin-shell bg-[#f1f5f9] min-h-screen font-['Roboto'] pb-16">
       {/* Toast Notification */}
       {notification && (
         <div className="fixed top-20 right-6 z-50 bg-[#1B4C98] text-white px-5 py-3 shadow-2xl border-l-4 border-[#FF000F] text-xs font-bold animate-fadeIn flex items-center gap-2">
@@ -885,19 +936,19 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                   <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z" />
                 </svg>
               )}
-              <span className="font-bold tracking-tight">💾 Lưu vào Mã Nguồn</span>
+              <span className="font-bold tracking-tight">Save</span>
             </button>
 
             {/* Backup JSON dropdown/buttons */}
             <button
-              onClick={exportAllDataAsJSON}
+              onClick={handleExportBackup}
               className="px-2.5 py-1.5 text-xs font-semibold text-white/90 bg-white/10 hover:bg-white/20 transition-all flex items-center gap-1"
               title="Tải file sao lưu JSON về máy tính"
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
               </svg>
-              Xuất JSON
+              Backup
             </button>
 
             <button
@@ -908,7 +959,7 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
               <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z" />
               </svg>
-              Nạp JSON
+              Restore
             </button>
 
             <div className="h-5 w-px bg-white/20 mx-1"></div>
@@ -927,7 +978,39 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
       </header>
 
       {/* Main Admin Container */}
-      <div className="max-w-7xl mx-auto px-6 pt-8">
+      <div className="mx-auto max-w-[1500px] px-4 pt-6 lg:px-6">
+        <div className="flex items-start gap-6">
+          <aside className="sticky top-20 hidden h-[calc(100vh-6rem)] w-64 shrink-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm lg:flex">
+            <div className="border-b border-slate-200 bg-gradient-to-br from-[#173f7d] to-[#1B4C98] px-5 py-5 text-white">
+              <h2 className="text-base font-bold">Settings</h2>
+            </div>
+            <nav className="flex-1 space-y-1 overflow-y-auto p-3" aria-label="Settings">
+              {adminNavigation.map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => selectAdminTab(tab.id)}
+                  className={`group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-xs font-bold transition-all ${
+                    activeTab === tab.id
+                      ? 'bg-red-50 text-[#FF000F] shadow-sm ring-1 ring-red-100'
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-[#1B4C98]'
+                  }`}
+                >
+                  <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-sm ${activeTab === tab.id ? 'bg-[#FF000F] text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-blue-50 group-hover:text-[#1B4C98]'}`}>
+                    {tab.icon}
+                  </span>
+                  <span className="min-w-0 flex-1">{tab.label}</span>
+                  {tab.badge !== undefined && (
+                    <span className={`min-w-6 rounded-full px-2 py-0.5 text-center text-[10px] ${activeTab === tab.id ? 'bg-white text-[#FF000F]' : 'bg-slate-100 text-slate-500'}`}>
+                      {tab.badge}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </nav>
+          </aside>
+
+          <main id="admin-content-top" className="min-w-0 flex-1 scroll-mt-24">
         {/* Quick KPI Stats Counter */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-8">
           <div className="bg-white p-4 border border-gray-200 border-l-4 border-l-[#FF000F] shadow-sm">
@@ -984,34 +1067,34 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
           </div>
         </div>
 
-        {/* Navigation Tabs */}
-        <div className="bg-white border-b border-gray-200 shadow-sm flex flex-wrap mb-6">
-          {[
-            { id: 'banners', label: `Quản lý Banner Slider (${banners.filter((b) => b.isActive).length})`, icon: '🎠' },
-            { id: 'products', label: `Quản lý Sản phẩm (${products.length})`, icon: '⚡' },
-            { id: 'videos', label: `Quản lý Video (${videos.length})`, icon: '📹' },
-            { id: 'news', label: `Quản lý Tin tức (${news.length})`, icon: '📰' },
-            {
-              id: 'quotes',
-              label: `Yêu cầu Báo giá (${quotes.filter((q) => q.status === 'new').length})`,
-              icon: '📋',
-            },
-            { id: 'settings', label: 'Cài đặt Website', icon: '⚙️' },
-          ].map((tab) => (
+        {/* Compact navigation for tablet/mobile; desktop uses the persistent sidebar. */}
+        <div className="mb-6 grid grid-cols-2 gap-2 rounded-xl border border-gray-200 bg-white p-2 shadow-sm sm:grid-cols-4 lg:hidden">
+          {adminNavigation.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as TabType)}
-              className={`px-6 py-3.5 text-xs font-bold uppercase tracking-wider transition-all border-b-2 -mb-px flex items-center gap-2 ${
+              type="button"
+              onClick={() => selectAdminTab(tab.id)}
+              className={`flex items-center gap-2 rounded-lg px-3 py-2.5 text-left text-[11px] font-bold transition-all ${
                 activeTab === tab.id
-                  ? 'border-[#FF000F] text-[#FF000F] bg-red-50/40'
-                  : 'border-transparent text-gray-600 hover:text-[#1B4C98] hover:bg-gray-50'
+                  ? 'bg-[#FF000F] text-white shadow-sm'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-[#1B4C98]'
               }`}
             >
               <span>{tab.icon}</span>
-              {tab.label}
+              <span className="min-w-0 flex-1 truncate">{tab.label}</span>
+              {tab.badge !== undefined && <span className="text-[9px] opacity-75">{tab.badge}</span>}
             </button>
           ))}
         </div>
+
+        {activeTab === 'homepage' && (
+          <AdminHomePageTab
+            content={homePageContent}
+            products={products}
+            onSave={handleSaveHomePageContent}
+            showToast={showToast}
+          />
+        )}
 
         {/* ═════════════════════════════════════════════════════════════════════ */}
         {/* TAB PRODUCTS: QUẢN LÝ SẢN PHẨM ABB */}
@@ -1020,6 +1103,8 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
           <AdminProductsTab
             products={products}
             onProductsUpdated={setProducts}
+            featuredProductIds={homePageContent.featuredProductIds}
+            onFeaturedProductIdsUpdated={handleFeaturedProductsUpdated}
             showToast={showToast}
             openConfirm={(title, message, onConfirm) =>
               setConfirmDialog({ isOpen: true, title, message, onConfirm })
@@ -1712,7 +1797,7 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                   Cấu hình Thông tin Doanh Nghiệp Viễn Đông
                 </h3>
                 <p className="text-xs text-gray-500">
-                  Các thông tin dưới đây sẽ tự động cập nhật đồng bộ lên toàn bộ Header, Topbar và Footer.
+                  Các thông tin này được dùng cho các nút liên hệ và khối hỗ trợ đã kết nối với cấu hình website.
                 </p>
               </div>
 
@@ -1750,6 +1835,21 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                     onChange={(e) => setSettingsForm({ ...settingsForm, zaloUrl: e.target.value })}
                     className="w-full px-3 py-2 text-xs border border-gray-300 focus:outline-none focus:border-[#1B4C98]"
                   />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Tên doanh nghiệp:</label>
+                  <input type="text" value={settingsForm.companyName} onChange={(e) => setSettingsForm({ ...settingsForm, companyName: e.target.value })} className="w-full px-3 py-2 text-xs border border-gray-300 focus:outline-none focus:border-[#1B4C98]" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Link gọi điện:</label>
+                  <input type="text" value={settingsForm.hotlineFormatted} onChange={(e) => setSettingsForm({ ...settingsForm, hotlineFormatted: e.target.value })} placeholder="tel:02839435276" className="w-full px-3 py-2 text-xs border border-gray-300 focus:outline-none focus:border-[#1B4C98]" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Link Catalogue / Bảng giá:</label>
+                  <input type="text" value={settingsForm.catalogueUrl} onChange={(e) => setSettingsForm({ ...settingsForm, catalogueUrl: e.target.value })} placeholder="https://..." className="w-full px-3 py-2 text-xs border border-gray-300 focus:outline-none focus:border-[#1B4C98]" />
                 </div>
               </div>
 
@@ -1803,6 +1903,8 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
             </div>
           </div>
         )}
+          </main>
+        </div>
       </div>
 
       {/* ═════════════════════════════════════════════════════════════════════════ */}
@@ -1854,24 +1956,23 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                       <span>📁</span> Tải ảnh từ máy tính
                       <input
                         type="file"
-                        accept="image/*"
+                        accept="image/*,.tif,.tiff"
+                        disabled={isUploadingBanner}
                         className="hidden"
-                        onChange={(e) => {
+                        onChange={async (e) => {
                           const file = e.target.files?.[0]
                           if (file) {
-                            if (file.size > 5 * 1024 * 1024) {
-                              showToast('Kích thước ảnh tối đa 5MB!')
-                              return
+                            setIsUploadingBanner(true)
+                            try {
+                              const result = await uploadMedia(file, { folder: 'banners', maxWidth: 2560, maxHeight: 1440, quality: 0.86 })
+                              setBannerForm((current) => ({ ...current, imageUrl: result.url }))
+                              showToast(`Đã tối ưu WebP và tải ảnh lên (${Math.round(result.bytes / 1024)} KB).`)
+                            } catch (error) {
+                              showToast(error instanceof Error ? error.message : 'Không thể tải ảnh banner lên.')
+                            } finally {
+                              setIsUploadingBanner(false)
+                              e.target.value = ''
                             }
-                            const reader = new FileReader()
-                            reader.onload = (uploadEvent) => {
-                              const result = uploadEvent.target?.result as string
-                              if (result) {
-                                setBannerForm({ ...bannerForm, imageUrl: result })
-                                showToast('Đã tải ảnh từ máy tính lên banner!')
-                              }
-                            }
-                            reader.readAsDataURL(file)
                           }
                         }}
                       />
@@ -1941,7 +2042,6 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                         <option value="">-- Không gán link (Chỉ xem ảnh) --</option>
                         <option value="products">Trang Sản Phẩm ABB</option>
                         <option value="cart">Trang Giỏ Hàng & Báo Giá</option>
-                        <option value="map">Hệ Thống Đại Lý & Phân Phối</option>
                         <option value="videos">Trang Video Kỹ Thuật</option>
                         <option value="news">Trang Tin Tức & Khuyến Mãi</option>
                       </select>
@@ -2094,19 +2194,10 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
               {/* CTA BUTTONS CONFIGURATION (SIZE SM, 3 COLORS, MAX 2 BUTTONS)    */}
               {/* ═════════════════════════════════════════════════════════════════ */}
               <div className="p-4 bg-gray-50 border border-gray-300 space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center">
                   <span className="font-bold text-gray-800 uppercase text-xs flex items-center gap-2">
-                    <span>🔘</span> Cấu Hình Nút CTA Trên Banner (Cố Định Size Nhỏ)
+                    <span>🔘</span> Cấu Hình Nút CTA Trên Banner
                   </span>
-                  {bannerForm.buttons.length < 2 && (
-                    <button
-                      type="button"
-                      onClick={addSecondButton}
-                      className="px-3 py-1.5 text-xs font-bold text-white bg-[#1B4C98] hover:bg-blue-900 rounded shadow-xs flex items-center gap-1 cursor-pointer"
-                    >
-                      <span>+</span> Chèn thêm 1 button khác (Nút 2)
-                    </button>
-                  )}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -2116,10 +2207,7 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                       <div className="flex items-center justify-between pb-2 border-b border-gray-100">
                         <span className="font-bold text-xs text-[#1B4C98] flex items-center gap-1.5">
                           <span className="w-2 h-2 rounded-full bg-[#1B4C98]" />
-                          Nút 1 (Neo thẳng hàng Logo VD · Cách đáy 20%)
-                        </span>
-                        <span className="text-[10px] font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
-                          Size: Mặc định (+15%)
+                          Nút 1
                         </span>
                       </div>
 
@@ -2208,12 +2296,9 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                       <div className="flex items-center justify-between pb-2 border-b border-gray-100">
                         <span className="font-bold text-xs text-emerald-800 flex items-center gap-1.5">
                           <span className="w-2 h-2 rounded-full bg-emerald-600" />
-                          Nút 2 (Cách Nút 1 33px trên cùng hàng)
+                          Nút 2
                         </span>
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
-                            Size: Mặc định (+15%)
-                          </span>
                           <button
                             type="button"
                             onClick={removeSecondButton}
@@ -2306,15 +2391,12 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                     <div className="p-6 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-center space-y-2 bg-white/50">
                       <span className="text-gray-400 text-2xl">➕</span>
                       <p className="text-xs font-bold text-gray-700">Chưa kích hoạt Nút 2</p>
-                      <p className="text-[11px] text-gray-500 max-w-xs">
-                        Banner hiện chỉ hiển thị 1 nút duy nhất. Bạn có thể nhấn bên dưới để chèn thêm Nút thứ 2.
-                      </p>
                       <button
                         type="button"
                         onClick={addSecondButton}
                         className="px-4 py-2 text-xs font-bold text-white bg-[#1B4C98] hover:bg-blue-900 rounded shadow-xs cursor-pointer mt-1"
                       >
-                        + Chèn thêm Nút 2 (cách Nút 1 33px)
+                        + Chèn thêm Nút 2
                       </button>
                     </div>
                   )}
@@ -2506,13 +2588,39 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                 <label className="block font-bold text-gray-700 uppercase mb-1">
                   Hình ảnh Thu nhỏ (Thumbnail URL):
                 </label>
-                <input
-                  type="text"
-                  value={videoForm.thumb}
-                  onChange={(e) => setVideoForm({ ...videoForm, thumb: e.target.value })}
-                  placeholder="https://..."
-                  className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:border-[#1B4C98]"
-                />
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={videoForm.thumb}
+                    onChange={(e) => setVideoForm({ ...videoForm, thumb: e.target.value })}
+                    placeholder="https://... hoặc /media/..."
+                    className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:border-[#1B4C98]"
+                  />
+                  <label className="flex flex-shrink-0 cursor-pointer items-center border border-blue-200 bg-blue-50 px-3 font-bold text-[#1B4C98] hover:bg-blue-100">
+                    {isUploadingVideoThumb ? 'Đang tải...' : 'Tải ảnh'}
+                    <input
+                      type="file"
+                      accept="image/*,.tif,.tiff"
+                      disabled={isUploadingVideoThumb}
+                      className="hidden"
+                      onChange={async (event) => {
+                        const file = event.target.files?.[0]
+                        if (!file) return
+                        setIsUploadingVideoThumb(true)
+                        try {
+                          const result = await uploadMedia(file, { folder: 'videos', maxWidth: 1600, maxHeight: 1000 })
+                          setVideoForm((current) => ({ ...current, thumb: result.url }))
+                          showToast(`Đã tải thumbnail WebP (${Math.round(result.bytes / 1024)} KB).`)
+                        } catch (error) {
+                          showToast(error instanceof Error ? error.message : 'Không thể tải thumbnail lên.')
+                        } finally {
+                          setIsUploadingVideoThumb(false)
+                          event.target.value = ''
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
               </div>
 
               <div className="flex items-center gap-6 pt-2">

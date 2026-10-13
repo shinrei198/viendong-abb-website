@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
+import { uploadMedia } from '@/utils/mediaUpload'
 
 export interface ThumbnailCropData {
   url: string
@@ -39,6 +40,8 @@ export default function ThumbnailCropper({
   const initial = parseThumbnailValue(value)
   const [imageUrl, setImageUrl] = useState(initial.url)
   const [appliedCrop, setAppliedCrop] = useState<ThumbnailCropData['crop'] | null>(initial.crop)
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadError, setUploadError] = useState('')
 
   // Cropper states
   const [isCropping, setIsCropping] = useState(false)
@@ -89,18 +92,23 @@ export default function ThumbnailCropper({
     notifyChange(newUrl.trim(), null)
   }
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        const base64 = event.target?.result as string
-        setImageUrl(base64)
+      setIsUploading(true)
+      setUploadError('')
+      try {
+        const result = await uploadMedia(file, { folder: 'news', maxWidth: 1600, maxHeight: 1000 })
+        setImageUrl(result.url)
         setAppliedCrop(null)
         setIsCropping(false)
-        notifyChange(base64, null)
+        notifyChange(result.url, null)
+      } catch (error) {
+        setUploadError(error instanceof Error ? error.message : 'Không thể tải ảnh lên.')
+      } finally {
+        setIsUploading(false)
+        e.target.value = ''
       }
-      reader.readAsDataURL(file)
     }
   }
 
@@ -298,19 +306,22 @@ export default function ThumbnailCropper({
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            accept="image/*,.tif,.tiff"
+            disabled={isUploading}
             onChange={handleFileUpload}
             className="hidden"
           />
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
             className="w-full px-2 py-1.5 text-xs font-semibold bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 rounded cursor-pointer text-center"
           >
-            📁 Tải ảnh lên
+            {isUploading ? 'Đang tải...' : '📁 Tải ảnh lên'}
           </button>
         </div>
       </div>
+      {uploadError && <p className="text-[11px] font-semibold text-red-600">{uploadError}</p>}
 
       {/* CROPPER TOOLBAR */}
       {isCropping && (

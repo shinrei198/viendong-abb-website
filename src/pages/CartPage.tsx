@@ -1,8 +1,9 @@
-import { useState } from 'react'
-import { addQuoteRequest } from '@/data/siteData'
+import { useEffect, useState } from 'react'
+import { submitQuoteRequest } from '@/data/siteData'
 
 interface CartItem {
   id: string
+  productId: string
   name: string
   sku: string
   qty: number
@@ -17,14 +18,65 @@ interface CartPageProps {
 }
 
 type Step = 'cart' | 'info' | 'success'
+const QUOTE_DRAFT_KEY = 'viendong_quote_draft_v1'
+const QUOTE_IDEMPOTENCY_KEY = 'viendong_quote_idempotency_v1'
+
+const emptyForm = {
+  name: '', company: '', phone: '', email: '', province: '', note: '', userType: 'Đại lý'
+}
+
+function getStoredQuoteDraft() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(QUOTE_DRAFT_KEY) || '{}')
+    return {
+      form: { ...emptyForm, ...(parsed.form || {}) },
+      step: parsed.step === 'info' ? 'info' as const : 'cart' as const,
+    }
+  } catch {
+    return { form: emptyForm, step: 'cart' as const }
+  }
+}
 
 export default function CartPage({ items, onNavigate, onUpdateQty, onRemove, onClear }: CartPageProps) {
-  const [step, setStep] = useState<Step>('cart')
+  const cartFingerprint = JSON.stringify(items.map(({ productId, sku, qty }) => ({ productId, sku, qty })))
+  const initialDraft = getStoredQuoteDraft()
+  const [step, setStep] = useState<Step>(initialDraft.step)
   const [createdCode, setCreatedCode] = useState<string>('')
-  const [form, setForm] = useState({
-    name: '', company: '', phone: '', email: '', province: '', note: '', userType: 'Đại lý'
-  })
+  const [form, setForm] = useState(initialDraft.form)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
+  const [idempotencyKey, setIdempotencyKey] = useState(() => {
+    try {
+      const existing = JSON.parse(localStorage.getItem(QUOTE_IDEMPOTENCY_KEY) || '{}')
+      if (existing.key && existing.cartFingerprint === cartFingerprint) return existing.key as string
+    } catch {
+      // Create a fresh key below.
+    }
+    const created = crypto.randomUUID()
+    localStorage.setItem(QUOTE_IDEMPOTENCY_KEY, JSON.stringify({ key: created, cartFingerprint }))
+    return created
+  })
+
+  useEffect(() => {
+    if (step !== 'success') localStorage.setItem(QUOTE_DRAFT_KEY, JSON.stringify({ form, step }))
+  }, [form, step])
+
+  useEffect(() => {
+    if (step === 'success') return
+    try {
+      const stored = JSON.parse(localStorage.getItem(QUOTE_IDEMPOTENCY_KEY) || '{}')
+      if (stored.key && stored.cartFingerprint === cartFingerprint) {
+        if (stored.key !== idempotencyKey) setIdempotencyKey(stored.key)
+        return
+      }
+    } catch {
+      // Replace malformed state below.
+    }
+    const nextKey = crypto.randomUUID()
+    localStorage.setItem(QUOTE_IDEMPOTENCY_KEY, JSON.stringify({ key: nextKey, cartFingerprint }))
+    setIdempotencyKey(nextKey)
+  }, [cartFingerprint, idempotencyKey, step])
 
   const validate = () => {
     const e: Record<string, string> = {}
@@ -34,25 +86,33 @@ export default function CartPage({ items, onNavigate, onUpdateQty, onRemove, onC
     return e
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const e = validate()
     if (Object.keys(e).length > 0) { setErrors(e); return }
 
-    // Save to siteData quote requests
-    const newQuote = addQuoteRequest({
-      customerName: form.name,
-      company: form.company,
-      phone: form.phone,
-      email: form.email,
-      province: form.province || 'Toàn quốc',
-      customerType: form.userType as any || 'Đại lý',
-      note: form.note,
-      items: items.map((i) => ({ id: i.id, name: i.name, sku: i.sku, qty: i.qty })),
-    })
-
-    setCreatedCode(newQuote.code)
-    setStep('success')
-    onClear()
+    setIsSubmitting(true)
+    setSubmitError('')
+    try {
+      const newQuote = await submitQuoteRequest({
+        customerName: form.name,
+        company: form.company,
+        phone: form.phone,
+        email: form.email,
+        province: form.province || 'Toàn quốc',
+        customerType: (form.userType || 'Đại lý') as 'Đại lý' | 'Nhà thầu' | 'Thợ điện' | 'Khác',
+        note: form.note,
+        items: items.map((i) => ({ id: i.productId, name: i.name, sku: i.sku, qty: i.qty })),
+      }, idempotencyKey)
+      setCreatedCode(newQuote.code)
+      setStep('success')
+      localStorage.removeItem(QUOTE_DRAFT_KEY)
+      localStorage.removeItem(QUOTE_IDEMPOTENCY_KEY)
+      onClear()
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : 'Không thể gửi yêu cầu. Vui lòng thử lại.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   if (step === 'success') {
@@ -358,12 +418,14 @@ export default function CartPage({ items, onNavigate, onUpdateQty, onRemove, onC
               </button>
               <button
                 onClick={handleSubmit}
-                className="flex-1 py-2.5 text-sm font-bold text-white rounded transition-all hover:opacity-90 active:scale-95"
+                disabled={isSubmitting}
+                className="flex-1 py-2.5 text-sm font-bold text-white rounded transition-all hover:opacity-90 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
                 style={{ backgroundColor: 'var(--red)' }}
               >
-                Gửi yêu cầu Báo giá →
+                {isSubmitting ? 'Đang gửi yêu cầu…' : 'Gửi yêu cầu Báo giá →'}
               </button>
             </div>
+            {submitError && <p className="mt-3 text-sm font-medium text-red-600" role="alert">{submitError}</p>}
           </div>
 
           {/* Order summary */}

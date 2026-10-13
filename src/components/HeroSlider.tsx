@@ -100,12 +100,12 @@ export default function HeroSlider({ banners, onNavigate }: HeroSliderProps) {
     if (type === 'internal' || !type) {
       onNavigate(url)
     } else if (type === 'external') {
-      window.open(url.startsWith('http') ? url : `https://${url}`, '_blank')
+      window.open(url.startsWith('http') ? url : `https://${url}`, '_blank', 'noopener,noreferrer')
     } else if (type === 'phone') {
       window.location.href = `tel:${url.replace(/\s+/g, '')}`
     } else if (type === 'zalo') {
       const cleanUrl = url.startsWith('http') ? url : `https://zalo.me/${url}`
-      window.open(cleanUrl, '_blank')
+      window.open(cleanUrl, '_blank', 'noopener,noreferrer')
     }
   }
 

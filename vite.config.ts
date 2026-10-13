@@ -368,6 +368,48 @@ function saveSiteDataPlugin(): Plugin {
     name: 'save-site-data-plugin',
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
+        if (req.url?.startsWith('/api/media') && req.method === 'POST') {
+          const requestUrl = new URL(req.url, 'http://localhost')
+          const allowedFolders = new Set(['banners', 'news', 'products', 'homepage', 'videos', 'content'])
+          const folder = requestUrl.searchParams.get('folder') || ''
+          if (!allowedFolders.has(folder)) {
+            res.statusCode = 400
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ success: false, message: 'Nhóm media không hợp lệ.' }))
+            return
+          }
+
+          const chunks: Buffer[] = []
+          let totalBytes = 0
+          req.on('data', (chunk: Buffer) => {
+            totalBytes += chunk.length
+            if (totalBytes <= 20 * 1024 * 1024) chunks.push(chunk)
+          })
+          req.on('end', async () => {
+            try {
+              if (!totalBytes || totalBytes > 20 * 1024 * 1024) throw new Error('Ảnh phải nhỏ hơn 20 MB.')
+              const { default: sharp } = await import('sharp')
+              const output = await sharp(Buffer.concat(chunks)).rotate().webp({ quality: 82, effort: 4 }).toBuffer()
+              const requestedName = String(req.headers['x-file-name'] || 'image.webp').replace(/[^a-zA-Z0-9._-]/g, '-')
+              const baseName = requestedName.replace(/\.webp$/i, '') || 'image'
+              const dateFolder = new Date().toISOString().slice(0, 10)
+              const fileName = `${crypto.randomUUID()}-${baseName}.webp`
+              const relativeDirectory = path.join('media', folder, dateFolder)
+              const outputDirectory = path.resolve(__dirname, 'public', relativeDirectory)
+              fs.mkdirSync(outputDirectory, { recursive: true })
+              fs.writeFileSync(path.join(outputDirectory, fileName), output)
+              const url = `/${relativeDirectory.replace(/\\/g, '/')}/${fileName}`
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify({ success: true, url, key: `${folder}/${dateFolder}/${fileName}`, bytes: output.length, localPreview: true }))
+            } catch (err: any) {
+              res.statusCode = 400
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify({ success: false, message: err?.message || 'Không thể xử lý ảnh.' }))
+            }
+          })
+          return
+        }
+
         if (req.url === '/api/save-site-data' && req.method === 'POST') {
           let body = ''
           req.on('data', (chunk) => {

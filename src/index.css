@@ -16,7 +16,10 @@
   --accent-foreground: #ffffff;
   --border: #e5e5e5;
   --ring: #FF000F;
-  --radius: 4px;
+  --radius: 8px;
+  --radius-control: 7px;
+  --radius-card: 10px;
+  --radius-panel: 12px;
   --navy: #1B4C98;
   --red: #FF000F;
   --blue-light: #f7f7f7;
@@ -44,6 +47,43 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: -0.01em;
 }
 
+/* A restrained radius scale keeps controls and content cards consistent. */
+button,
+input,
+select,
+textarea {
+  border-radius: var(--radius-control);
+}
+
+.rounded-xs,
+.rounded-sm {
+  border-radius: 5px;
+}
+
+.rounded,
+.rounded-md {
+  border-radius: var(--radius-control);
+}
+
+.rounded-lg {
+  border-radius: var(--radius-card);
+}
+
+.rounded-xl,
+.rounded-2xl,
+.rounded-3xl {
+  border-radius: var(--radius-panel);
+}
+
+.rounded-full {
+  border-radius: 9999px;
+}
+
+/* Older admin panels did not carry radius utilities. Scope the bridge to admin. */
+.admin-shell [class~="bg-white"][class*="border"] {
+  border-radius: var(--radius-card);
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -67,7 +107,7 @@ h1, h2, h3, h4, h5, h6 {
   height: auto !important;
   margin: 0 auto !important;
   display: block;
-  border-radius: 3px;
+  border-radius: var(--radius-control);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 

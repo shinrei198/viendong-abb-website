@@ -6,7 +6,6 @@ import ProductsPage from '@/pages/ProductsPage'
 import ProductDetailPage from '@/pages/ProductDetailPage'
 import CartPage from '@/pages/CartPage'
 import AboutPage from '@/pages/AboutPage'
-import MapPage from '@/pages/MapPage'
 import VideosPage from '@/pages/VideosPage'
 import NewsPage from '@/pages/NewsPage'
 import NewsDetailPage from '@/pages/NewsDetailPage'
@@ -16,9 +15,46 @@ import { fetchCloudflareSiteData, getStoredNews, createVietnameseSlug } from '@/
 
 interface CartItem {
   id: string
+  productId: string
   name: string
   sku: string
   qty: number
+}
+
+const CART_STORAGE_KEY = 'viendong_cart_v1'
+
+function createCartLineId(productId: string, sku: string) {
+  return `${productId}::${sku}`
+}
+
+function getStoredCart(): CartItem[] {
+  if (typeof window === 'undefined') return []
+  try {
+    const parsed = JSON.parse(localStorage.getItem(CART_STORAGE_KEY) || '[]')
+    if (!Array.isArray(parsed)) return []
+    return parsed
+      .filter((item) => item && typeof item.id === 'string' && typeof item.name === 'string' && typeof item.sku === 'string')
+      .map((item) => {
+        const productId = typeof item.productId === 'string' ? item.productId : item.id.split('::')[0]
+        return {
+          id: createCartLineId(productId, item.sku),
+          productId,
+          name: item.name,
+          sku: item.sku,
+          qty: Math.max(1, Math.min(999, Number(item.qty) || 1)),
+        }
+      })
+  } catch {
+    return []
+  }
+}
+
+function persistCart(cart: CartItem[]) {
+  try {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart))
+  } catch {
+    // Keep the in-memory cart usable when browser storage is unavailable.
+  }
 }
 
 export type Page =
@@ -26,7 +62,6 @@ export type Page =
   | 'products'
   | 'productDetail'
   | 'cart'
-  | 'map'
   | 'about'
   | 'news'
   | 'newsDetail'
@@ -50,7 +85,8 @@ function parseRouteFromPath(): { page: Page; id?: string } {
 
   // 3. Products & Product Detail
   if (path === '/san-pham' || path === '/products') {
-    return { page: 'products' }
+    const category = new URLSearchParams(window.location.search).get('category') || undefined
+    return { page: 'products', id: category }
   }
   if (path.startsWith('/san-pham/') || path.startsWith('/products/')) {
     const parts = path.split('/')
@@ -105,7 +141,7 @@ function getPathFromRoute(page: Page, id?: string): string {
     case 'about':
       return '/gioi-thieu'
     case 'products':
-      return '/san-pham'
+      return id ? `/san-pham?category=${encodeURIComponent(id)}` : '/san-pham'
     case 'productDetail':
       return `/san-pham/${encodeURIComponent(id || 'p1')}`
     case 'news':
@@ -114,8 +150,6 @@ function getPathFromRoute(page: Page, id?: string): string {
       return `/tin-tuc/${encodeURIComponent(id || 'n1')}`
     case 'videos':
       return '/video'
-    case 'map':
-      return '/gioi-thieu'
     case 'cart':
       return '/gio-hang'
     case 'admin':
@@ -178,11 +212,6 @@ function updateSeoMetadata(page: Page, id?: string) {
       description =
         'Xem video thực tế hướng dẫn lắp đặt thiết bị đóng cắt MCB, MCCB, công nghệ chống hồ quang AFDD ABB.'
       break
-    case 'map':
-      title = 'Hệ Thống Phân Phối & Đại Lý ABB Toàn Quốc | Viễn Đông Electric'
-      description =
-        'Tra cứu danh sách đại lý phân phối thiết bị điện ABB chính hãng của Viễn Đông Electric tại TP.HCM và các tỉnh.'
-      break
     case 'cart':
       title = 'Yêu Cầu Báo Giá Thiết Bị Điện ABB | Viễn Đông Electric'
       description =
@@ -205,8 +234,10 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>(initialRoute.page)
   const [currentProductId, setCurrentProductId] = useState<string>(initialRoute.id || 'p1')
   const [currentArticleId, setCurrentArticleId] = useState<string>(initialRoute.id || 'n1')
-  const [selectedCategory, setSelectedCategory] = useState<string | undefined>()
-  const [cart, setCart] = useState<CartItem[]>([])
+  const [selectedCategory, setSelectedCategory] = useState<string | undefined>(
+    initialRoute.page === 'products' ? initialRoute.id : undefined
+  )
+  const [cart, setCart] = useState<CartItem[]>(getStoredCart)
 
   // Initialize data from Cloudflare KV and sync route on mount
   useEffect(() => {
@@ -219,6 +250,7 @@ export default function App() {
     const handlePopState = () => {
       const route = parseRouteFromPath()
       setCurrentPage(route.page)
+      if (route.page === 'products') setSelectedCategory(route.id)
       if (route.page === 'productDetail' && route.id) setCurrentProductId(route.id)
       if (route.page === 'newsDetail' && route.id) setCurrentArticleId(route.id)
       updateSeoMetadata(route.page, route.id)
@@ -231,14 +263,18 @@ export default function App() {
   // Scroll to top on page change
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
-  }, [currentPage, currentArticleId, currentProductId])
+  }, [currentPage, currentArticleId, currentProductId, selectedCategory])
 
   const navigate = (page: string, id?: string) => {
-    const targetPage = (page === 'contact' ? 'map' : page) as Page
+    // The map/distributor page is intentionally dormant for now.
+    const targetPage = (page === 'contact' || page === 'map' ? 'about' : page) as Page
     const targetId = id || (targetPage === 'productDetail' ? currentProductId : targetPage === 'newsDetail' ? currentArticleId : undefined)
     const newPath = getPathFromRoute(targetPage, targetId)
 
-    if (typeof window !== 'undefined' && window.location.pathname !== newPath) {
+    const currentPath = typeof window !== 'undefined'
+      ? `${window.location.pathname}${window.location.search}`
+      : ''
+    if (typeof window !== 'undefined' && currentPath !== newPath) {
       window.history.pushState({ page: targetPage, id: targetId }, '', newPath)
     }
 
@@ -255,24 +291,37 @@ export default function App() {
   }
 
   const addToCart = (product: { id: string; name: string; sku: string }) => {
+    const lineId = createCartLineId(product.id, product.sku)
     setCart((prev) => {
-      const existing = prev.find((i) => i.id === product.id)
-      if (existing) {
-        return prev.map((i) => (i.id === product.id ? { ...i, qty: i.qty + 1 } : i))
-      }
-      return [...prev, { ...product, qty: 1 }]
+      const existing = prev.find((i) => i.id === lineId)
+      const next = existing
+        ? prev.map((i) => (i.id === lineId ? { ...i, qty: Math.min(999, i.qty + 1) } : i))
+        : [...prev, { id: lineId, productId: product.id, name: product.name, sku: product.sku, qty: 1 }]
+      persistCart(next)
+      return next
     })
   }
 
   const updateQty = (id: string, qty: number) => {
-    setCart((prev) => prev.map((i) => (i.id === id ? { ...i, qty } : i)))
+    setCart((prev) => {
+      const next = prev.map((i) => (i.id === id ? { ...i, qty: Math.max(1, Math.min(999, qty)) } : i))
+      persistCart(next)
+      return next
+    })
   }
 
   const removeItem = (id: string) => {
-    setCart((prev) => prev.filter((i) => i.id !== id))
+    setCart((prev) => {
+      const next = prev.filter((i) => i.id !== id)
+      persistCart(next)
+      return next
+    })
   }
 
-  const clearCart = () => setCart([])
+  const clearCart = () => {
+    persistCart([])
+    setCart([])
+  }
 
   const renderPage = () => {
     switch (currentPage) {
@@ -308,8 +357,6 @@ export default function App() {
             onClear={clearCart}
           />
         )
-      case 'map':
-        return <MapPage onNavigate={navigate} />
       default:
         return (
           <div className="max-w-2xl mx-auto px-4 py-20 text-center">
@@ -334,7 +381,7 @@ export default function App() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <Header currentPage={currentPage} onNavigate={navigate} cartCount={cart.length} />
+      <Header currentPage={currentPage} onNavigate={navigate} cartCount={cart.reduce((sum, item) => sum + item.qty, 0)} />
       <main style={{ flex: 1 }}>{renderPage()}</main>
       {currentPage !== 'admin' && <Footer onNavigate={navigate} />}
       {currentPage !== 'admin' && <FloatingButton />}

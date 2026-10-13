@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
+import { uploadMedia } from '@/utils/mediaUpload'
+import { escapeHtmlAttribute, isSafeContentUrl, sanitizePlainText, sanitizeRichHtml } from '@/utils/sanitize'
 
 interface RichTextEditorProps {
   value: string
@@ -23,6 +25,8 @@ export default function RichTextEditor({
   const [imageUrlInput, setImageUrlInput] = useState('')
   const [imageCaptionInput, setImageCaptionInput] = useState('')
   const [imageWidthPercent, setImageWidthPercent] = useState<number>(70)
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
+  const [imageUploadError, setImageUploadError] = useState('')
   const [editingImageElement, setEditingImageElement] = useState<HTMLImageElement | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -220,18 +224,23 @@ export default function RichTextEditor({
     }
   }
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        const base64 = event.target?.result as string
-        setImageUrlInput(base64)
+      setIsUploadingImage(true)
+      setImageUploadError('')
+      try {
+        const result = await uploadMedia(file, { folder: 'content', maxWidth: 2200, maxHeight: 2200 })
+        setImageUrlInput(result.url)
         setIsCropping(false)
         setAppliedCrop(null)
         setCropBox({ x: 5, y: 5, width: 90, height: 90 })
+      } catch (error) {
+        setImageUploadError(error instanceof Error ? error.message : 'Không thể tải ảnh lên.')
+      } finally {
+        setIsUploadingImage(false)
+        e.target.value = ''
       }
-      reader.readAsDataURL(file)
     }
   }
 
@@ -372,10 +381,14 @@ export default function RichTextEditor({
       alert('Vui lòng chọn ảnh hoặc nhập URL hình ảnh')
       return
     }
+    if (!isSafeContentUrl(imageUrlInput)) {
+      alert('URL hình ảnh không an toàn hoặc không hợp lệ.')
+      return
+    }
 
-    const caption = imageCaptionInput.trim()
+    const caption = escapeHtmlAttribute(sanitizePlainText(imageCaptionInput, 500))
     const widthPct = imageWidthPercent || 70
-    const finalHtml = generateImageMarkup(imageUrlInput.trim(), caption, widthPct)
+    const finalHtml = generateImageMarkup(escapeHtmlAttribute(imageUrlInput.trim()), caption, widthPct)
 
     // Nếu đang ở chế độ Cập nhật ảnh đã có sẵn
     if (editingImageElement && editorRef.current) {
@@ -428,11 +441,15 @@ export default function RichTextEditor({
     if (!linkUrlInput.trim()) return
 
     const url = linkUrlInput.trim()
-    const text = linkTextInput.trim() || url
+    if (!isSafeContentUrl(url)) {
+      alert('Liên kết không an toàn hoặc không hợp lệ.')
+      return
+    }
+    const text = escapeHtmlAttribute(sanitizePlainText(linkTextInput, 500) || url)
 
     if (editorRef.current) {
       restoreSelection()
-      const linkHtml = `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #1B4C98; font-weight: 600; text-decoration: underline;">${text}</a>`
+      const linkHtml = `<a href="${escapeHtmlAttribute(url)}" target="_blank" rel="noopener noreferrer" style="color: #1B4C98; font-weight: 600; text-decoration: underline;">${text}</a>`
       document.execCommand('insertHTML', false, linkHtml)
       onChange(editorRef.current.innerHTML)
     }
@@ -505,7 +522,7 @@ export default function RichTextEditor({
       )}
 
       {activeTab === 'preview' && (
-        <div style={{ minHeight }} className="p-6 bg-white overflow-y-auto prose max-w-none text-gray-900 border-t border-gray-100" dangerouslySetInnerHTML={{ __html: value || '<p class="text-gray-400 italic">Chưa có nội dung bài viết...</p>' }} />
+        <div style={{ minHeight }} className="p-6 bg-white overflow-y-auto prose max-w-none text-gray-900 border-t border-gray-100" dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(value || '<p class="text-gray-400 italic">Chưa có nội dung bài viết...</p>') }} />
       )}
 
       {activeTab === 'html' && (
@@ -535,8 +552,10 @@ export default function RichTextEditor({
                 </div>
               ) : (
                 <div>
-                  <label className="block font-bold text-gray-700 mb-1">Chọn tệp hình ảnh từ máy tính (PNG, JPG, WEBP):</label>
-                  <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileUpload} className="w-full p-2 border border-dashed border-gray-400 bg-gray-50 cursor-pointer text-xs" />
+                  <label className="block font-bold text-gray-700 mb-1">Chọn ảnh (PNG, JPG, WEBP, TIFF — tự đổi sang WebP):</label>
+                  <input ref={fileInputRef} type="file" accept="image/*,.tif,.tiff" disabled={isUploadingImage} onChange={handleFileUpload} className="w-full p-2 border border-dashed border-gray-400 bg-gray-50 cursor-pointer text-xs disabled:opacity-50" />
+                  {isUploadingImage && <p className="mt-2 text-[11px] font-semibold text-[#1B4C98]">Đang tối ưu và tải ảnh lên kho media...</p>}
+                  {imageUploadError && <p className="mt-2 text-[11px] font-semibold text-red-600">{imageUploadError}</p>}
                 </div>
               )}
 

@@ -154,7 +154,7 @@ export default function VideosPage({ onNavigate }: VideosPageProps) {
               <div
                 key={v.id}
                 onClick={() => setActiveModalVideo(v)}
-                className="bg-white border border-[#e5e5e5] overflow-hidden group cursor-pointer hover:shadow-lg transition-all duration-300 flex flex-col"
+                className="bg-white border border-[#e5e5e5] rounded-lg overflow-hidden group cursor-pointer hover:shadow-lg transition-all duration-300 flex flex-col"
               >
                 {/* Thumbnail Container (16:9) with Red Play Button Overlay */}
                 <div className="relative w-full aspect-video bg-[#f0f0f0] overflow-hidden">
@@ -167,7 +167,7 @@ export default function VideosPage({ onNavigate }: VideosPageProps) {
                   {/* Featured Red Badge Top-Left */}
                   {v.isFeatured && (
                     <span
-                      className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-bold text-white z-10 uppercase tracking-wider shadow-sm"
+                      className="absolute top-2 left-2 rounded-md px-2 py-0.5 text-[10px] font-bold text-white z-10 uppercase tracking-wider shadow-sm"
                       style={{ backgroundColor: 'var(--red)' }}
                     >
                       Nổi bật
@@ -178,7 +178,7 @@ export default function VideosPage({ onNavigate }: VideosPageProps) {
                   <div className="absolute inset-0 bg-black/20 group-hover:bg-black/35 transition-colors flex items-center justify-center">
                     {/* Centered Red Play Square Button (as in Image 1) */}
                     <div
-                      className="w-12 h-10 flex items-center justify-center shadow-md group-hover:scale-110 active:scale-95 transition-transform duration-200"
+                      className="w-12 h-10 rounded-md flex items-center justify-center shadow-md group-hover:scale-110 active:scale-95 transition-transform duration-200"
                       style={{ backgroundColor: '#FF000F' }}
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
@@ -188,7 +188,7 @@ export default function VideosPage({ onNavigate }: VideosPageProps) {
                   </div>
 
                   {/* Duration badge bottom-right (as in Image 1) */}
-                  <span className="absolute bottom-2 right-2 bg-black/80 text-white text-[11px] font-mono font-bold px-1.5 py-0.5 rounded-none">
+                  <span className="absolute bottom-2 right-2 bg-black/80 text-white text-[11px] font-mono font-bold px-1.5 py-0.5 rounded-md">
                     {v.duration || '0:30'}
                   </span>
                 </div>
@@ -226,7 +226,7 @@ export default function VideosPage({ onNavigate }: VideosPageProps) {
             ))}
           </div>
         ) : (
-          <div className="text-center py-20 bg-gray-50 border border-gray-200">
+          <div className="text-center rounded-lg py-20 bg-gray-50 border border-gray-200">
             <svg
               width="48"
               height="48"

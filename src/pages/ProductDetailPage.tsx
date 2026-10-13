@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { getStoredProducts, ProductItem, ProductVariant } from '@/data/siteData'
 
 interface ProductDetailPageProps {
@@ -17,7 +17,13 @@ const colorDot: Record<string, string> = {
 }
 
 export default function ProductDetailPage({ productId, onNavigate, onAddToCart }: ProductDetailPageProps) {
-  const allProducts = useMemo(() => getStoredProducts(), [])
+  const [allProducts, setAllProducts] = useState<ProductItem[]>(getStoredProducts)
+
+  useEffect(() => {
+    const refreshProducts = () => setAllProducts(getStoredProducts())
+    window.addEventListener('viendong_storage_update', refreshProducts)
+    return () => window.removeEventListener('viendong_storage_update', refreshProducts)
+  }, [])
   
   const product: ProductItem = useMemo(() => {
     const found = allProducts.find((p) => p.id === productId)
@@ -50,13 +56,33 @@ export default function ProductDetailPage({ productId, onNavigate, onAddToCart }
       enabled: true,
     }
   })
+  const [selectedImage, setSelectedImage] = useState(selectedVariant.image)
 
-  // Update selected variant when product changes
-  useMemo(() => {
-    if (enabledVariants.length > 0) {
-      setSelectedVariant(enabledVariants[0])
-    }
-  }, [product.id])
+  // Keep the selected SKU when data refreshes; otherwise select the first valid variant.
+  useEffect(() => {
+    setSelectedVariant((current) =>
+      enabledVariants.find((variant) => variant.sku === current.sku) ||
+      enabledVariants[0] ||
+      product.variants?.[0] || {
+        color: 'Trắng',
+        colorCode: 'P01',
+        hex: '#FFFFFF',
+        sku: product.baseSku,
+        image: '',
+        enabled: true,
+      }
+    )
+    setQty(1)
+  }, [product.id, product.baseSku, product.variants, enabledVariants])
+
+  useEffect(() => {
+    setSelectedImage(selectedVariant.image)
+  }, [product.id, selectedVariant.sku, selectedVariant.image])
+
+  const galleryImages = useMemo(
+    () => Array.from(new Set([selectedVariant.image, ...(product.gallery || [])].filter(Boolean))),
+    [product.gallery, selectedVariant.image]
+  )
 
   const [qty, setQty] = useState(1)
   const [activeTab, setActiveTab] = useState<'specs' | 'features' | 'docs'>('specs')
@@ -98,10 +124,10 @@ export default function ProductDetailPage({ productId, onNavigate, onAddToCart }
         {/* Product Images View */}
         <div>
           <div className="bg-white border border-gray-200 rounded-2xl aspect-square flex items-center justify-center mb-4 p-8 relative shadow-sm overflow-hidden group">
-            {selectedVariant.image ? (
+            {selectedImage ? (
               <img
-                src={selectedVariant.image}
-                alt={`${product.name} màu ${selectedVariant.color}`}
+                src={selectedImage}
+                alt={`${product.name} ${selectedVariant.color}`}
                 className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-300"
               />
             ) : (
@@ -124,11 +150,27 @@ export default function ProductDetailPage({ productId, onNavigate, onAddToCart }
             </span>
           </div>
 
-          {/* Color Thumbnails */}
+          {galleryImages.length > 1 && (
+            <div className="mb-4 grid grid-cols-3 gap-2">
+              {galleryImages.map((image, index) => (
+                <button
+                  key={image}
+                  type="button"
+                  onClick={() => setSelectedImage(image)}
+                  className={`aspect-square overflow-hidden rounded-lg border bg-white p-2 transition-colors ${selectedImage === image ? 'border-[#FF000F] ring-1 ring-[#FF000F]' : 'border-gray-200 hover:border-gray-400'}`}
+                  aria-label={`Xem ảnh ${index + 1} của ${product.name}`}
+                >
+                  <img src={image} alt="" className="h-full w-full object-contain" />
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Color or breaker-pole variants */}
           {enabledVariants.length > 1 && (
             <div className="space-y-2">
               <span className="text-xs font-bold text-gray-600 uppercase tracking-wider block">
-                Chọn biến thể màu xem trước:
+                {product.category === 'breaker' ? 'Chọn số cực:' : 'Chọn biến thể màu xem trước:'}
               </span>
               <div className="flex gap-2 flex-wrap">
                 {enabledVariants.map((v) => {
@@ -143,10 +185,12 @@ export default function ProductDetailPage({ productId, onNavigate, onAddToCart }
                           : 'border-gray-200 bg-white hover:border-gray-400'
                       }`}
                     >
-                      <span
-                        className="w-3.5 h-3.5 rounded-full border border-gray-300 shadow-xs"
-                        style={{ backgroundColor: colorDot[v.color] || v.hex }}
-                      />
+                      {product.category !== 'breaker' && (
+                        <span
+                          className="w-3.5 h-3.5 rounded-full border border-gray-300 shadow-xs"
+                          style={{ backgroundColor: colorDot[v.color] || v.hex }}
+                        />
+                      )}
                       <span className="text-xs font-bold text-gray-800">{v.color}</span>
                     </button>
                   )
@@ -179,7 +223,7 @@ export default function ProductDetailPage({ productId, onNavigate, onAddToCart }
             </div>
             <div className="h-8 w-px bg-gray-200" />
             <div>
-              <span className="text-[11px] text-gray-500 block uppercase font-medium">Màu sắc đang chọn:</span>
+              <span className="text-[11px] text-gray-500 block uppercase font-medium">{product.category === 'breaker' ? 'Số cực đang chọn:' : 'Màu sắc đang chọn:'}</span>
               <span className="text-sm font-bold text-gray-800">{selectedVariant.color}</span>
             </div>
             {product.pack && (

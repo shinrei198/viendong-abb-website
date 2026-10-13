@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { NewsItem, getStoredNews, createVietnameseSlug } from '@/data/siteData'
 import { NewsThumbnailView } from '@/components/ThumbnailCropper'
+import { isSafeContentUrl, sanitizeRichHtml } from '@/utils/sanitize'
 
 interface NewsDetailPageProps {
   articleId: string
@@ -97,14 +98,14 @@ export default function NewsDetailPage({ articleId, onNavigate }: NewsDetailPage
 
         {/* Summary Excerpt */}
         {article.summary && (
-          <div className="bg-[#f8fafc] border-l-4 border-[#1B4C98] p-4 sm:p-5 mb-8 text-gray-700 text-sm sm:text-base font-medium leading-relaxed">
+          <div className="bg-[#f8fafc] rounded-lg border-l-4 border-[#1B4C98] p-4 sm:p-5 mb-8 text-gray-700 text-sm sm:text-base font-medium leading-relaxed">
             {article.summary}
           </div>
         )}
 
         {/* Featured Image */}
         {article.thumb && (
-          <div className="mb-8 overflow-hidden border border-gray-200 bg-gray-100 max-h-[460px]">
+          <div className="mb-8 overflow-hidden rounded-lg border border-gray-200 bg-gray-100 max-h-[460px]">
             <NewsThumbnailView
               thumb={article.thumb}
               alt={article.title}
@@ -115,7 +116,7 @@ export default function NewsDetailPage({ articleId, onNavigate }: NewsDetailPage
 
         {/* Quote Block (if configured) */}
         {article.quote && (
-          <blockquote className="my-8 p-6 bg-gradient-to-r from-red-50 to-gray-50 border-l-4 border-[#FF000F] text-gray-800">
+          <blockquote className="my-8 rounded-lg p-6 bg-gradient-to-r from-red-50 to-gray-50 border-l-4 border-[#FF000F] text-gray-800">
             <p className="text-base sm:text-lg font-semibold italic leading-relaxed text-[#1a1a1a] mb-2">
               "{article.quote}"
             </p>
@@ -130,12 +131,12 @@ export default function NewsDetailPage({ articleId, onNavigate }: NewsDetailPage
         {/* Rich HTML Content */}
         <div
           className="prose max-w-none text-gray-800 text-[15px] leading-relaxed space-y-4"
-          dangerouslySetInnerHTML={{ __html: article.content }}
+          dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(article.content) }}
         />
 
         {/* Attachments Section */}
         {article.attachments && article.attachments.length > 0 && (
-          <div className="mt-10 p-6 bg-[#f8fafc] border border-gray-200">
+          <div className="mt-10 rounded-lg p-6 bg-[#f8fafc] border border-gray-200">
             <h4 className="text-sm font-bold text-[#1B4C98] uppercase tracking-wider mb-4 flex items-center gap-2">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 1.5V8H18.5L13 3.5zM6 20V4h5v5h5v11H6z" />
@@ -146,7 +147,7 @@ export default function NewsDetailPage({ articleId, onNavigate }: NewsDetailPage
               {article.attachments.map((file, idx) => (
                 <div
                   key={idx}
-                  className="flex items-center justify-between p-3 bg-white border border-gray-200 hover:border-[#FF000F] transition-colors"
+                  className="flex items-center justify-between rounded-md p-3 bg-white border border-gray-200 hover:border-[#FF000F] transition-colors"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded bg-red-100 text-[#FF000F] flex items-center justify-center font-bold text-xs">
@@ -158,7 +159,7 @@ export default function NewsDetailPage({ articleId, onNavigate }: NewsDetailPage
                     </div>
                   </div>
                   <a
-                    href={file.url}
+                    href={isSafeContentUrl(file.url) ? file.url : '#'}
                     download
                     className="px-3.5 py-1.5 text-xs font-semibold text-white bg-[#1B4C98] hover:bg-[#FF000F] transition-colors"
                   >
@@ -235,7 +236,7 @@ export default function NewsDetailPage({ articleId, onNavigate }: NewsDetailPage
                   onNavigate('newsDetail', createVietnameseSlug(item.slug || item.title))
                   window.scrollTo({ top: 0, behavior: 'smooth' })
                 }}
-                className="bg-white overflow-hidden border border-[#e5e5e5] hover:shadow-md transition-all duration-300 group cursor-pointer flex flex-col"
+                className="bg-white overflow-hidden rounded-lg border border-[#e5e5e5] hover:shadow-md transition-all duration-300 group cursor-pointer flex flex-col"
               >
                 <div className="w-24 h-16 shrink-0 overflow-hidden bg-gray-100 relative">
                   <NewsThumbnailView

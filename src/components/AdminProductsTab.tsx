@@ -1,9 +1,12 @@
 import { useState, useMemo } from 'react'
 import { ProductItem, ProductVariant, saveStoredProducts, saveAllDataToSourceCode } from '@/data/siteData'
+import { uploadMedia } from '@/utils/mediaUpload'
 
 interface AdminProductsTabProps {
   products: ProductItem[]
   onProductsUpdated: (products: ProductItem[]) => void
+  featuredProductIds: string[]
+  onFeaturedProductIdsUpdated: (productIds: string[]) => void
   showToast: (msg: string) => void
   openConfirm: (title: string, message: string, onConfirm: () => void) => void
 }
@@ -19,6 +22,8 @@ const COLOR_PRESETS = [
 export default function AdminProductsTab({
   products,
   onProductsUpdated,
+  featuredProductIds,
+  onFeaturedProductIdsUpdated,
   showToast,
   openConfirm,
 }: AdminProductsTabProps) {
@@ -33,6 +38,8 @@ export default function AdminProductsTab({
   const [editingProduct, setEditingProduct] = useState<ProductItem | null>(null)
   const [isNew, setIsNew] = useState(false)
   const [syncing, setSyncing] = useState(false)
+  const [uploadingVariant, setUploadingVariant] = useState<number | null>(null)
+  const [isFeaturedOnHome, setIsFeaturedOnHome] = useState(false)
 
   // Form state
   const [formData, setFormData] = useState<ProductItem>({
@@ -83,6 +90,7 @@ export default function AdminProductsTab({
     setIsNew(false)
     setEditingProduct(p)
     setFormData(JSON.parse(JSON.stringify(p)))
+    setIsFeaturedOnHome(featuredProductIds.includes(p.id))
     setModalOpen(true)
   }
 
@@ -90,6 +98,7 @@ export default function AdminProductsTab({
   const handleAddNew = () => {
     setIsNew(true)
     setEditingProduct(null)
+    setIsFeaturedOnHome(false)
     setFormData({
       id: `prod-${Date.now()}`,
       name: '',
@@ -120,6 +129,9 @@ export default function AdminProductsTab({
         const next = products.filter((item) => item.id !== p.id)
         saveStoredProducts(next)
         onProductsUpdated(next)
+        if (featuredProductIds.includes(p.id)) {
+          onFeaturedProductIdsUpdated(featuredProductIds.filter((id) => id !== p.id))
+        }
         showToast('✓ Đã xóa sản phẩm thành công!')
       }
     )
@@ -145,6 +157,12 @@ export default function AdminProductsTab({
       return
     }
 
+    const wasFeatured = featuredProductIds.includes(formData.id)
+    if (isFeaturedOnHome && !wasFeatured && featuredProductIds.length >= 6) {
+      showToast('Danh sách Sản phẩm nổi bật đã đủ 6 sản phẩm.')
+      return
+    }
+
     let next: ProductItem[]
     if (isNew) {
       next = [formData, ...products]
@@ -156,6 +174,11 @@ export default function AdminProductsTab({
 
     saveStoredProducts(next)
     onProductsUpdated(next)
+    if (isFeaturedOnHome && !wasFeatured) {
+      onFeaturedProductIdsUpdated([...featuredProductIds, formData.id])
+    } else if (!isFeaturedOnHome && wasFeatured) {
+      onFeaturedProductIdsUpdated(featuredProductIds.filter((id) => id !== formData.id))
+    }
     setModalOpen(false)
   }
 
@@ -174,20 +197,24 @@ export default function AdminProductsTab({
 
   // Add new variant in modal
   const handleAddVariant = () => {
-    setFormData((prev) => ({
-      ...prev,
-      variants: [
-        ...prev.variants,
-        {
-          color: 'Trắng',
-          colorCode: 'P01',
-          hex: '#FFFFFF',
-          sku: `${prev.baseSku}P0100`,
-          image: '',
-          enabled: true,
-        },
-      ],
-    }))
+    setFormData((prev) => {
+      const nextPole = `${prev.variants.length + 1}P`
+      const isBreaker = prev.category === 'breaker'
+      return {
+        ...prev,
+        variants: [
+          ...prev.variants,
+          {
+            color: isBreaker ? nextPole : 'Trắng',
+            colorCode: isBreaker ? nextPole : 'P01',
+            hex: '#FFFFFF',
+            sku: isBreaker ? `${prev.baseSku}-${nextPole}` : `${prev.baseSku}P0100`,
+            image: '',
+            enabled: true,
+          },
+        ],
+      }
+    })
   }
 
   // Series Stats
@@ -229,13 +256,13 @@ export default function AdminProductsTab({
             disabled={syncing}
             className="px-4 py-2 bg-[#0055A4] hover:bg-blue-800 text-white font-bold text-xs uppercase tracking-wider rounded-lg shadow-sm transition-all flex items-center gap-1.5 disabled:opacity-50"
           >
-            <span>☁️</span> {syncing ? 'Đang lưu...' : 'Lưu Database Cloudflare'}
+            <span>☁️</span> {syncing ? 'Đang lưu...' : 'Lưu Database'}
           </button>
         </div>
       </div>
 
       {/* Series Quick Filter Bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-10 gap-2">
         <button
           onClick={() => { setSelectedSeries('all'); setPage(1) }}
           className={`p-3 rounded-xl border text-left transition-all ${
@@ -247,7 +274,7 @@ export default function AdminProductsTab({
           <div className="text-[10px] font-bold text-gray-500 uppercase">Tất cả</div>
           <div className="text-base font-extrabold text-gray-900">{products.length}</div>
         </button>
-        {['VELET 120', 'MAYPLE 120', 'MAYPLE', 'VELET', 'ZITA', 'ACUS'].map((series) => (
+        {['VELET 120', 'MAYPLE 120', 'MAYPLE', 'VELET', 'ZITA', 'ACUS', 'GSH200', 'SH200', 'SH200L'].map((series) => (
           <button
             key={series}
             onClick={() => { setSelectedSeries(series); setPage(1) }}
@@ -535,6 +562,9 @@ export default function AdminProductsTab({
                       <option value="VELET">VELET (Vuông 86×86)</option>
                       <option value="ZITA">ZITA (Vuông 86×86 phẳng)</option>
                       <option value="ACUS">ACUS (Vuông 86×86 Luxury)</option>
+                      <option value="GSH200">GSH200 (Cầu dao chống dòng rò)</option>
+                      <option value="SH200">SH200 (Cầu dao tự động)</option>
+                      <option value="SH200L">SH200L (Cầu dao tự động)</option>
                     </select>
                   </div>
 
@@ -612,6 +642,24 @@ export default function AdminProductsTab({
                     className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg bg-white"
                   />
                 </div>
+
+                <div className={`flex items-center justify-between gap-4 rounded-lg border p-3 transition-colors ${isFeaturedOnHome ? 'border-amber-300 bg-amber-50' : 'border-gray-200 bg-white'}`}>
+                  <div className="flex items-center gap-2">
+                    <span className={`flex h-8 w-8 items-center justify-center rounded-md text-base ${isFeaturedOnHome ? 'bg-amber-400 text-white' : 'bg-gray-100 text-gray-400'}`}>★</span>
+                    <div>
+                      <p className="text-xs font-bold text-gray-800">Sản phẩm nổi bật trang chủ</p>
+                      <p className="text-[10px] font-semibold text-gray-500">{featuredProductIds.length}/6 sản phẩm</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={!isFeaturedOnHome && !featuredProductIds.includes(formData.id) && featuredProductIds.length >= 6}
+                    onClick={() => setIsFeaturedOnHome((current) => !current)}
+                    className={`min-w-[190px] px-4 py-2 text-xs font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${isFeaturedOnHome ? 'bg-amber-400 text-gray-900 hover:bg-amber-500' : 'border border-[#1B4C98] bg-white text-[#1B4C98] hover:bg-blue-50'}`}
+                  >
+                    {isFeaturedOnHome ? '✓ Đang hiển thị nổi bật' : '☆ Đưa lên Sản phẩm nổi bật'}
+                  </button>
+                </div>
               </div>
 
               {/* SECTION 2: QUẢN LÝ BIẾN THỂ MÀU SẮC (CHILD VARIANTS) */}
@@ -619,10 +667,10 @@ export default function AdminProductsTab({
                 <div className="flex items-center justify-between">
                   <div>
                     <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-1.5">
-                      <span>2.</span> Biến thể màu sắc & Mã SKU từng màu ({formData.variants.length} màu)
+                      <span>2.</span> {formData.category === 'breaker' ? 'Số cực & Mã SKU từng phiên bản' : 'Biến thể màu sắc & Mã SKU từng màu'} ({formData.variants.length} {formData.category === 'breaker' ? 'phiên bản' : 'màu'})
                     </h4>
                     <p className="text-[11px] text-gray-500">
-                      Gạt công tắc để Ẩn / Hiện màu này trên web. Có thể sửa trực tiếp mã SKU hoặc đường dẫn ảnh WebP.
+                      Gạt công tắc để Ẩn / Hiện phiên bản này trên web. Có thể sửa trực tiếp mã SKU hoặc đường dẫn ảnh WebP.
                     </p>
                   </div>
                   <button
@@ -644,36 +692,53 @@ export default function AdminProductsTab({
                     >
                       {/* Color Preview & Select */}
                       <div className="flex items-center gap-2 w-32 flex-shrink-0">
-                        <span
-                          className="w-4 h-4 rounded-full border border-gray-300 shadow-xs flex-shrink-0"
-                          style={{ backgroundColor: v.hex }}
-                        />
-                        <select
-                          value={v.color}
-                          onChange={(e) => {
-                            const found = COLOR_PRESETS.find((cp) => cp.name === e.target.value)
-                            const updated = [...formData.variants]
-                            updated[vIdx] = {
-                              ...v,
-                              color: e.target.value,
-                              colorCode: found ? found.code : 'P01',
-                              hex: found ? found.hex : '#E5E7EB',
-                            }
-                            setFormData({ ...formData, variants: updated })
-                          }}
-                          className="px-2 py-1 text-xs border border-gray-300 rounded-md bg-white font-bold text-gray-800"
-                        >
-                          <option value="Trắng">Trắng</option>
-                          <option value="Vàng">Vàng</option>
-                          <option value="Xám Đậm">Xám Đậm</option>
-                          <option value="Bạc">Bạc</option>
-                          <option value="Đen">Đen</option>
-                        </select>
+                        {formData.category !== 'breaker' && (
+                          <span
+                            className="w-4 h-4 rounded-full border border-gray-300 shadow-xs flex-shrink-0"
+                            style={{ backgroundColor: v.hex }}
+                          />
+                        )}
+                        {formData.category === 'breaker' ? (
+                          <input
+                            value={v.color}
+                            onChange={(e) => {
+                              const updated = [...formData.variants]
+                              updated[vIdx] = { ...v, color: e.target.value, colorCode: e.target.value }
+                              setFormData({ ...formData, variants: updated })
+                            }}
+                            aria-label="Số cực"
+                            className="w-20 px-2 py-1 text-xs border border-gray-300 rounded-md bg-white font-bold text-gray-800"
+                          />
+                        ) : (
+                          <select
+                            value={v.color}
+                            onChange={(e) => {
+                              const found = COLOR_PRESETS.find((cp) => cp.name === e.target.value)
+                              const updated = [...formData.variants]
+                              updated[vIdx] = {
+                                ...v,
+                                color: e.target.value,
+                                colorCode: found ? found.code : 'P01',
+                                hex: found ? found.hex : '#E5E7EB',
+                              }
+                              setFormData({ ...formData, variants: updated })
+                            }}
+                            className="px-2 py-1 text-xs border border-gray-300 rounded-md bg-white font-bold text-gray-800"
+                          >
+                            <option value="Trắng">Trắng</option>
+                            <option value="Vàng">Vàng</option>
+                            <option value="Xám Đậm">Xám Đậm</option>
+                            <option value="Bạc">Bạc</option>
+                            <option value="Đen">Đen</option>
+                          </select>
+                        )}
                       </div>
 
                       {/* Variant SKU Input */}
                       <div className="flex-1 min-w-0">
-                        <label className="text-[10px] text-gray-500 block uppercase font-medium">Mã SKU cụ thể của màu này:</label>
+                        <label className="text-[10px] text-gray-500 block uppercase font-medium">
+                          {formData.category === 'breaker' ? 'Mã SKU của phiên bản này:' : 'Mã SKU cụ thể của màu này:'}
+                        </label>
                         <input
                           type="text"
                           value={v.sku}
@@ -682,7 +747,7 @@ export default function AdminProductsTab({
                             updated[vIdx] = { ...v, sku: e.target.value.toUpperCase() }
                             setFormData({ ...formData, variants: updated })
                           }}
-                          placeholder="Ví dụ: 4TYA505111P0106"
+                          placeholder={formData.category === 'breaker' ? 'Ví dụ: SH201-2P' : 'Ví dụ: 4TYA505111P0106'}
                           className="w-full px-2.5 py-1 text-xs font-mono font-bold border border-gray-300 rounded-md bg-white uppercase"
                         />
                       </div>
@@ -705,6 +770,34 @@ export default function AdminProductsTab({
                           {v.image && (
                             <img src={v.image} alt="" className="w-7 h-7 object-contain bg-white border border-gray-200 rounded-sm" />
                           )}
+                          <label className="flex-shrink-0 cursor-pointer rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-[#1B4C98] hover:bg-blue-100">
+                            {uploadingVariant === vIdx ? 'Đang tải...' : 'Tải ảnh'}
+                            <input
+                              type="file"
+                              accept="image/*,.tif,.tiff"
+                              disabled={uploadingVariant !== null}
+                              className="hidden"
+                              onChange={async (event) => {
+                                const file = event.target.files?.[0]
+                                if (!file) return
+                                setUploadingVariant(vIdx)
+                                try {
+                                  const result = await uploadMedia(file, { folder: 'products', maxWidth: 1800, maxHeight: 1800, quality: 0.86 })
+                                  setFormData((current) => {
+                                    const variants = [...current.variants]
+                                    variants[vIdx] = { ...variants[vIdx], image: result.url }
+                                    return { ...current, variants }
+                                  })
+                                  showToast(`Đã tải ảnh WebP (${Math.round(result.bytes / 1024)} KB).`)
+                                } catch (error) {
+                                  showToast(error instanceof Error ? error.message : 'Không thể tải ảnh sản phẩm lên.')
+                                } finally {
+                                  setUploadingVariant(null)
+                                  event.target.value = ''
+                                }
+                              }}
+                            />
+                          </label>
                         </div>
                       </div>
 

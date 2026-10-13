@@ -66,7 +66,7 @@ export default function VideoModal({ video, onClose, onNavigate }: VideoModalPro
       <div className="absolute inset-0" onClick={onClose} />
 
       {/* Modal Container */}
-      <div className="relative z-10 w-full max-w-4xl bg-[#111827] text-white rounded-none shadow-2xl border border-gray-800 overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="relative z-10 w-full max-w-4xl bg-[#111827] text-white rounded-xl shadow-2xl border border-gray-800 overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header bar */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800 bg-[#0b0f19]">
           <div className="flex items-center gap-3">

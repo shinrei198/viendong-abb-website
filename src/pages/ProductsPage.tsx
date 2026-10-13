@@ -82,55 +82,6 @@ export const categoryTree = [
   },
 ]
 
-// Fallback breakers for display until client supplies dedicated photos
-const fallbackBreakers: ProductItem[] = [
-  {
-    id: 'brk-1',
-    name: 'MCB 1P 6A SH200L-C6',
-    baseSku: '2CSS215101R0064',
-    series: 'VELET',
-    category: 'breaker',
-    subCategory: 'breaker-auto',
-    specs: '1P | 6A | 6kA | Đặc tính C',
-    inStock: true,
-    variants: [{ color: 'Xám', colorCode: 'P04', hex: '#6B7280', sku: '2CSS215101R0064', image: '', enabled: true }]
-  },
-  {
-    id: 'brk-2',
-    name: 'MCB 1P 16A SH200L-C16',
-    baseSku: '2CSS215101R0164',
-    series: 'VELET',
-    category: 'breaker',
-    subCategory: 'breaker-auto',
-    specs: '1P | 16A | 6kA | Đặc tính C',
-    badge: 'Bán chạy',
-    inStock: true,
-    variants: [{ color: 'Xám', colorCode: 'P04', hex: '#6B7280', sku: '2CSS215101R0164', image: '', enabled: true }]
-  },
-  {
-    id: 'brk-3',
-    name: 'MCB 2P 20A SH200L-C20',
-    baseSku: '2CSS215201R0204',
-    series: 'VELET',
-    category: 'breaker',
-    subCategory: 'breaker-auto',
-    specs: '2P | 20A | 6kA | Đặc tính C',
-    inStock: true,
-    variants: [{ color: 'Xám', colorCode: 'P04', hex: '#6B7280', sku: '2CSS215201R0204', image: '', enabled: true }]
-  },
-  {
-    id: 'brk-10',
-    name: 'RCCB 2P 25A 30mA F202',
-    baseSku: '2CSF202001R1250',
-    series: 'VELET',
-    category: 'breaker',
-    subCategory: 'breaker-leakage',
-    specs: '2P | 25A | Dòng rò 30mA | AC',
-    inStock: true,
-    variants: [{ color: 'Xám', colorCode: 'P04', hex: '#6B7280', sku: '2CSF202001R1250', image: '', enabled: true }]
-  },
-]
-
 const colorDot: Record<string, string> = {
   'Trắng': '#FFFFFF',
   'Bạc': '#D1D5DB',
@@ -145,7 +96,7 @@ const font = "'Roboto Condensed', 'Roboto', sans-serif"
 export default function ProductsPage({ onNavigate, onAddToCart, initialCategory }: ProductsPageProps) {
   const [products, setProducts] = useState<ProductItem[]>(() => {
     const stored = getStoredProducts()
-    return stored && stored.length > 0 ? stored : fallbackBreakers
+    return stored && stored.length > 0 ? stored : []
   })
 
   // Selected active color for each individual product card: { [productId]: 'Vàng' }
@@ -170,9 +121,9 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
   }, [])
 
   useEffect(() => {
+    setSelectedCat(initialCategory || 'all')
+    setSelectedSubcat('all')
     if (initialCategory) {
-      setSelectedCat(initialCategory)
-      setSelectedSubcat('all')
       setExpandedCats((prev) => Array.from(new Set([...prev, initialCategory])))
     }
   }, [initialCategory])
@@ -204,10 +155,7 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
     }
   }
 
-  // Combined product list (real catalog + fallback breaker if needed)
-  const allList = products.some(p => p.category === 'breaker')
-    ? products
-    : [...products, ...fallbackBreakers]
+  const allList = products
 
   const filtered = allList.filter((p) => {
     const matchCat =
@@ -303,8 +251,8 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
                 )}
               </div>
 
-              {/* Color filter */}
-              <div className="pt-2 border-t border-gray-100">
+              {/* Color filter is not relevant for breaker pole variants. */}
+              {selectedCat !== 'breaker' && <div className="pt-2 border-t border-gray-100">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Lọc màu sắc</span>
                   {selectedColor && (
@@ -326,7 +274,7 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
                     />
                   ))}
                 </div>
-              </div>
+              </div>}
 
               <div className="pt-3 mt-3 border-t border-gray-100">
                 <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
@@ -434,7 +382,9 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
                 </span>
               </h2>
               <p className="text-xs text-gray-500 mt-0.5">
-                Bấm vào ô màu sắc trên từng sản phẩm để xem trước ảnh và đổi mã SKU tương ứng.
+                {selectedCat === 'breaker'
+                  ? 'Chọn số cực trên từng sản phẩm để xem đúng hình ảnh và mã SKU tương ứng.'
+                  : 'Bấm vào ô màu sắc trên từng sản phẩm để xem trước ảnh và đổi mã SKU tương ứng.'}
               </p>
             </div>
 
@@ -547,7 +497,7 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
                           </div>
                         )}
 
-                        {/* Interactive Color Swatches */}
+                        {/* Interactive color or breaker-pole variants */}
                         {enabledVariants.length > 1 && (
                           <div className="absolute bottom-2 left-2 right-2 flex items-center justify-center gap-1.5 bg-white/80 backdrop-blur-xs py-1 px-2 rounded-full border border-gray-200/60 shadow-xs">
                             {enabledVariants.map((v) => {
@@ -559,14 +509,14 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
                                     e.stopPropagation()
                                     setSelectedColors((prev) => ({ ...prev, [p.id]: v.color }))
                                   }}
-                                  title={`Xem màu ${v.color} (${v.sku})`}
-                                  className={`w-3.5 h-3.5 rounded-full transition-all ${
-                                    isSelected
-                                      ? 'ring-2 ring-[#FF000F] scale-125 shadow-xs'
-                                      : 'border border-gray-300 hover:scale-110'
-                                  }`}
-                                  style={{ backgroundColor: colorDot[v.color] || v.hex }}
-                                />
+                                  title={p.category === 'breaker' ? `Xem phiên bản ${v.color} (${v.sku})` : `Xem màu ${v.color} (${v.sku})`}
+                                  className={p.category === 'breaker'
+                                    ? `min-w-7 rounded-md border px-1.5 py-0.5 text-[9px] font-bold transition-all ${isSelected ? 'border-[#FF000F] bg-red-50 text-[#FF000F]' : 'border-gray-300 bg-white text-gray-600 hover:border-gray-400'}`
+                                    : `w-3.5 h-3.5 rounded-full transition-all ${isSelected ? 'ring-2 ring-[#FF000F] scale-125 shadow-xs' : 'border border-gray-300 hover:scale-110'}`}
+                                  style={p.category === 'breaker' ? undefined : { backgroundColor: colorDot[v.color] || v.hex }}
+                                >
+                                  {p.category === 'breaker' ? v.color : null}
+                                </button>
                               )
                             })}
                           </div>
@@ -580,7 +530,7 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
                             {p.series}
                           </p>
                           <span className="text-[9px] text-gray-500 font-medium">
-                            Màu: <strong className="text-gray-800">{activeVariant.color}</strong>
+                            {p.category === 'breaker' ? 'Số cực' : 'Màu'}: <strong className="text-gray-800">{activeVariant.color}</strong>
                           </span>
                         </div>
 

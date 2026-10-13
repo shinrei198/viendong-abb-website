@@ -1,4 +1,5 @@
 {
+  "schemaVersion": 2,
   "initialVideoCategories": [
     "Sản phẩm mới",
     "Sự kiện",
@@ -11273,6 +11274,230 @@
           "enabled": true
         }
       ]
+    },
+    {
+      "id": "prod-breaker-gsh201",
+      "name": "Cầu dao chống dòng rò ABB GSH201",
+      "baseSku": "GSH201",
+      "series": "GSH200",
+      "category": "breaker",
+      "subCategory": "breaker-leakage",
+      "specs": "1P+N | RCBO | Bảo vệ quá tải, ngắn mạch và dòng rò",
+      "pack": 1,
+      "badge": "Mới",
+      "inStock": true,
+      "description": "Cầu dao chống dòng rò ABB GSH201 tích hợp bảo vệ quá tải, ngắn mạch và dòng rò, phù hợp cho hệ thống điện dân dụng và thương mại.",
+      "gallery": [
+        "/products/7.Breakers/GSH200/GSH201.webp",
+        "/products/7.Breakers/GSH200/GSH201-1.webp",
+        "/products/7.Breakers/GSH200/GSH201-2.webp"
+      ],
+      "variants": [
+        {
+          "color": "1P+N",
+          "colorCode": "1PN",
+          "hex": "#E5E7EB",
+          "sku": "GSH201",
+          "image": "/products/7.Breakers/GSH200/GSH201.webp",
+          "enabled": true
+        }
+      ]
+    },
+    {
+      "id": "prod-breaker-sh201",
+      "name": "Cầu dao tự động ABB SH201",
+      "baseSku": "SH201",
+      "series": "SH200",
+      "category": "breaker",
+      "subCategory": "breaker-auto",
+      "specs": "1P–4P | MCB | Dòng SH200",
+      "pack": 1,
+      "badge": "Mới",
+      "inStock": true,
+      "description": "Cầu dao tự động ABB SH201 bảo vệ mạch điện trước tình trạng quá tải và ngắn mạch, với các phiên bản từ 1 đến 4 cực.",
+      "variants": [
+        {
+          "color": "1P",
+          "colorCode": "1P",
+          "hex": "#E5E7EB",
+          "sku": "SH201-1P",
+          "image": "/products/7.Breakers/SH200/SH201-1P.webp",
+          "enabled": true
+        },
+        {
+          "color": "2P",
+          "colorCode": "2P",
+          "hex": "#E5E7EB",
+          "sku": "SH201-2P",
+          "image": "/products/7.Breakers/SH200/SH201-2P.webp",
+          "enabled": true
+        },
+        {
+          "color": "3P",
+          "colorCode": "3P",
+          "hex": "#E5E7EB",
+          "sku": "SH201-3P",
+          "image": "/products/7.Breakers/SH200/SH201-3P.webp",
+          "enabled": true
+        },
+        {
+          "color": "4P",
+          "colorCode": "4P",
+          "hex": "#E5E7EB",
+          "sku": "SH201-4P",
+          "image": "/products/7.Breakers/SH200/SH201-4P.webp",
+          "enabled": true
+        }
+      ]
+    },
+    {
+      "id": "prod-breaker-sh201l",
+      "name": "Cầu dao tự động ABB SH201L",
+      "baseSku": "SH201L",
+      "series": "SH200L",
+      "category": "breaker",
+      "subCategory": "breaker-auto",
+      "specs": "1P–4P | MCB | Dòng SH200L",
+      "pack": 1,
+      "badge": "Mới",
+      "inStock": true,
+      "description": "Cầu dao tự động ABB SH201L bảo vệ mạch điện trước tình trạng quá tải và ngắn mạch, với các phiên bản từ 1 đến 4 cực.",
+      "variants": [
+        {
+          "color": "1P",
+          "colorCode": "1P",
+          "hex": "#E5E7EB",
+          "sku": "SH201L-1P",
+          "image": "/products/7.Breakers/SH200L/SH201L-1P.webp",
+          "enabled": true
+        },
+        {
+          "color": "2P",
+          "colorCode": "2P",
+          "hex": "#E5E7EB",
+          "sku": "SH201L-2P",
+          "image": "/products/7.Breakers/SH200L/SH201L-2P.webp",
+          "enabled": true
+        },
+        {
+          "color": "3P",
+          "colorCode": "3P",
+          "hex": "#E5E7EB",
+          "sku": "SH201L-3P",
+          "image": "/products/7.Breakers/SH200L/SH201L-3P.webp",
+          "enabled": true
+        },
+        {
+          "color": "4P",
+          "colorCode": "4P",
+          "hex": "#E5E7EB",
+          "sku": "SH201L-4P",
+          "image": "/products/7.Breakers/SH200L/SH201L-4P.webp",
+          "enabled": true
+        }
+      ]
     }
-  ]
+  ],
+  "initialHomePageContent": {
+    "partnerTitle": "Viễn Đông Electric — Nhà phân phối chính thức của ABB tại Việt Nam",
+    "partnerSubtitle": "Authorized Distribution Partner · Hỗ trợ & Bảo hành chính hãng",
+    "categorySectionTitle": "Danh mục sản phẩm",
+    "categories": [
+      {
+        "id": "home-cat-breaker",
+        "name": "Công tắc",
+        "description": "Acus, Velet, Mayple, Zita...",
+        "count": 89,
+        "imageUrl": "/media/homepage/2026-10-13/8b431c59-bed1-4c88-be92-f90fbef4caaf-velet.webp",
+        "targetCategory": "switch",
+        "isActive": true
+      },
+      {
+        "id": "home-cat-afdd",
+        "name": "Ổ cắm",
+        "description": "Acus, Velet, Mayple, Zita...",
+        "count": 66,
+        "imageUrl": "/media/homepage/2026-10-13/6725ee24-a0ba-4d08-a9e1-027df2f4b961-acus.webp",
+        "targetCategory": "socket",
+        "isActive": true
+      },
+      {
+        "id": "home-cat-switch",
+        "name": "Ổ cắm Media",
+        "description": "Acus, Velet, Mayple, Zita...",
+        "count": 42,
+        "imageUrl": "/media/homepage/2026-10-13/48df51a0-6676-4b9a-afe5-40ef5fed6856-acus.webp",
+        "targetCategory": "media-socket",
+        "isActive": true
+      },
+      {
+        "id": "home-cat-socket",
+        "name": "Thiết bị & Phụ kiện",
+        "description": "Acus, Velet, Mayple, Zita...",
+        "count": 42,
+        "imageUrl": "/media/homepage/2026-10-13/bfba10a9-9c4c-4686-8055-12a360cfb77d-zita.webp",
+        "targetCategory": "accessories",
+        "isActive": true
+      },
+      {
+        "id": "home-cat-surge",
+        "name": "Cầu dao",
+        "description": "GSH, SH, SHL...",
+        "count": 3,
+        "imageUrl": "/media/homepage/2026-10-13/77399294-fd61-4eee-8879-b291973d942e-mayple120.webp",
+        "targetCategory": "breaker",
+        "isActive": true
+      }
+    ],
+    "featuredSectionTitle": "Sản phẩm nổi bật",
+    "featuredProductIds": [
+      "prod-velet120-4tyx505221-0",
+      "prod-mayple120-4tyx506221-42",
+      "prod-mayple-4tya502111-82",
+      "prod-velet-4tya503111-107",
+      "prod-zita-4tya501111-146",
+      "prod-acus-4tya500111-1"
+    ],
+    "videoSectionTitle": "Video mới cập nhật",
+    "whyTitle": "Tại sao chọn Viễn Đông?",
+    "whySubtitle": "Đối tác tin cậy của hàng nghìn đại lý và nhà thầu điện trên toàn quốc",
+    "benefits": [
+      {
+        "id": "benefit-authentic",
+        "title": "Hàng chính hãng 100%",
+        "description": "Nhập trực tiếp từ ABB với đầy đủ chứng từ và tem kiểm định.",
+        "icon": "shield",
+        "isActive": true
+      },
+      {
+        "id": "benefit-delivery",
+        "title": "Giao hàng toàn quốc",
+        "description": "Phủ khắp 63 tỉnh thành, nhanh trong 24–48 giờ.",
+        "icon": "truck",
+        "isActive": true
+      },
+      {
+        "id": "benefit-support",
+        "title": "Hỗ trợ kỹ thuật 24/7",
+        "description": "Đội ngũ kỹ sư điện tư vấn và giải đáp mọi thắc mắc.",
+        "icon": "support",
+        "isActive": true
+      },
+      {
+        "id": "benefit-price",
+        "title": "Giá đại lý tốt nhất",
+        "description": "Chính sách chiết khấu linh hoạt cho đại lý, nhà thầu và dự án.",
+        "icon": "price",
+        "isActive": true
+      }
+    ],
+    "ctaTitle": "Trở thành đại lý phân phối của Viễn Đông",
+    "ctaDescription": "Tiếp cận toàn bộ danh mục ABB với chính sách chiết khấu tốt nhất thị trường.",
+    "ctaPrimaryLabel": "Đăng ký làm đại lý",
+    "ctaPrimaryUrl": "mailto:info@viendongelectric.vn?subject=Đăng ký làm đại lý",
+    "ctaSecondaryLabel": "Về Viễn Đông Electric",
+    "supportTitle": "Chúng tôi sẵn sàng hỗ trợ bạn",
+    "supportDescription": "Hãy liên hệ với Viễn Đông nếu bạn cần tư vấn về sản phẩm, chương trình ưu đãi hoặc cách thức hợp tác bạn nhé!",
+    "newsSectionTitle": "Tin tức & Kỹ thuật"
+  }
 }

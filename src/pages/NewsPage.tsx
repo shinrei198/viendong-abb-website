@@ -167,7 +167,7 @@ export default function NewsPage({ onNavigate }: NewsPageProps) {
               <div
                 key={item.id}
                 onClick={() => onNavigate('newsDetail', createVietnameseSlug(item.slug || item.title))}
-                className="bg-white overflow-hidden border border-[#e5e5e5] hover:shadow-md transition-all duration-300 group cursor-pointer flex flex-col"
+                className="bg-white overflow-hidden rounded-lg border border-[#e5e5e5] hover:shadow-md transition-all duration-300 group cursor-pointer flex flex-col"
               >
                 {/* Thumbnail Image */}
                 <div className="h-48 overflow-hidden bg-[#f5f5f5] relative">
@@ -226,7 +226,7 @@ export default function NewsPage({ onNavigate }: NewsPageProps) {
             ))}
           </div>
         ) : (
-          <div className="text-center py-20 bg-gray-50 border border-gray-200">
+          <div className="text-center rounded-lg py-20 bg-gray-50 border border-gray-200">
             <svg
               width="48"
               height="48"

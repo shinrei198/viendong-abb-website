@@ -150,11 +150,7 @@ export default function Header({ currentPage, onNavigate, cartCount }: HeaderPro
                           <button
                             key={cat.id}
                             onClick={() => {
-                              if (cat.isBreaker) {
-                                onNavigate('products')
-                              } else {
-                                onNavigate('products', cat.id)
-                              }
+                              onNavigate('products', cat.id)
                               setProductsOpen(false)
                             }}
                             className="flex items-start gap-3 px-5 py-4 text-left hover:bg-blue-50 transition-colors"
@@ -245,7 +241,7 @@ export default function Header({ currentPage, onNavigate, cartCount }: HeaderPro
             {navItems.map((item) => (
               <button
                 key={item.page}
-                onClick={() => { onNavigate(item.page === 'contact' ? 'map' : item.page); setMobileOpen(false) }}
+                onClick={() => { onNavigate(item.page); setMobileOpen(false) }}
                 className="w-full text-left px-2 py-2.5 text-sm font-medium border-b border-gray-50"
                 style={{ color: currentPage === item.page ? 'var(--red)' : 'var(--navy)' }}
               >
@@ -259,11 +255,7 @@ export default function Header({ currentPage, onNavigate, cartCount }: HeaderPro
                 <button
                   key={cat.id}
                   onClick={() => {
-                    if (cat.isBreaker) {
-                      onNavigate('products')
-                    } else {
-                      onNavigate('products', cat.id)
-                    }
+                    onNavigate('products', cat.id)
                     setMobileOpen(false)
                   }}
                   className="w-full flex items-center justify-between px-2 py-2 text-sm border-b border-gray-50 hover:bg-blue-50 transition-colors"
