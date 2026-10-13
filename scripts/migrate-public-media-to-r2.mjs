@@ -17,7 +17,11 @@ async function collectFiles(directory) {
 }
 
 function upload(file) {
-  const key = relative(publicDir, file).split(sep).join('/')
+  const publicPath = relative(publicDir, file).split(sep).join('/')
+  // `/media/<key>` is served by stripping the `/media/` URL prefix before
+  // looking up R2. Preserve product paths, but avoid storing media/media/...
+  // for files created by the local admin preview.
+  const key = publicPath.startsWith('media/') ? publicPath.slice('media/'.length) : publicPath
   const executable = process.platform === 'win32' ? 'npx.cmd' : 'npx'
   const args = [
     'wrangler', 'r2', 'object', 'put', `${bucket}/${key}`,
