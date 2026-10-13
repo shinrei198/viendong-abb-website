@@ -1,11 +1,20 @@
 import { readdir } from 'node:fs/promises'
-import { relative, resolve, sep } from 'node:path'
+import { extname, relative, resolve, sep } from 'node:path'
 import { spawn } from 'node:child_process'
 
 const publicDir = resolve('public')
+const wranglerScript = resolve('node_modules/wrangler/bin/wrangler.js')
 const bucket = process.env.R2_BUCKET || 'viendong-media'
 const execute = process.argv.includes('--execute')
 const allowedExtensions = /\.(avif|gif|jpe?g|png|webp)$/i
+const imageContentTypes = {
+  '.avif': 'image/avif',
+  '.gif': 'image/gif',
+  '.jpeg': 'image/jpeg',
+  '.jpg': 'image/jpeg',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
+}
 
 async function collectFiles(directory) {
   const entries = await readdir(directory, { withFileTypes: true })
@@ -22,16 +31,15 @@ function upload(file) {
   // looking up R2. Preserve product paths, but avoid storing media/media/...
   // for files created by the local admin preview.
   const key = publicPath.startsWith('media/') ? publicPath.slice('media/'.length) : publicPath
-  const executable = process.platform === 'win32' ? 'npx.cmd' : 'npx'
   const args = [
-    'wrangler', 'r2', 'object', 'put', `${bucket}/${key}`,
+    wranglerScript, 'r2', 'object', 'put', `${bucket}/${key}`,
     '--file', file,
-    '--content-type', key.toLowerCase().endsWith('.webp') ? 'image/webp' : 'application/octet-stream',
+    '--content-type', imageContentTypes[extname(key).toLowerCase()] || 'application/octet-stream',
     '--cache-control', 'public, max-age=31536000, immutable',
     '--remote',
   ]
   return new Promise((resolvePromise, rejectPromise) => {
-    const child = spawn(executable, args, { stdio: ['ignore', 'pipe', 'pipe'], shell: false })
+    const child = spawn(process.execPath, args, { stdio: ['ignore', 'pipe', 'pipe'], shell: false })
     let errorText = ''
     child.stderr.on('data', (chunk) => { errorText += chunk })
     child.on('error', rejectPromise)
@@ -53,6 +61,7 @@ if (!execute) {
 let nextIndex = 0
 let completed = 0
 const failures = []
+const concurrency = process.platform === 'win32' ? 1 : 6
 async function worker() {
   while (nextIndex < files.length) {
     const index = nextIndex++
@@ -66,7 +75,7 @@ async function worker() {
   }
 }
 
-await Promise.all(Array.from({ length: Math.min(6, files.length) }, () => worker()))
+await Promise.all(Array.from({ length: Math.min(concurrency, files.length) }, () => worker()))
 if (failures.length) {
   console.error(`Migration finished with ${failures.length} failure(s):`)
   console.error(failures.join('\n'))
