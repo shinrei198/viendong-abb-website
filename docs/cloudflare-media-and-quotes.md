@@ -28,7 +28,7 @@ npx wrangler d1 migrations apply viendong-quotes --remote
 
 ## 2. Create R2 media storage
 
-`wrangler.json` already binds `MEDIA` to `viendong-media` and enables the Images binding as `IMAGES`.
+`wrangler.json` binds `MEDIA` to `viendong-media`. The admin converts source files to WebP in the browser before upload, so a paid Cloudflare Images binding is optional rather than required.
 
 ```powershell
 npx wrangler r2 bucket create viendong-media
@@ -51,4 +51,3 @@ npm run r2:migrate -- --execute
 ```
 
 The object keys preserve current paths such as `products/...`. The Worker reads R2 first and falls back to the deployed static asset, so a partial migration does not break product images.
-

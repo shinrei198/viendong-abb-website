@@ -26,9 +26,6 @@
       "bucket_name": "viendong-media"
     }
   ],
-  "images": {
-    "binding": "IMAGES"
-  },
   "cache": {
     "enabled": true
   }
