@@ -13,6 +13,13 @@
       "id": "81f19f5af04f4cd1994f8e3b6db01cb9"
     }
   ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "viendong-quotes",
+      "database_id": "c8c1449e-42bd-4894-a1f8-56c22dc2499e"
+    }
+  ],
   "r2_buckets": [
     {
       "binding": "MEDIA",
