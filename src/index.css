@@ -55,6 +55,12 @@ textarea {
   border-radius: var(--radius-control);
 }
 
+/* Keep every real button label on one readable line across breakpoints. */
+button,
+a[role='button'] {
+  white-space: nowrap;
+}
+
 .rounded-xs,
 .rounded-sm {
   border-radius: 5px;

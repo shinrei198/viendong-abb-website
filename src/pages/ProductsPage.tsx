@@ -93,6 +93,68 @@ const colorDot: Record<string, string> = {
 
 const font = "'Roboto Condensed', 'Roboto', sans-serif"
 
+interface ProductPaginationProps {
+  currentPage: number
+  totalPages: number
+  onPageChange: (page: number) => void
+}
+
+function ProductPagination({ currentPage, totalPages, onPageChange }: ProductPaginationProps) {
+  const [pageInput, setPageInput] = useState(String(currentPage))
+
+  useEffect(() => {
+    setPageInput(String(currentPage))
+  }, [currentPage])
+
+  const goToInputPage = () => {
+    const parsedPage = Number.parseInt(pageInput, 10)
+    const nextPage = Number.isFinite(parsedPage)
+      ? Math.min(Math.max(parsedPage, 1), totalPages)
+      : currentPage
+    setPageInput(String(nextPage))
+    onPageChange(nextPage)
+  }
+
+  const buttonClass = 'w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 transition-colors hover:border-[#0055A4] hover:text-[#0055A4] disabled:cursor-not-allowed disabled:opacity-35'
+
+  return (
+    <div className="flex items-center justify-end gap-1.5" aria-label="Điều hướng trang sản phẩm">
+      <button className={buttonClass} onClick={() => onPageChange(1)} disabled={currentPage === 1} title="Trang đầu" aria-label="Về trang đầu">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 17l-5-5 5-5M18 17l-5-5 5-5" /></svg>
+      </button>
+      <button className={buttonClass} onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1} title="Trang trước" aria-label="Về trang trước">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6" /></svg>
+      </button>
+      <label className="flex h-9 items-center gap-1 rounded-lg border border-gray-200 bg-white px-2 text-xs text-gray-500">
+        <span>Trang</span>
+        <input
+          type="number"
+          min={1}
+          max={totalPages}
+          value={pageInput}
+          onChange={(e) => setPageInput(e.target.value)}
+          onBlur={goToInputPage}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              goToInputPage()
+              e.currentTarget.blur()
+            }
+          }}
+          className="h-7 w-11 rounded-md border border-gray-200 px-1 text-center text-xs font-bold text-gray-800 focus:border-[#0055A4] focus:outline-none"
+          aria-label="Nhập số trang sản phẩm"
+        />
+        <span>/ {totalPages}</span>
+      </label>
+      <button className={buttonClass} onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages} title="Trang kế tiếp" aria-label="Qua trang kế tiếp">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 6l6 6-6 6" /></svg>
+      </button>
+      <button className={buttonClass} onClick={() => onPageChange(totalPages)} disabled={currentPage === totalPages} title="Trang cuối" aria-label="Tới trang cuối">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 7l5 5-5 5M13 7l5 5-5 5" /></svg>
+      </button>
+    </div>
+  )
+}
+
 export default function ProductsPage({ onNavigate, onAddToCart, initialCategory }: ProductsPageProps) {
   const [products, setProducts] = useState<ProductItem[]>(() => {
     const stored = getStoredProducts()
@@ -105,10 +167,11 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
   const [selectedCat, setSelectedCat] = useState(initialCategory || 'all')
   const [selectedSubcat, setSelectedSubcat] = useState('all')
   const [expandedCats, setExpandedCats] = useState<string[]>(initialCategory ? [initialCategory] : ['switch', 'socket'])
-  const [selectedColor, setSelectedColor] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [stockOnly, setStockOnly] = useState(false)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [pageSize, setPageSize] = useState(12)
+  const [currentPage, setCurrentPage] = useState(1)
 
   // Auto-sync when database updates in Admin or Cloudflare
   useEffect(() => {
@@ -179,13 +242,20 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
 
     const matchStock = !stockOnly || p.inStock
 
-    const matchColor =
-      !selectedColor ||
-      (p.variants &&
-        p.variants.some((v) => v.enabled && (v.color === selectedColor || (selectedColor === 'Xám' && v.color === 'Xám Đậm'))))
-
-    return matchCat && matchSubcat && matchSearch && matchStock && matchColor
+    return matchCat && matchSubcat && matchSearch && matchStock
   })
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
+  const safeCurrentPage = Math.min(currentPage, totalPages)
+  const paginatedProducts = filtered.slice((safeCurrentPage - 1) * pageSize, safeCurrentPage * pageSize)
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [selectedCat, selectedSubcat, search, stockOnly, pageSize])
+
+  useEffect(() => {
+    if (currentPage !== safeCurrentPage) setCurrentPage(safeCurrentPage)
+  }, [currentPage, safeCurrentPage])
 
   // Dynamic count for category tree
   const getCatCount = (catId: string) => {
@@ -219,12 +289,6 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
             <span className="px-3.5 py-1.5 rounded-full text-xs font-semibold text-white bg-white/15 backdrop-blur-xs border border-white/20">
               {allList.length} sản phẩm niêm yết
             </span>
-            <button
-              onClick={() => onNavigate('cart')}
-              className="px-4 py-2 bg-[#FF000F] hover:bg-red-700 text-white font-bold text-xs uppercase tracking-wider rounded-lg shadow-md transition-all flex items-center gap-1.5"
-            >
-              <span>📋</span> Danh sách báo giá
-            </button>
           </div>
         </div>
       </div>
@@ -232,7 +296,7 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
       <div className="max-w-7xl mx-auto px-4 py-8 flex flex-col lg:flex-row gap-8">
         {/* ── Left Sidebar: Sticky & Independent Scroll ── */}
         <aside className="w-full lg:w-72 flex-shrink-0">
-          <div className="sticky top-20 max-h-[calc(100vh-5.5rem)] overflow-y-auto overscroll-contain pr-1.5 space-y-4 [scrollbar-width:thin] [scrollbar-color:#c8daf4_transparent]">
+          <div className="max-h-[70vh] space-y-4 overflow-y-auto overscroll-auto pr-1.5 lg:sticky lg:top-20 lg:max-h-[calc(100vh-5.5rem)] lg:overscroll-contain [scrollbar-width:thin] [scrollbar-color:#c8daf4_transparent]">
             {/* Top Fixed Filter Controls */}
             <div className="bg-white rounded-2xl p-4 shadow-xs" style={{ border: '1px solid #c8daf4' }}>
               <div className="relative mb-3">
@@ -251,32 +315,7 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
                 )}
               </div>
 
-              {/* Color filter is not relevant for breaker pole variants. */}
-              {selectedCat !== 'breaker' && <div className="pt-2 border-t border-gray-100">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Lọc màu sắc</span>
-                  {selectedColor && (
-                    <button onClick={() => setSelectedColor(null)} className="text-[10px] text-blue-600 hover:underline">Xóa</button>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  {['Trắng', 'Bạc', 'Vàng', 'Xám', 'Đen'].map((colorName) => (
-                    <button
-                      key={colorName}
-                      onClick={() => setSelectedColor(selectedColor === colorName ? null : colorName)}
-                      title={`Lọc màu ${colorName}`}
-                      className={`relative w-6 h-6 rounded-full border transition-all ${
-                        selectedColor === colorName
-                          ? 'ring-2 ring-[#FF000F] ring-offset-2 scale-110 shadow-sm'
-                          : 'border-gray-300 hover:scale-105'
-                      }`}
-                      style={{ backgroundColor: colorDot[colorName] }}
-                    />
-                  ))}
-                </div>
-              </div>}
-
-              <div className="pt-3 mt-3 border-t border-gray-100">
+              <div className="pt-2 border-t border-gray-100">
                 <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
                   <input
                     type="checkbox"
@@ -389,6 +428,19 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
             </div>
 
             <div className="flex items-center gap-2 self-end sm:self-auto">
+              <label className="flex items-center gap-1.5 text-xs text-gray-500">
+                <span className="hidden sm:inline">Hiển thị</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => setPageSize(Number(e.target.value))}
+                  className="h-8 rounded-lg border border-gray-200 bg-white px-2 text-xs font-semibold text-gray-700 focus:border-[#0055A4] focus:outline-none"
+                  aria-label="Số sản phẩm mỗi trang"
+                >
+                  <option value={12}>12 / trang</option>
+                  <option value={24}>24 / trang</option>
+                  <option value={48}>48 / trang</option>
+                </select>
+              </label>
               <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden bg-white">
                 <button
                   onClick={() => setViewMode('grid')}
@@ -413,19 +465,13 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
           </div>
 
           {/* Active filter badges */}
-          {(selectedColor || search || selectedCat !== 'all' || stockOnly) && (
+          {(search || selectedCat !== 'all' || stockOnly) && (
             <div className="flex flex-wrap items-center gap-2 mb-4">
               <span className="text-[11px] text-gray-400 font-medium">Đang lọc:</span>
               {selectedCat !== 'all' && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-blue-50 text-blue-700">
                   {selectedCatData?.label}
                   <button onClick={() => { setSelectedCat('all'); setSelectedSubcat('all') }} className="hover:text-blue-900">✕</button>
-                </span>
-              )}
-              {selectedColor && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-700">
-                  Màu {selectedColor}
-                  <button onClick={() => setSelectedColor(null)} className="hover:text-gray-900">✕</button>
                 </span>
               )}
               {search && (
@@ -441,7 +487,7 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
                 </span>
               )}
               <button
-                onClick={() => { setSelectedCat('all'); setSelectedSubcat('all'); setSelectedColor(null); setSearch(''); setStockOnly(false) }}
+                onClick={() => { setSelectedCat('all'); setSelectedSubcat('all'); setSearch(''); setStockOnly(false) }}
                 className="text-[11px] text-red-600 hover:underline font-semibold ml-1"
               >
                 Xóa tất cả
@@ -449,10 +495,16 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
             </div>
           )}
 
+          {filtered.length > 0 && (
+            <div className="mb-4 overflow-x-auto pb-1">
+              <ProductPagination currentPage={safeCurrentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+            </div>
+          )}
+
           {/* Grid View */}
           {viewMode === 'grid' && (
             <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
-              {filtered.map((p) => {
+              {paginatedProducts.map((p) => {
                 const activeVariant = getActiveVariant(p)
                 const enabledVariants = p.variants ? p.variants.filter((v) => v.enabled) : []
 
@@ -599,7 +651,7 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
           {/* List View */}
           {viewMode === 'list' && (
             <div className="space-y-3">
-              {filtered.map((p) => {
+              {paginatedProducts.map((p) => {
                 const activeVariant = getActiveVariant(p)
                 const enabledVariants = p.variants ? p.variants.filter((v) => v.enabled) : []
 
@@ -704,11 +756,17 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
               </svg>
               <p className="text-sm font-medium">Không tìm thấy sản phẩm phù hợp với bộ lọc.</p>
               <button
-                onClick={() => { setSelectedCat('all'); setSelectedSubcat('all'); setSelectedColor(null); setSearch('') }}
+                onClick={() => { setSelectedCat('all'); setSelectedSubcat('all'); setSearch('') }}
                 className="mt-2 text-sm text-blue-600 underline font-semibold"
               >
                 Xóa tất cả bộ lọc
               </button>
+            </div>
+          )}
+
+          {filtered.length > 0 && (
+            <div className="mt-6 overflow-x-auto border-t border-gray-100 pt-4 pb-1">
+              <ProductPagination currentPage={safeCurrentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
             </div>
           )}
         </div>

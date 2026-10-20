@@ -196,9 +196,9 @@ export default function AdminHomePageTab({ content, products, onSave, showToast 
         <div className="grid gap-4 md:grid-cols-2">
           <label><span className={labelClass}>Tiêu đề CTA</span><input className={inputClass} value={draft.ctaTitle} onChange={(e) => updateDraft({ ...draft, ctaTitle: e.target.value })} /></label>
           <label><span className={labelClass}>Mô tả CTA</span><input className={inputClass} value={draft.ctaDescription} onChange={(e) => updateDraft({ ...draft, ctaDescription: e.target.value })} /></label>
-          <label><span className={labelClass}>Nhãn nút chính</span><input className={inputClass} value={draft.ctaPrimaryLabel} onChange={(e) => updateDraft({ ...draft, ctaPrimaryLabel: e.target.value })} /></label>
+          <label><span className={labelClass}>Nhãn nút chính</span><input maxLength={28} className={inputClass} value={draft.ctaPrimaryLabel} onChange={(e) => updateDraft({ ...draft, ctaPrimaryLabel: e.target.value })} /></label>
           <label><span className={labelClass}>Link nút chính</span><input className={inputClass} value={draft.ctaPrimaryUrl} onChange={(e) => updateDraft({ ...draft, ctaPrimaryUrl: e.target.value })} placeholder="mailto:..., tel:... hoặc https://..." /></label>
-          <label><span className={labelClass}>Nhãn nút giới thiệu</span><input className={inputClass} value={draft.ctaSecondaryLabel} onChange={(e) => updateDraft({ ...draft, ctaSecondaryLabel: e.target.value })} /></label>
+          <label><span className={labelClass}>Nhãn nút giới thiệu</span><input maxLength={28} className={inputClass} value={draft.ctaSecondaryLabel} onChange={(e) => updateDraft({ ...draft, ctaSecondaryLabel: e.target.value })} /></label>
           <div />
           <label><span className={labelClass}>Tiêu đề hỗ trợ</span><input className={inputClass} value={draft.supportTitle} onChange={(e) => updateDraft({ ...draft, supportTitle: e.target.value })} /></label>
           <label><span className={labelClass}>Mô tả hỗ trợ</span><input className={inputClass} value={draft.supportDescription} onChange={(e) => updateDraft({ ...draft, supportDescription: e.target.value })} /></label>

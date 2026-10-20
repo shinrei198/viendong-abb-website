@@ -7,6 +7,7 @@ interface HeroSliderProps {
 }
 
 const AUTOPLAY_DELAY = 10000 // 10 seconds
+const limitButtonLabel = (value: string) => Array.from(value.normalize('NFC')).slice(0, 24).join('')
 
 export default function HeroSlider({ banners, onNavigate }: HeroSliderProps) {
   const activeBanners = banners.filter((b) => b.isActive)
@@ -176,7 +177,7 @@ export default function HeroSlider({ banners, onNavigate }: HeroSliderProps) {
   return (
     <div
       ref={containerRef}
-      className="relative w-full bg-[#1a1a1a] select-none overflow-hidden group"
+      className="relative w-full min-h-[260px] sm:min-h-0 bg-[#1a1a1a] select-none overflow-hidden group"
       style={{
         containerType: 'inline-size',
         aspectRatio: aspectRatioStyle,
@@ -205,6 +206,43 @@ export default function HeroSlider({ banners, onNavigate }: HeroSliderProps) {
           className="w-full h-full object-cover object-center pointer-events-none transition-all duration-700 select-none"
         />
 
+        {/* Responsive readability overlays: desktop gradient and full mobile shade. */}
+        <div
+          className="pointer-events-none absolute inset-y-0 left-0 z-10 hidden w-[45%] sm:block"
+          style={{
+            background: 'linear-gradient(to right, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.5) 50%, rgba(0, 0, 0, 0) 100%)',
+          }}
+        />
+        <div className="pointer-events-none absolute inset-0 z-10 bg-black/50 sm:hidden" />
+
+        {(currentBanner.mainTitle || currentBanner.description) && (
+          <div className="absolute inset-0 pointer-events-none z-20">
+            <div className="max-w-7xl mx-auto px-4 h-full relative">
+              <div
+                className={`absolute ${containerDim.width < 640 ? 'left-1/2 w-[calc(100%-128px)] -translate-x-1/2 text-center' : 'left-4 max-w-[58%] text-left'}`}
+                style={{
+                  top: containerDim.width < 640 ? undefined : '50%',
+                  bottom: containerDim.width < 640 ? 'calc(31% + 29px)' : undefined,
+                }}
+              >
+                {currentBanner.mainTitle && (
+                  <h2 className={`${containerDim.width < 640 ? 'line-clamp-2 text-lg' : '-translate-y-1/2 whitespace-nowrap text-2xl lg:text-4xl'} overflow-hidden text-ellipsis font-bold leading-tight text-white drop-shadow-lg`}>
+                    {currentBanner.mainTitle}
+                  </h2>
+                )}
+                {currentBanner.description && (
+                  <p
+                    className={`${containerDim.width < 640 ? 'mt-1 line-clamp-2 text-xs' : 'text-sm lg:text-base'} max-w-2xl leading-snug text-white/90 drop-shadow-md`}
+                    style={containerDim.width >= 640 && currentBanner.mainTitle ? { marginTop: containerDim.width >= 1024 ? '-18px' : '-11px' } : undefined}
+                  >
+                    {currentBanner.description}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ── CTA BUTTONS (ANCHORED TO VD LOGO, 20% FROM BOTTOM, 33px GAP) ── */}
         {currentBanner.buttons && currentBanner.buttons.length > 0 && (
           <div className="absolute inset-0 pointer-events-none z-20">
@@ -212,10 +250,12 @@ export default function HeroSlider({ banners, onNavigate }: HeroSliderProps) {
               <div
                 className="absolute flex items-center pointer-events-auto"
                 style={{
-                  left: '16px',
-                  bottom: '20%',
-                  transform: 'translateY(50%)',
-                  gap: '33px',
+                  left: containerDim.width < 640 ? '50%' : '16px',
+                  top: containerDim.width < 640 ? '69%' : undefined,
+                  bottom: containerDim.width < 640 ? undefined : '20%',
+                  transform: containerDim.width < 640 ? 'translate(-50%, -50%)' : 'translateY(50%)',
+                  gap: containerDim.width < 640 ? '8px' : '33px',
+                  maxWidth: containerDim.width < 640 ? 'calc(100% - 24px)' : undefined,
                 }}
               >
                 {currentBanner.buttons.slice(0, 2).map((btn) => {
@@ -232,13 +272,9 @@ export default function HeroSlider({ banners, onNavigate }: HeroSliderProps) {
                       key={btn.id}
                       type="button"
                       onClick={(e) => handleButtonClick(e, btn)}
-                      style={{
-                        fontSize: 'clamp(11.5px, 1.1cqw + 1px, 15px)',
-                        padding: 'clamp(5px, 0.4cqw + 2.3px, 9.2px) clamp(9.2px, 1.04cqw + 6.9px, 18.4px)',
-                      }}
-                      className={`rounded-[4px] font-bold tracking-tight transition-all duration-150 hover:opacity-95 active:scale-95 cursor-pointer flex items-center gap-1.5 whitespace-nowrap leading-none ${styleClass}`}
+                      className={`h-[38px] sm:h-9 px-3 sm:px-[18px] text-xs rounded-[4px] font-bold tracking-tight transition-all duration-150 hover:opacity-95 active:scale-95 cursor-pointer flex items-center gap-1.5 whitespace-nowrap leading-none ${styleClass}`}
                     >
-                      <span>{btn.label}</span>
+                      <span className="max-w-[105px] min-[375px]:max-w-[128px] sm:max-w-none overflow-hidden text-ellipsis">{limitButtonLabel(btn.label)}</span>
                       {btn.actionType === 'phone' && (
                         <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
                           <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />

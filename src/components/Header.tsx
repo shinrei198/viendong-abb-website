@@ -52,17 +52,6 @@ export default function Header({ currentPage, onNavigate, cartCount }: HeaderPro
               (028) 39435276
             </span>
           </div>
-          <div className="hidden md:flex items-center gap-4">
-            <button className="flex items-center gap-1.5 group">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-gray-300">
-                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 1.5V8H18.5L13 3.5zM6 20V4h5v5h5v11H6z"/>
-              </svg>
-              <span className="text-[11px] font-bold tracking-widest uppercase text-white group-hover:text-yellow-300 transition-colors">
-                BẢNG GIÁ, CATALOGUE ABB
-              </span>
-              <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
-            </button>
-          </div>
           <div className="flex items-center gap-2">
             <div className="hidden sm:flex items-center gap-2">
               {['Đại lý', 'Nhà thầu', 'Thợ điện'].map((label) => (

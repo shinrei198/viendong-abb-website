@@ -30,7 +30,6 @@ export interface NewsItem {
   status: 'published' | 'draft'
   isFeatured?: boolean
   views?: number
-  attachments?: { name: string; url: string; size: string }[]
 }
 
 export interface QuoteRequestItem {
@@ -72,6 +71,8 @@ export interface BannerButtonOverlay {
 export interface BannerSlideItem {
   id: string
   title: string
+  mainTitle?: string
+  description?: string
   imageUrl: string
   mobileImageUrl?: string
   altText?: string
@@ -290,12 +291,25 @@ export function saveStoredProducts(data: ProductItem[]) {
   }
 }
 
+const LEGACY_PLACEHOLDER_VIDEO_IDS = new Set(['v1', 'v2', 'v3', 'v4', 'v5', 'v6'])
+
+function removeLegacyPlaceholderVideos(data: VideoItem[]): VideoItem[] {
+  return data.filter((item) => {
+    if (!LEGACY_PLACEHOLDER_VIDEO_IDS.has(item.id)) return true
+    return !(
+      item.videoUrl?.includes('PPrxx0Y3v-U') ||
+      item.videoUrl?.includes('dQw4w9WgXcQ')
+    )
+  })
+}
+
 export function getStoredVideos(): VideoItem[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.VIDEOS)
-    return raw ? JSON.parse(raw) : initialVideos
+    const stored = raw ? JSON.parse(raw) : initialVideos
+    return Array.isArray(stored) ? removeLegacyPlaceholderVideos(stored) : []
   } catch {
-    return initialVideos
+    return removeLegacyPlaceholderVideos(initialVideos)
   }
 }
 
@@ -310,7 +324,7 @@ export function scheduleCloudflareSync() {
 
 export function saveStoredVideos(data: VideoItem[]) {
   try {
-    localStorage.setItem(STORAGE_KEYS.VIDEOS, JSON.stringify(data))
+    localStorage.setItem(STORAGE_KEYS.VIDEOS, JSON.stringify(removeLegacyPlaceholderVideos(data)))
     window.dispatchEvent(new Event('viendong_storage_update'))
     scheduleCloudflareSync()
   } catch (err) {
@@ -337,25 +351,35 @@ export function saveStoredVideoCategories(data: string[]) {
   }
 }
 
+function sanitizeNewsRecord(item: NewsItem): NewsItem {
+  // Legacy seed data contained PDF attachments that could not be managed in Admin.
+  // Keep the public data model limited to fields that administrators can edit.
+  const { attachments: _unsupportedAttachments, ...supportedItem } = item as NewsItem & {
+    attachments?: unknown
+  }
+  return {
+    ...supportedItem,
+    title: sanitizePlainText(supportedItem.title, 300),
+    summary: sanitizePlainText(supportedItem.summary, 1000),
+    quote: supportedItem.quote ? sanitizePlainText(supportedItem.quote, 1000) : undefined,
+    quoteAuthor: supportedItem.quoteAuthor ? sanitizePlainText(supportedItem.quoteAuthor, 200) : undefined,
+    content: sanitizeRichHtml(supportedItem.content),
+  }
+}
+
 export function getStoredNews(): NewsItem[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.NEWS)
-    return raw ? JSON.parse(raw) : initialNews
+    const stored = raw ? JSON.parse(raw) : initialNews
+    return Array.isArray(stored) ? stored.map(sanitizeNewsRecord) : []
   } catch {
-    return initialNews
+    return initialNews.map(sanitizeNewsRecord)
   }
 }
 
 export function saveStoredNews(data: NewsItem[]) {
   try {
-    const sanitized = data.map((item) => ({
-      ...item,
-      title: sanitizePlainText(item.title, 300),
-      summary: sanitizePlainText(item.summary, 1000),
-      quote: item.quote ? sanitizePlainText(item.quote, 1000) : undefined,
-      quoteAuthor: item.quoteAuthor ? sanitizePlainText(item.quoteAuthor, 200) : undefined,
-      content: sanitizeRichHtml(item.content),
-    }))
+    const sanitized = data.map(sanitizeNewsRecord)
     localStorage.setItem(STORAGE_KEYS.NEWS, JSON.stringify(sanitized))
     window.dispatchEvent(new Event('viendong_storage_update'))
     scheduleCloudflareSync()
@@ -699,14 +723,9 @@ export function importAllDataFromJSON(jsonData: any): boolean {
   }
 
   const entries: Array<[string, unknown, 'array' | 'object']> = [
-    [STORAGE_KEYS.VIDEOS, normalized.initialVideos, 'array'],
+    [STORAGE_KEYS.VIDEOS, Array.isArray(normalized.initialVideos) ? removeLegacyPlaceholderVideos(normalized.initialVideos) : normalized.initialVideos, 'array'],
     [STORAGE_KEYS.VIDEO_CATS, normalized.initialVideoCategories, 'array'],
-    [STORAGE_KEYS.NEWS, Array.isArray(normalized.initialNews) ? normalized.initialNews.map((item: NewsItem) => ({
-      ...item,
-      title: sanitizePlainText(item?.title, 300),
-      summary: sanitizePlainText(item?.summary, 1000),
-      content: sanitizeRichHtml(item?.content),
-    })) : normalized.initialNews, 'array'],
+    [STORAGE_KEYS.NEWS, Array.isArray(normalized.initialNews) ? normalized.initialNews.map(sanitizeNewsRecord) : normalized.initialNews, 'array'],
     [STORAGE_KEYS.NEWS_CATS, normalized.initialNewsCategories, 'array'],
     [STORAGE_KEYS.BANNERS, normalized.initialBannerSlides, 'array'],
     [STORAGE_KEYS.QUOTES, normalized.initialQuoteRequests, 'array'],

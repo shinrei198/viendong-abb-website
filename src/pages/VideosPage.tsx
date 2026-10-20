@@ -158,11 +158,15 @@ export default function VideosPage({ onNavigate }: VideosPageProps) {
               >
                 {/* Thumbnail Container (16:9) with Red Play Button Overlay */}
                 <div className="relative w-full aspect-video bg-[#f0f0f0] overflow-hidden">
-                  <img
-                    src={v.thumb || 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=338&fit=crop&auto=format'}
-                    alt={v.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
+                  {v.thumb ? (
+                    <img
+                      src={v.thumb}
+                      alt={v.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="h-full w-full bg-gradient-to-br from-gray-100 to-gray-200" aria-hidden="true" />
+                  )}
 
                   {/* Featured Red Badge Top-Left */}
                   {v.isFeatured && (
@@ -188,9 +192,11 @@ export default function VideosPage({ onNavigate }: VideosPageProps) {
                   </div>
 
                   {/* Duration badge bottom-right (as in Image 1) */}
-                  <span className="absolute bottom-2 right-2 bg-black/80 text-white text-[11px] font-mono font-bold px-1.5 py-0.5 rounded-md">
-                    {v.duration || '0:30'}
-                  </span>
+                  {v.duration && (
+                    <span className="absolute bottom-2 right-2 bg-black/80 text-white text-[11px] font-mono font-bold px-1.5 py-0.5 rounded-md">
+                      {v.duration}
+                    </span>
+                  )}
                 </div>
 
                 {/* Video Info Content (Exact styling from instructions & Image 1) */}

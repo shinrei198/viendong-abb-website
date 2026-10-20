@@ -7,86 +7,7 @@
     "Dự án tiêu biểu",
     "Đại lý & Phân phối"
   ],
-  "initialVideos": [
-    {
-      "title": "Giải pháp bảo vệ toàn diện với thiết bị đóng cắt MCB & RCBO ABB",
-      "category": "Sản phẩm mới",
-      "date": "18/08/2026",
-      "duration": "0:22",
-      "thumb": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=450&fit=crop&auto=format",
-      "videoUrl": "https://www.youtube.com/watch?v=PPrxx0Y3v-U&pp=ygUOTUNCICYgUkNCTyBBQkI%3D",
-      "embedType": "youtube",
-      "isFeatured": true,
-      "isHidden": false,
-      "linkedProductSku": "SH201L-C16",
-      "id": "v1"
-    },
-    {
-      "title": "Giới thiệu dòng công tắc & ổ cắm ABB Inora thiết kế hiện đại",
-      "category": "Sản phẩm mới",
-      "date": "15/08/2026",
-      "duration": "0:35",
-      "thumb": "https://images.unsplash.com/photo-1513694203232-719a280e022f?w=800&h=450&fit=crop&auto=format",
-      "videoUrl": "https://www.youtube.com/watch?v=PPrxx0Y3v-U&pp=ygUOTUNCICYgUkNCTyBBQkI%3D",
-      "embedType": "youtube",
-      "isFeatured": true,
-      "isHidden": false,
-      "linkedProductSku": "INORA-SW1-WH",
-      "id": "v2"
-    },
-    {
-      "title": "Hội thảo kỹ thuật ABB: Công nghệ bảo vệ hồ quang điện AFDD tiên tiến",
-      "category": "Sự kiện",
-      "date": "10/08/2026",
-      "duration": "1:15",
-      "thumb": "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&h=450&fit=crop&auto=format",
-      "videoUrl": "https://www.youtube.com/watch?v=PPrxx0Y3v-U&pp=ygUOTUNCICYgUkNCTyBBQkI%3D",
-      "embedType": "youtube",
-      "isFeatured": false,
-      "isHidden": false,
-      "linkedProductSku": "S-ARC1-B16",
-      "id": "v3"
-    },
-    {
-      "title": "Hướng dẫn lắp đặt và cài đặt Aptomat khối MCCB Tmax XT cho tủ phân phối",
-      "category": "Hướng dẫn kỹ thuật",
-      "date": "02/08/2026",
-      "duration": "2:45",
-      "thumb": "https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=800&h=450&fit=crop&auto=format",
-      "videoUrl": "https://www.youtube.com/watch?v=PPrxx0Y3v-U&pp=ygUOTUNCICYgUkNCTyBBQkI%3D",
-      "embedType": "youtube",
-      "isFeatured": false,
-      "isHidden": false,
-      "linkedProductSku": "XT2N-160-TMD",
-      "id": "v4"
-    },
-    {
-      "id": "v5",
-      "title": "Tham quan hệ thống phân phối thiết bị điện Viễn Đông Electric tại TP.HCM",
-      "category": "Đại lý & Phân phối",
-      "date": "25/07/2026",
-      "duration": "1:40",
-      "thumb": "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&h=450&fit=crop&auto=format",
-      "videoUrl": "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
-      "embedType": "youtube",
-      "isFeatured": false,
-      "isHidden": false,
-      "views": 890
-    },
-    {
-      "title": "Ứng dụng máy cắt không khí ACB Emax 2 trong trung tâm dữ liệu",
-      "category": "Dự án tiêu biểu",
-      "date": "18/07/2026",
-      "duration": "3:10",
-      "thumb": "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&h=450&fit=crop&auto=format",
-      "videoUrl": "https://www.youtube.com/watch?v=PPrxx0Y3v-U&pp=ygUOTUNCICYgUkNCTyBBQkI%3D",
-      "embedType": "youtube",
-      "isFeatured": false,
-      "isHidden": false,
-      "linkedProductSku": "EMAX2-E1.2N",
-      "id": "v6"
-    }
-  ],
+  "initialVideos": [],
   "initialNewsCategories": [
     "Sản phẩm mới",
     "Tin tức & Sự kiện",
@@ -116,19 +37,7 @@
       "quoteAuthor": "Đại diện kỹ thuật ABB Khu vực Đông Nam Á",
       "status": "published",
       "isFeatured": true,
-      "views": 3120,
-      "attachments": [
-        {
-          "name": "Catalogue_ABB_Compact_Home_2026.pdf",
-          "url": "#",
-          "size": "4.2 MB"
-        },
-        {
-          "name": "Bang_Gia_MCB_RCCB_VienDong.pdf",
-          "url": "#",
-          "size": "1.8 MB"
-        }
-      ]
+      "views": 3120
     },
     {
       "id": "n2",
@@ -309,6 +218,8 @@
   "initialBannerSlides": [
     {
       "title": "Giải Pháp Đóng Cắt & Bảo Vệ Điện ABB Toàn Diện",
+      "mainTitle": "VIỄN ĐÔNG ELECTRIC",
+      "description": "Nhà phân phối chính thức sản phẩm ABB tại Việt Nam",
       "imageUrl": "https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=1920&h=650&fit=crop&auto=format",
       "altText": "Thiết bị đóng cắt ABB MCB MCCB RCBO",
       "bannerLink": "products",
@@ -319,24 +230,17 @@
           "label": "Xem Danh Mục Sản Phẩm →",
           "actionType": "internal",
           "targetUrl": "products",
-          "size": "sm",
-          "styleType": "red",
           "posX": 15,
-          "posY": 80
-        },
-        {
-          "id": "btn1_2",
-          "label": "Tải Bảng Giá ABB 2026 (PDF)",
-          "actionType": "external",
-          "targetUrl": "https://viendongelectric.vn/catalogue.pdf",
+          "posY": 80,
           "size": "sm",
-          "styleType": "navy",
-          "posX": 35,
-          "posY": 80
+          "styleType": "red"
         }
       ],
       "order": 1,
       "isActive": true,
+      "naturalWidth": 1920,
+      "naturalHeight": 650,
+      "mobileCtaLayout": "hotspot",
       "id": "b1"
     },
     {
@@ -352,20 +256,20 @@
           "label": "Khám Phá Dòng Framia",
           "actionType": "internal",
           "targetUrl": "products",
-          "size": "sm",
-          "styleType": "red",
-          "posX": 15,
-          "posY": 80
+          "posX": 25,
+          "posY": 72,
+          "size": "md",
+          "styleType": "red"
         },
         {
           "id": "btn2_2",
           "label": "Hotline: (028) 39435276",
           "actionType": "phone",
           "targetUrl": "02839435276",
-          "size": "sm",
-          "styleType": "white",
-          "posX": 35,
-          "posY": 80
+          "posX": 52,
+          "posY": 72,
+          "size": "md",
+          "styleType": "glass"
         }
       ],
       "order": 2,
@@ -376,18 +280,18 @@
       "title": "Chính Sách Chiết Khấu Đặc Biệt Dành Cho Đại Lý & Nhà Thầu",
       "imageUrl": "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=1920&h=650&fit=crop&auto=format",
       "altText": "Hệ thống đại lý phân phối Viễn Đông Electric",
-      "bannerLink": "about",
+      "bannerLink": "map",
       "bannerLinkType": "internal",
       "buttons": [
         {
           "id": "btn3_1",
           "label": "Đăng Ký Làm Đại Lý Ngay ➔",
           "actionType": "internal",
-          "targetUrl": "about",
-          "size": "sm",
-          "styleType": "red",
+          "targetUrl": "map",
           "posX": 15,
-          "posY": 80
+          "posY": 70,
+          "size": "lg",
+          "styleType": "red"
         }
       ],
       "order": 3,
@@ -3626,7 +3530,7 @@
     },
     {
       "id": "prod-velet-4tya503211-108",
-      "name": "Bộ công tắc đ��i 1 chiều 16AX",
+      "name": "Bộ công tắc đôi 1 chiều 16AX",
       "baseSku": "4TYA503211",
       "series": "VELET",
       "category": "switch",

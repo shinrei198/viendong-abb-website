@@ -62,6 +62,9 @@ const BOUND_LEFT = 0 // % từ mép trái nội dung max-w-7xl
 const BOUND_RIGHT = 100 // % từ mép phải nội dung max-w-7xl
 const BOUND_TOP = 10 // % từ mép trên
 const BOUND_BOTTOM = 88 // % từ mép dưới
+const limitText = (value: string, maxLength: number) => Array.from(value.normalize('NFC')).slice(0, maxLength).join('')
+const countText = (value: string) => Array.from(value.normalize('NFC')).length
+const limitButtonLabel = (value: string) => limitText(value, 24)
 
 export default function AdminPage({ onNavigate }: AdminPageProps) {
   const [activeTab, setActiveTab] = useState<TabType>('banners')
@@ -128,6 +131,8 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
 
   const [bannerForm, setBannerForm] = useState<Omit<BannerSlideItem, 'id'>>({
     title: '',
+    mainTitle: '',
+    description: '',
     imageUrl: '',
     altText: '',
     bannerLink: '',
@@ -188,6 +193,8 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
     setEditingBanner(null)
     setBannerForm({
       title: '',
+      mainTitle: '',
+      description: '',
       imageUrl: sampleBannerImages[0].url,
       altText: '',
       bannerLink: 'products',
@@ -241,6 +248,8 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
 
     setBannerForm({
       title: item.title,
+      mainTitle: item.mainTitle || '',
+      description: item.description || '',
       imageUrl: item.imageUrl,
       altText: item.altText || '',
       bannerLink: item.bannerLink || '',
@@ -383,7 +392,7 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
     title: '',
     category: videoCats[0] || 'Sản phẩm mới',
     date: new Date().toLocaleDateString('vi-VN'),
-    duration: '1:30',
+    duration: '',
     thumb: '',
     videoUrl: '',
     embedType: 'youtube',
@@ -398,9 +407,9 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
       title: '',
       category: videoCats[0] || 'Sản phẩm mới',
       date: new Date().toLocaleDateString('vi-VN'),
-      duration: '1:30',
-      thumb: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=450&fit=crop&auto=format',
-      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+      duration: '',
+      thumb: '',
+      videoUrl: '',
       embedType: 'youtube',
       isFeatured: false,
       isHidden: false,
@@ -1193,8 +1202,9 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                       {/* Title */}
                       <td className="py-3 px-4">
                         <p className="font-bold text-gray-900 text-xs line-clamp-2">
-                          {b.title}
+                          {b.mainTitle || b.title}
                         </p>
+                        {b.mainTitle && <p className="mt-0.5 text-[10px] text-gray-400 line-clamp-1">Chiến dịch: {b.title}</p>}
                       </td>
 
                       {/* Banner Link */}
@@ -1217,7 +1227,7 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                                 key={btn.id}
                                 className="px-2 py-0.5 text-[10px] font-bold bg-red-100 text-red-700 rounded-xs"
                               >
-                                🔘 {btn.label} ({btn.posX}%, {btn.posY}%)
+                                🔘 {btn.label}
                               </span>
                             ))}
                           </div>
@@ -1918,7 +1928,7 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
               <div className="flex items-center gap-2">
                 <span className="text-base">🎠</span>
                 <h3 className="text-sm font-bold uppercase tracking-wider">
-                  {editingBanner ? 'Chỉnh Sửa Banner Slider & Định Vị Nút CTA' : 'Thêm Banner Slider Mới'}
+                  {editingBanner ? 'Edit banner' : 'Create new banner'}
                 </h3>
               </div>
               <button
@@ -1930,19 +1940,19 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
               </button>
             </div>
 
-            <form onSubmit={saveBanner} className="p-5 sm:p-6 space-y-5">
+            <form onSubmit={saveBanner} className="flex flex-col gap-5 p-5 sm:p-6">
               {/* Basic Details Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="order-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block font-bold text-gray-700 uppercase mb-1">
-                    Tên Chiến Dịch / Tiêu Đề Banner (*):
+                    Tên chiến dịch nội bộ (*):
                   </label>
                   <input
                     type="text"
                     required
                     value={bannerForm.title}
                     onChange={(e) => setBannerForm({ ...bannerForm, title: e.target.value })}
-                    placeholder="VD: Chương trình khuyến mãi Aptomat khối Tmax XT..."
+                    placeholder="VD: Chiến dịch Aptomat khối Tmax XT tháng 10..."
                     className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:border-[#1B4C98] font-bold text-gray-900"
                   />
                 </div>
@@ -2003,7 +2013,7 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
               </div>
 
               {/* Banner-Wide Link Configuration */}
-              <div className="p-3 bg-blue-50/70 border border-blue-200">
+              <div className="order-4 border border-blue-200 bg-blue-50/70 p-3">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2">
                   <span className="font-bold text-[#1B4C98] uppercase text-[11px] flex items-center gap-1.5">
                     <span>🔗</span> Liên Kết Khi Bấm Vào Toàn Banner (Không qua nút)
@@ -2065,12 +2075,12 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
               {/* ═════════════════════════════════════════════════════════════════ */}
               {/* 1:1 LIVE WYSIWYG PREVIEW (ANCHORED TO VD LOGO, 20% FROM BOTTOM) */}
               {/* ═════════════════════════════════════════════════════════════════ */}
-              <div className="p-4 bg-slate-900 border border-slate-700 shadow-xl space-y-3">
+              <div className="order-1 space-y-3 border border-slate-700 bg-slate-900 p-4 shadow-xl">
                 {/* Canvas Controls Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-700 text-white">
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-xs uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
-                      <span>🎨</span> Xem Trước Banner Khớp 100% Trang Chủ
+                      <span>🎨</span> Banner Preview
                     </span>
                     <span className="text-[10px] font-mono px-2 py-0.5 bg-slate-800 text-cyan-300 border border-slate-600 rounded">
                       {imageNaturalSize.width} × {imageNaturalSize.height}px
@@ -2100,19 +2110,6 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                   </div>
                 </div>
 
-                {/* Info guide bar */}
-                <div className="px-3 py-2 bg-slate-800/90 border border-slate-700 rounded text-[11px] text-gray-300 flex items-center justify-between flex-wrap gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span>
-                      <strong>Quy chuẩn định vị:</strong> Nút 1 neo thẳng hàng Logo VD ở Header, cách cạnh dưới <strong>20%</strong>. Nút 2 cách Nút 1 <strong>33px</strong> trên cùng hàng. Kích thước mặc định (+15%).
-                    </span>
-                  </div>
-                  <span className="text-[10px] text-yellow-300 font-mono">
-                    {bannerForm.buttons.length} nút đang hiển thị
-                  </span>
-                </div>
-
                 {/* Canvas Container */}
                 <div className="w-full flex items-center justify-center p-3 bg-black/70 overflow-hidden">
                   <div
@@ -2120,6 +2117,7 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                     style={{
                       containerType: 'inline-size',
                       aspectRatio: `${imageNaturalSize.width} / ${imageNaturalSize.height}`,
+                      minHeight: previewDeviceMode === 'mobile' ? '260px' : undefined,
                     }}
                     className={`relative bg-[#1a1a1a] select-none border-2 border-slate-600 shadow-2xl transition-all duration-300 ${
                       previewDeviceMode === 'desktop'
@@ -2142,6 +2140,26 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                       </div>
                     )}
 
+                    <div
+                      className={`pointer-events-none absolute inset-y-0 left-0 z-10 ${previewDeviceMode === 'mobile' ? 'w-full bg-black/50' : 'w-[45%]'}`}
+                      style={previewDeviceMode === 'mobile' ? undefined : {
+                        background: 'linear-gradient(to right, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.5) 50%, rgba(0, 0, 0, 0) 100%)',
+                      }}
+                    />
+
+                    {(bannerForm.mainTitle || bannerForm.description) && (
+                      <div
+                        className={`absolute z-20 ${previewDeviceMode === 'mobile' ? 'left-1/2 w-[calc(100%-128px)] -translate-x-1/2 text-center' : 'left-8 max-w-[58%] text-left'}`}
+                        style={{
+                          top: previewDeviceMode === 'mobile' ? undefined : '50%',
+                          bottom: previewDeviceMode === 'mobile' ? 'calc(31% + 29px)' : undefined,
+                        }}
+                      >
+                        {bannerForm.mainTitle && <h2 className={`${previewDeviceMode === 'mobile' ? 'line-clamp-2 text-lg' : '-translate-y-1/2 whitespace-nowrap text-2xl'} overflow-hidden text-ellipsis font-bold leading-tight text-white drop-shadow-lg`}>{bannerForm.mainTitle}</h2>}
+                        {bannerForm.description && <p className={`${previewDeviceMode === 'mobile' ? 'mt-1 line-clamp-2' : bannerForm.mainTitle ? '-mt-[11px]' : ''} text-xs leading-snug text-white/90 drop-shadow-md sm:text-sm`}>{bannerForm.description}</p>}
+                      </div>
+                    )}
+
                     {/* Anchored CTA Buttons (Exact match to HeroSlider) */}
                     {bannerForm.buttons && bannerForm.buttons.length > 0 && (
                       <div className="absolute inset-0 pointer-events-none z-20">
@@ -2149,10 +2167,12 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                           <div
                             className="absolute flex items-center pointer-events-auto"
                             style={{
-                              left: '16px',
-                              bottom: '20%',
-                              transform: 'translateY(50%)',
-                              gap: '33px',
+                              left: previewDeviceMode === 'mobile' ? '50%' : '16px',
+                              top: previewDeviceMode === 'mobile' ? '69%' : undefined,
+                              bottom: previewDeviceMode === 'mobile' ? undefined : '20%',
+                              transform: previewDeviceMode === 'mobile' ? 'translate(-50%, -50%)' : 'translateY(50%)',
+                              gap: previewDeviceMode === 'mobile' ? '8px' : '33px',
+                              maxWidth: previewDeviceMode === 'mobile' ? 'calc(100% - 24px)' : undefined,
                             }}
                           >
                             {bannerForm.buttons.slice(0, 2).map((btn, idx) => {
@@ -2167,13 +2187,9 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                                 <button
                                   key={btn.id}
                                   type="button"
-                                  style={{
-                                    fontSize: 'clamp(11.5px, 1.1cqw + 1px, 15px)',
-                                    padding: 'clamp(5px, 0.4cqw + 2.3px, 9.2px) clamp(9.2px, 1.04cqw + 6.9px, 18.4px)',
-                                  }}
-                                  className={`rounded-[4px] font-bold tracking-tight shadow-md flex items-center gap-1.5 whitespace-nowrap leading-none ${styleClass}`}
+                                  className={`${previewDeviceMode === 'mobile' ? 'h-[38px] px-3' : 'h-9 px-[18px]'} rounded-[4px] text-xs font-bold tracking-tight shadow-md flex items-center gap-1.5 whitespace-nowrap leading-none ${styleClass}`}
                                 >
-                                  <span>{btn.label || `Nút ${idx + 1}`}</span>
+                                  <span className={previewDeviceMode === 'mobile' ? 'max-w-[128px] overflow-hidden text-ellipsis' : ''}>{limitButtonLabel(btn.label || `Nút ${idx + 1}`)}</span>
                                   {btn.actionType === 'phone' && (
                                     <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
                                       <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
@@ -2190,13 +2206,46 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                 </div>
               </div>
 
+              {/* Headline and description displayed directly on the banner */}
+              <div className="order-3 grid grid-cols-1 gap-4 rounded-lg border border-blue-200 bg-blue-50/60 p-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 flex items-center justify-between font-bold uppercase text-gray-700">
+                    <span>Headline:</span>
+                    <span className="text-[10px] font-medium text-gray-400">{countText(bannerForm.mainTitle || '')}/50</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={bannerForm.mainTitle || ''}
+                    onChange={(e) => setBannerForm({ ...bannerForm, mainTitle: limitText(e.target.value, 50) })}
+                    placeholder="VD: Thiết bị điện ABB thế hệ mới"
+                    className="w-full border border-gray-300 px-3 py-2 font-bold text-gray-900 focus:border-[#1B4C98] focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 flex items-center justify-between font-bold uppercase text-gray-700">
+                    <span>Description:</span>
+                    <span className="text-[10px] font-medium text-gray-400">{countText(bannerForm.description || '')}/120</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={bannerForm.description || ''}
+                    onChange={(e) => setBannerForm({ ...bannerForm, description: limitText(e.target.value, 120) })}
+                    placeholder="Mô tả ngắn hỗ trợ nội dung chính của banner"
+                    className="w-full border border-gray-300 px-3 py-2 text-gray-900 focus:border-[#1B4C98] focus:outline-none"
+                  />
+                </div>
+                <p className="text-[10px] text-gray-500 sm:col-span-2">
+                  Nội dung để trống sẽ không hiển thị. Desktop canh trái; mobile tự động canh giữa.
+                </p>
+              </div>
+
               {/* ═════════════════════════════════════════════════════════════════ */}
               {/* CTA BUTTONS CONFIGURATION (SIZE SM, 3 COLORS, MAX 2 BUTTONS)    */}
               {/* ═════════════════════════════════════════════════════════════════ */}
-              <div className="p-4 bg-gray-50 border border-gray-300 space-y-4">
+              <div className="order-5 space-y-4 border border-gray-300 bg-gray-50 p-4">
                 <div className="flex items-center">
                   <span className="font-bold text-gray-800 uppercase text-xs flex items-center gap-2">
-                    <span>🔘</span> Cấu Hình Nút CTA Trên Banner
+                    <span>🔘</span> CTA Settings
                   </span>
                 </div>
 
@@ -2212,13 +2261,14 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                       </div>
 
                       <div>
-                        <label className="block text-[11px] font-bold text-gray-700 mb-1">
-                          Nội dung hiển thị trên nút:
+                        <label className="mb-1 flex items-center justify-between text-[11px] font-bold text-gray-700">
+                          <span>Nội dung hiển thị trên nút:</span>
+                          <span className="font-medium text-gray-400">{countText(bannerForm.buttons[0].label)}/24</span>
                         </label>
                         <input
                           type="text"
                           value={bannerForm.buttons[0].label}
-                          onChange={(e) => updateButtonField(0, 'label', e.target.value)}
+                          onChange={(e) => updateButtonField(0, 'label', limitButtonLabel(e.target.value))}
                           placeholder="Ví dụ: Xem Danh Mục Sản Phẩm →"
                           className="w-full px-3 py-2 border border-gray-300 text-xs font-bold text-gray-900 focus:outline-none focus:border-[#1B4C98]"
                         />
@@ -2246,11 +2296,14 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                           </label>
                           <select
                             value={bannerForm.buttons[0].actionType}
-                            onChange={(e) => updateButtonField(0, 'actionType', e.target.value)}
+                            onChange={(e) => {
+                              updateButtonField(0, 'actionType', e.target.value)
+                              if (e.target.value === 'external') updateButtonField(0, 'targetUrl', '')
+                            }}
                             className="w-full px-2.5 py-1.5 border border-gray-300 text-xs bg-white"
                           >
                             <option value="internal">Trang nội bộ</option>
-                            <option value="external">Link ngoài / PDF</option>
+                            <option value="external">URL bên ngoài website</option>
                             <option value="phone">Gọi Hotline</option>
                             <option value="zalo">Chat Zalo</option>
                           </select>
@@ -2275,7 +2328,7 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                           </select>
                         ) : (
                           <input
-                            type="text"
+                              type={bannerForm.buttons[0].actionType === 'external' ? 'url' : 'text'}
                             value={bannerForm.buttons[0].targetUrl}
                             onChange={(e) => updateButtonField(0, 'targetUrl', e.target.value)}
                             placeholder={
@@ -2311,13 +2364,14 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                       </div>
 
                       <div>
-                        <label className="block text-[11px] font-bold text-gray-700 mb-1">
-                          Nội dung hiển thị trên nút:
+                        <label className="mb-1 flex items-center justify-between text-[11px] font-bold text-gray-700">
+                          <span>Nội dung hiển thị trên nút:</span>
+                          <span className="font-medium text-gray-400">{countText(bannerForm.buttons[1].label)}/24</span>
                         </label>
                         <input
                           type="text"
                           value={bannerForm.buttons[1].label}
-                          onChange={(e) => updateButtonField(1, 'label', e.target.value)}
+                          onChange={(e) => updateButtonField(1, 'label', limitButtonLabel(e.target.value))}
                           placeholder="Ví dụ: Tải Bảng Giá PDF"
                           className="w-full px-3 py-2 border border-gray-300 text-xs font-bold text-gray-900 focus:outline-none focus:border-[#1B4C98]"
                         />
@@ -2345,11 +2399,14 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                           </label>
                           <select
                             value={bannerForm.buttons[1].actionType}
-                            onChange={(e) => updateButtonField(1, 'actionType', e.target.value)}
+                            onChange={(e) => {
+                              updateButtonField(1, 'actionType', e.target.value)
+                              if (e.target.value === 'external') updateButtonField(1, 'targetUrl', '')
+                            }}
                             className="w-full px-2.5 py-1.5 border border-gray-300 text-xs bg-white"
                           >
                             <option value="internal">Trang nội bộ</option>
-                            <option value="external">Link ngoài / PDF</option>
+                            <option value="external">URL bên ngoài website</option>
                             <option value="phone">Gọi Hotline</option>
                             <option value="zalo">Chat Zalo</option>
                           </select>
@@ -2374,7 +2431,7 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                           </select>
                         ) : (
                           <input
-                            type="text"
+                              type={bannerForm.buttons[1].actionType === 'external' ? 'url' : 'text'}
                             value={bannerForm.buttons[1].targetUrl}
                             onChange={(e) => updateButtonField(1, 'targetUrl', e.target.value)}
                             placeholder={
@@ -2404,7 +2461,7 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
               </div>
 
               {/* Active Toggle */}
-              <div className="flex items-center gap-2 pt-1">
+              <div className="order-6 flex items-center gap-2 pt-1">
                 <label className="flex items-center gap-2 cursor-pointer font-bold text-gray-800">
                   <input
                     type="checkbox"
@@ -2413,12 +2470,12 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                       setBannerForm({ ...bannerForm, isActive: e.target.checked })
                     }
                   />
-                  <span>Kích hoạt hiển thị banner này trên trang chủ</span>
+                  <span>Show on homepage</span>
                 </label>
               </div>
 
               {/* Submit / Cancel Actions */}
-              <div className="pt-3 border-t border-gray-200 flex justify-end gap-3">
+              <div className="order-7 flex justify-end gap-3 border-t border-gray-200 pt-3">
                 <button
                   type="button"
                   onClick={() => setBannerModalOpen(false)}

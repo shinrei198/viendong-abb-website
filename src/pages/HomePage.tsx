@@ -199,11 +199,6 @@ export default function HomePage({ onNavigate, onAddToCart }: HomePageProps) {
               <p className="text-xs text-gray-400">{homeContent.partnerSubtitle}</p>
             </div>
           </div>
-          <div className="flex items-center gap-5 text-xs text-gray-400 flex-shrink-0">
-            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-green-500" /> Hàng có sẵn</span>
-            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-gray-400" /> Bảo hành chính hãng</span>
-            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-red-600" /> Hỗ trợ kỹ thuật</span>
-          </div>
         </div>
       </section>
 
@@ -420,11 +415,15 @@ export default function HomePage({ onNavigate, onAddToCart }: HomePageProps) {
               >
                 {/* 16:9 Thumbnail with red play button overlay */}
                 <div className="relative w-full aspect-video bg-[#f7f7f7] overflow-hidden">
-                  <img
-                    src={v.thumb}
-                    alt={v.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 pointer-events-none"
-                  />
+                  {v.thumb ? (
+                    <img
+                      src={v.thumb}
+                      alt={v.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 pointer-events-none"
+                    />
+                  ) : (
+                    <div className="h-full w-full bg-gradient-to-br from-gray-100 to-gray-200" aria-hidden="true" />
+                  )}
 
                   {/* Featured Red Badge Top-Left */}
                   {v.isFeatured && (

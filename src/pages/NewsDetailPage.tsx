@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { NewsItem, getStoredNews, createVietnameseSlug } from '@/data/siteData'
 import { NewsThumbnailView } from '@/components/ThumbnailCropper'
-import { isSafeContentUrl, sanitizeRichHtml } from '@/utils/sanitize'
+import { sanitizeRichHtml } from '@/utils/sanitize'
 
 interface NewsDetailPageProps {
   articleId: string
@@ -20,19 +20,40 @@ export default function NewsDetailPage({ articleId, onNavigate }: NewsDetailPage
     return () => window.removeEventListener('viendong_storage_update', handleStorageUpdate)
   }, [])
 
-  // Find article by id or slug, or fallback
+  // Only published articles are available on the public website.
+  // Never fall back to another article when a URL does not match.
+  const publishedNews = allNews.filter((item) => item.status === 'published')
   const normalizeSlug = (s?: string) => (s || '').toLowerCase().replace(/[-_]+/g, '_')
   const targetSlug = normalizeSlug(articleId)
-  const article =
-    allNews.find(
-      (n) =>
-        n.id === articleId ||
-        normalizeSlug(n.slug) === targetSlug ||
-        normalizeSlug(createVietnameseSlug(n.title)) === targetSlug
-    ) || allNews[0]
+  const article = publishedNews.find(
+    (n) =>
+      n.id === articleId ||
+      normalizeSlug(n.slug) === targetSlug ||
+      normalizeSlug(createVietnameseSlug(n.title)) === targetSlug
+  )
+
+  if (!article) {
+    return (
+      <main className="min-h-[60vh] bg-white px-6 py-20 font-['Roboto']">
+        <div className="mx-auto max-w-xl rounded-lg border border-gray-200 bg-[#f8fafc] p-8 text-center">
+          <h1 className="mb-3 text-2xl font-bold text-[#1a1a1a]">Không tìm thấy bài viết</h1>
+          <p className="mb-6 text-sm leading-relaxed text-gray-600">
+            Bài viết không tồn tại, chưa được xuất bản hoặc đã được quản trị viên gỡ xuống.
+          </p>
+          <button
+            type="button"
+            onClick={() => onNavigate('news')}
+            className="h-9 whitespace-nowrap bg-[#1B4C98] px-5 text-xs font-bold text-white transition-colors hover:bg-[#FF000F]"
+          >
+            ← Quay lại danh sách tin tức
+          </button>
+        </div>
+      </main>
+    )
+  }
 
   // Find related articles (same category, excluding current)
-  const relatedArticles = allNews
+  const relatedArticles = publishedNews
     .filter((n) => n.id !== article.id && (n.category === article.category || n.tags.some(t => article.tags?.includes(t))))
     .slice(0, 3)
 
@@ -40,7 +61,7 @@ export default function NewsDetailPage({ articleId, onNavigate }: NewsDetailPage
   const finalRelated =
     relatedArticles.length >= 2
       ? relatedArticles
-      : allNews.filter((n) => n.id !== article.id).slice(0, 3)
+      : publishedNews.filter((n) => n.id !== article.id).slice(0, 3)
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href)
@@ -133,43 +154,6 @@ export default function NewsDetailPage({ articleId, onNavigate }: NewsDetailPage
           className="prose max-w-none text-gray-800 text-[15px] leading-relaxed space-y-4"
           dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(article.content) }}
         />
-
-        {/* Attachments Section */}
-        {article.attachments && article.attachments.length > 0 && (
-          <div className="mt-10 rounded-lg p-6 bg-[#f8fafc] border border-gray-200">
-            <h4 className="text-sm font-bold text-[#1B4C98] uppercase tracking-wider mb-4 flex items-center gap-2">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 1.5V8H18.5L13 3.5zM6 20V4h5v5h5v11H6z" />
-              </svg>
-              Tài liệu kỹ thuật đính kèm
-            </h4>
-            <div className="space-y-2.5">
-              {article.attachments.map((file, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center justify-between rounded-md p-3 bg-white border border-gray-200 hover:border-[#FF000F] transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded bg-red-100 text-[#FF000F] flex items-center justify-center font-bold text-xs">
-                      PDF
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-gray-900">{file.name}</p>
-                      <p className="text-[11px] text-gray-400">{file.size}</p>
-                    </div>
-                  </div>
-                  <a
-                    href={isSafeContentUrl(file.url) ? file.url : '#'}
-                    download
-                    className="px-3.5 py-1.5 text-xs font-semibold text-white bg-[#1B4C98] hover:bg-[#FF000F] transition-colors"
-                  >
-                    Tải về ↓
-                  </a>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Article Tags & Social Share */}
         <div className="mt-10 pt-6 border-t border-gray-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

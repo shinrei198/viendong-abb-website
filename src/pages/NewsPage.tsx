@@ -28,7 +28,7 @@ export default function NewsPage({ onNavigate }: NewsPageProps) {
 
   // Filter published articles
   const filteredNews = news.filter((n) => {
-    if (n.status === 'draft') return false
+    if (n.status !== 'published') return false
     const matchesCat = selectedCat === 'Tất cả' || n.category.toLowerCase() === selectedCat.toLowerCase()
     const matchesQuery =
       n.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -80,26 +80,16 @@ export default function NewsPage({ onNavigate }: NewsPageProps) {
 
       {/* Main Content Area */}
       <div className="max-w-7xl mx-auto px-6 py-10">
-        {/* Header Bar: Section Title + Position 1 Pagination (Canh lề phải ngay dưới Header) */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-gray-200">
-          <div>
-            <div className="w-8 h-1 bg-[#FF000F] mb-3" />
-            <h2 className="text-2xl sm:text-3xl font-bold text-[#1a1a1a] font-['Roboto_Condensed'] tracking-wide uppercase">
-              Tin tức & Kỹ thuật
-            </h2>
+        {/* Position 1 Pagination: ngay dưới banner, canh lề phải */}
+        {totalPages > 1 && (
+          <div className="flex justify-end border-b border-gray-200 pb-6">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
           </div>
-
-          {/* ── Position 1 Pagination: Ngay dưới Header, Canh lề phải ─────────────────── */}
-          {totalPages > 1 && (
-            <div className="flex sm:justify-end">
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-              />
-            </div>
-          )}
-        </div>
+        )}
 
         {/* Category Filter Pills & Search Input */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-6">

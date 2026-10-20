@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { VideoItem } from '@/data/siteData'
+import { VideoItem, getStoredProducts } from '@/data/siteData'
 
 interface VideoModalProps {
   video: VideoItem | null
@@ -59,6 +59,14 @@ export default function VideoModal({ video, onClose, onNavigate }: VideoModalPro
     video.videoUrl.startsWith('data:')
 
   const embedSrc = getEmbedUrl(video.videoUrl, video.embedType)
+  const normalizedLinkedSku = video.linkedProductSku?.trim().toLowerCase()
+  const linkedProduct = normalizedLinkedSku
+    ? getStoredProducts().find(
+        (product) =>
+          product.baseSku.toLowerCase() === normalizedLinkedSku ||
+          product.variants?.some((variant) => variant.sku.toLowerCase() === normalizedLinkedSku)
+      )
+    : undefined
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm animate-fadeIn">
@@ -118,16 +126,18 @@ export default function VideoModal({ video, onClose, onNavigate }: VideoModalPro
             <h3 className="text-lg font-bold text-white leading-snug mb-1 font-['Roboto']">
               {video.title}
             </h3>
-            <p className="text-xs text-gray-400">
-              Thời lượng: <strong className="text-gray-200">{video.duration || '0:30'}</strong> • Phát hành bởi Viễn Đông Electric & ABB
-            </p>
+            {video.duration && (
+              <p className="text-xs text-gray-400">
+                Thời lượng: <strong className="text-gray-200">{video.duration}</strong>
+              </p>
+            )}
           </div>
 
-          {video.linkedProductSku && onNavigate && (
+          {linkedProduct && onNavigate && (
             <button
               onClick={() => {
                 onClose()
-                onNavigate('products')
+                onNavigate('productDetail', linkedProduct.id)
               }}
               className="px-5 py-2.5 text-xs font-bold text-white flex-shrink-0 transition-all hover:opacity-90 flex items-center gap-2"
               style={{ backgroundColor: 'var(--red)' }}
