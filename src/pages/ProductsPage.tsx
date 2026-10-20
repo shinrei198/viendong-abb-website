@@ -279,10 +279,10 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
               <span className="text-white font-medium">Danh mục sản phẩm</span>
             </nav>
             <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-wide uppercase" style={{ fontFamily: font }}>
-              Thiết Bị Điện ABB Thế Hệ Mới
+              Nhà Phân Phối Chính Thức Thiết Bị Điện ABB (Thụy Sỹ)
             </h1>
             <p className="text-blue-200 text-sm mt-1 max-w-xl">
-              Phân phối chính hãng các dòng Công tắc, Ổ cắm, Phụ kiện VELET 120, MAYPLE 120, MAYPLE, VELET, ZITA, ACUS Thụy Sĩ.
+              Sản phẩm chính hãng 100%. Bảo hành lâu dài &amp; Uy tín.
             </p>
           </div>
           <div className="flex items-center gap-3">
