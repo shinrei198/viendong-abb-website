@@ -1,5 +1,44 @@
 # Cloudflare setup for media and quote requests
 
+## Production CMS storage
+
+Editable website content is stored in D1, independently from deployed source files.
+The `cms_sections` table keeps a separate revisioned row for each content group:
+
+- `news` and `newsCategories`
+- `videos` and `videoCategories`
+- `banners`
+- `products`
+- `settings`
+- `homePage`
+
+Run all D1 migrations before deploying the Worker:
+
+```powershell
+npx wrangler d1 migrations apply viendong-quotes --remote
+npm run build
+npx wrangler deploy
+```
+
+On the first `GET /api/content` after migration, the Worker imports the legacy
+`site_data` KV value only when `cms_sections` is empty. It records the completed
+migration as `legacy-kv-site-data-v1` and leaves the KV value untouched as a
+rollback source. Later code deployments never reseed or replace populated D1
+content.
+
+Each admin write updates only one section through `PUT /api/content/:section`.
+The client sends the last revision it loaded; D1 rejects stale writes with HTTP
+409 so two open admin sessions cannot silently overwrite each other.
+
+Production verification:
+
+```powershell
+npx wrangler d1 execute viendong-quotes --remote --command "SELECT section_key, revision, updated_at, length(payload_json) AS bytes FROM cms_sections ORDER BY section_key;"
+```
+
+Do not delete the legacy KV `site_data` key until D1 backups and restore drills
+have been verified. New media files remain in R2 and are not stored in D1.
+
 The application code is ready for D1 and R2, but the production resources must be created in the target Cloudflare account before deployment.
 
 ## 1. Create and bind D1

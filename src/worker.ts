@@ -8,6 +8,39 @@ export interface Env {
 
 const QUOTE_STATUSES = new Set(['new', 'contacted', 'quoted', 'completed', 'cancelled'])
 const MEDIA_FOLDERS = new Set(['banners', 'news', 'products', 'homepage', 'videos', 'content'])
+const CMS_SECTION_KEYS = [
+  'videoCategories',
+  'videos',
+  'newsCategories',
+  'news',
+  'banners',
+  'settings',
+  'products',
+  'homePage',
+] as const
+type CmsSectionKey = typeof CMS_SECTION_KEYS[number]
+const CMS_SECTION_KEY_SET = new Set<string>(CMS_SECTION_KEYS)
+const CMS_ARRAY_SECTIONS = new Set<CmsSectionKey>([
+  'videoCategories',
+  'videos',
+  'newsCategories',
+  'news',
+  'banners',
+  'products',
+])
+const LEGACY_TO_CMS_SECTION: Record<string, CmsSectionKey> = {
+  initialVideoCategories: 'videoCategories',
+  initialVideos: 'videos',
+  initialNewsCategories: 'newsCategories',
+  initialNews: 'news',
+  initialBannerSlides: 'banners',
+  initialSiteSettings: 'settings',
+  initialProducts: 'products',
+  initialHomePageContent: 'homePage',
+}
+const CMS_TO_LEGACY_SECTION = Object.fromEntries(
+  Object.entries(LEGACY_TO_CMS_SECTION).map(([legacyKey, sectionKey]) => [sectionKey, legacyKey]),
+) as Record<CmsSectionKey, string>
 
 function json(data: unknown, status = 200, headers: HeadersInit = {}) {
   return Response.json(data, { status, headers: { 'Cache-Control': 'no-store', ...headers } })
@@ -39,6 +72,170 @@ function sanitizeSiteData(data: any) {
     }))
   }
   return data
+}
+
+function sanitizeCmsSection(sectionKey: CmsSectionKey, value: unknown) {
+  if (CMS_ARRAY_SECTIONS.has(sectionKey)) {
+    if (!Array.isArray(value)) throw new Error(`Dữ liệu ${sectionKey} phải là danh sách.`)
+  } else if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error(`Dữ liệu ${sectionKey} phải là đối tượng.`)
+  }
+
+  if (sectionKey === 'news') {
+    return (value as any[]).map((item) => ({
+      ...item,
+      title: cleanText(item?.title, 300),
+      summary: cleanText(item?.summary, 1000),
+      content: sanitizeHtmlServer(item?.content),
+      quote: cleanText(item?.quote, 1000),
+      quoteAuthor: cleanText(item?.quoteAuthor, 200),
+    }))
+  }
+  return value
+}
+
+function legacyDataToSections(data: any): Partial<Record<CmsSectionKey, unknown>> {
+  const sanitized = sanitizeSiteData(data)
+  const sections: Partial<Record<CmsSectionKey, unknown>> = {}
+  for (const [legacyKey, sectionKey] of Object.entries(LEGACY_TO_CMS_SECTION)) {
+    if (sanitized[legacyKey] !== undefined) {
+      sections[sectionKey] = sanitizeCmsSection(sectionKey, sanitized[legacyKey])
+    }
+  }
+  return sections
+}
+
+async function writeCmsSections(env: Env, sections: Partial<Record<CmsSectionKey, unknown>>) {
+  if (!env.DB) throw new Error('D1 chưa được cấu hình.')
+  const now = new Date().toISOString()
+  const statements = Object.entries(sections).map(([sectionKey, value]) => env.DB.prepare(`
+    INSERT INTO cms_sections (section_key, payload_json, revision, updated_at)
+    VALUES (?, ?, 1, ?)
+    ON CONFLICT(section_key) DO UPDATE SET
+      payload_json = excluded.payload_json,
+      revision = cms_sections.revision + 1,
+      updated_at = excluded.updated_at
+  `).bind(sectionKey, JSON.stringify(value), now))
+  if (statements.length) await env.DB.batch(statements)
+}
+
+async function writeSingleCmsSection(
+  env: Env,
+  sectionKey: CmsSectionKey,
+  value: unknown,
+  expectedRevision?: number,
+) {
+  if (!env.DB) throw new Error('D1 chưa được cấu hình.')
+  const now = new Date().toISOString()
+  const current = await env.DB.prepare(
+    'SELECT revision FROM cms_sections WHERE section_key = ?',
+  ).bind(sectionKey).first() as any
+
+  if (!current) {
+    if (expectedRevision !== undefined && expectedRevision !== 0) return null
+    const insert = await env.DB.prepare(`
+      INSERT OR IGNORE INTO cms_sections (section_key, payload_json, revision, updated_at)
+      VALUES (?, ?, 1, ?)
+    `).bind(sectionKey, JSON.stringify(value), now).run()
+    return Number(insert.meta?.changes || 0) === 1 ? { revision: 1, updatedAt: now } : null
+  }
+
+  const currentRevision = Number(current.revision)
+  if (expectedRevision === undefined || expectedRevision !== currentRevision) return null
+  const update = await env.DB.prepare(`
+    UPDATE cms_sections
+    SET payload_json = ?, revision = revision + 1, updated_at = ?
+    WHERE section_key = ? AND revision = ?
+  `).bind(JSON.stringify(value), now, sectionKey, currentRevision).run()
+  if (Number(update.meta?.changes || 0) !== 1) return null
+  return { revision: currentRevision + 1, updatedAt: now }
+}
+
+async function migrateLegacyKvIfNeeded(env: Env) {
+  if (!env.DB) return false
+  const existing = await env.DB.prepare('SELECT COUNT(*) AS count FROM cms_sections').first() as any
+  if (Number(existing?.count || 0) > 0) return false
+
+  const legacyJson = await env.VIENDONG_KV?.get('site_data')
+  if (!legacyJson) return false
+  const sections = legacyDataToSections(JSON.parse(legacyJson))
+  if (Object.keys(sections).length === 0) return false
+
+  await writeCmsSections(env, sections)
+  await env.DB.prepare(`
+    INSERT OR IGNORE INTO cms_migrations (migration_key, completed_at, details_json)
+    VALUES ('legacy-kv-site-data-v1', ?, ?)
+  `).bind(new Date().toISOString(), JSON.stringify({ sections: Object.keys(sections) })).run()
+  return true
+}
+
+async function readCmsSections(env: Env) {
+  if (!env.DB) throw new Error('D1 chưa được cấu hình.')
+  await migrateLegacyKvIfNeeded(env)
+  const result = await env.DB.prepare(
+    'SELECT section_key, payload_json, revision, updated_at FROM cms_sections',
+  ).all()
+  const sections: Record<string, unknown> = {}
+  const revisions: Record<string, { revision: number; updatedAt: string }> = {}
+  for (const row of result.results || []) {
+    const sectionKey = String((row as any).section_key)
+    if (!CMS_SECTION_KEY_SET.has(sectionKey)) continue
+    sections[sectionKey] = JSON.parse(String((row as any).payload_json))
+    revisions[sectionKey] = {
+      revision: Number((row as any).revision || 1),
+      updatedAt: String((row as any).updated_at || ''),
+    }
+  }
+  return { sections, revisions }
+}
+
+function sectionsToLegacyData(sections: Record<string, unknown>) {
+  const data: Record<string, unknown> = { schemaVersion: 3 }
+  for (const sectionKey of CMS_SECTION_KEYS) {
+    if (sections[sectionKey] !== undefined) {
+      data[CMS_TO_LEGACY_SECTION[sectionKey]] = sections[sectionKey]
+    }
+  }
+  return data
+}
+
+async function handleCms(request: Request, env: Env, url: URL) {
+  if (!env.DB) return json({ success: false, message: 'D1 chưa được cấu hình.' }, 503)
+
+  if (request.method === 'GET' && url.pathname === '/api/content') {
+    const { sections, revisions } = await readCmsSections(env)
+    return json({ success: true, schemaVersion: 3, sections, revisions })
+  }
+
+  const sectionKey = decodeURIComponent(url.pathname.slice('/api/content/'.length))
+  if (!CMS_SECTION_KEY_SET.has(sectionKey)) {
+    return json({ success: false, message: 'Nhóm nội dung không hợp lệ.' }, 404)
+  }
+  if (request.method !== 'PUT') return json({ success: false, message: 'Method not allowed.' }, 405)
+
+  const body = await request.json() as any
+  const value = sanitizeCmsSection(sectionKey as CmsSectionKey, body?.data)
+  const serialized = JSON.stringify(value)
+  if (serialized.length > 8 * 1024 * 1024) {
+    return json({ success: false, message: 'Nhóm nội dung quá lớn.' }, 413)
+  }
+  const expectedRevision = Number.isInteger(body?.expectedRevision) && body.expectedRevision >= 0
+    ? Number(body.expectedRevision)
+    : undefined
+  const saved = await writeSingleCmsSection(env, sectionKey as CmsSectionKey, value, expectedRevision)
+  if (!saved) {
+    return json({
+      success: false,
+      conflict: true,
+      message: 'Nội dung đã được một phiên quản trị khác cập nhật. Hãy tải lại trang trước khi lưu tiếp.',
+    }, 409)
+  }
+  return json({
+    success: true,
+    sectionKey,
+    revision: saved.revision,
+    updatedAt: saved.updatedAt,
+  })
 }
 
 function quoteFromRow(row: any) {
@@ -217,6 +414,9 @@ export default {
     const url = new URL(request.url)
 
     try {
+      if (url.pathname === '/api/content' || url.pathname.startsWith('/api/content/')) {
+        return await handleCms(request, env, url)
+      }
       if (url.pathname === '/api/quotes' || url.pathname.startsWith('/api/quotes/')) {
         return await handleQuotes(request, env, url)
       }
@@ -235,18 +435,22 @@ export default {
 
       if (url.pathname === '/api/site-data') {
         if (request.method === 'GET') {
-          const stored = await env.VIENDONG_KV?.get('site_data')
-          return stored
-            ? new Response(stored, { headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' } })
+          if (env.DB) {
+            const { sections, revisions } = await readCmsSections(env)
+            if (Object.keys(sections).length) {
+              return json({ ...sectionsToLegacyData(sections), revisions })
+            }
+          }
+          const legacyStored = await env.VIENDONG_KV?.get('site_data')
+          return legacyStored
+            ? new Response(legacyStored, { headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' } })
             : json({ exists: false })
         }
         if (request.method === 'POST') {
-          if (!env.VIENDONG_KV) return json({ success: false, message: 'KV chưa được cấu hình.' }, 503)
-          const body = await request.text()
-          if (body.length > 10 * 1024 * 1024) return json({ success: false, message: 'Dữ liệu website quá lớn.' }, 413)
-          const sanitized = sanitizeSiteData(JSON.parse(body))
-          await env.VIENDONG_KV.put('site_data', JSON.stringify(sanitized))
-          return json({ success: true, message: 'Đã lưu dữ liệu website vào Cloudflare KV.' })
+          return json({
+            success: false,
+            message: 'API lưu toàn bộ site đã ngừng hoạt động. Hãy tải lại trang quản trị để dùng API D1 theo từng nhóm nội dung.',
+          }, 410)
         }
         return json({ success: false, message: 'Method not allowed.' }, 405)
       }

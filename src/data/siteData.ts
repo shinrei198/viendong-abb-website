@@ -251,6 +251,7 @@ const STORAGE_KEYS = {
   PRODUCTS: 'viendong_products_v1',
   PRODUCTS_SEED_VERSION: 'viendong_products_seed_version',
   HOME_PAGE: 'viendong_home_page_v1',
+  CMS_REVISIONS: 'viendong_cms_revisions_v1',
 }
 
 const CURRENT_PRODUCT_SEED_VERSION = 'breaker-images-2026-10-13'
@@ -285,7 +286,7 @@ export function saveStoredProducts(data: ProductItem[]) {
   try {
     localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(data))
     window.dispatchEvent(new Event('viendong_storage_update'))
-    scheduleCloudflareSync()
+    scheduleCloudflareSync('products', data)
   } catch (err) {
     console.error('Failed to save products', err)
   }
@@ -313,20 +314,87 @@ export function getStoredVideos(): VideoItem[] {
   }
 }
 
-let syncTimeout: any = null
-export function scheduleCloudflareSync() {
+export type CmsSectionKey =
+  | 'videoCategories'
+  | 'videos'
+  | 'newsCategories'
+  | 'news'
+  | 'banners'
+  | 'settings'
+  | 'products'
+  | 'homePage'
+
+const pendingSectionWrites = new Map<CmsSectionKey, unknown>()
+const activeSectionWrites = new Set<CmsSectionKey>()
+
+function dispatchSyncStatus(sectionKey: CmsSectionKey, status: 'saving' | 'saved' | 'error', message?: string) {
   if (typeof window === 'undefined') return
-  if (syncTimeout) clearTimeout(syncTimeout)
-  syncTimeout = setTimeout(() => {
-    saveAllDataToSourceCode().catch(() => {})
-  }, 600)
+  window.dispatchEvent(new CustomEvent('viendong_cloud_sync', {
+    detail: { sectionKey, status, message },
+  }))
+}
+
+async function persistCmsSection(sectionKey: CmsSectionKey, data: unknown) {
+  let revisions: Record<string, number> = {}
+  try {
+    revisions = JSON.parse(localStorage.getItem(STORAGE_KEYS.CMS_REVISIONS) || '{}')
+  } catch {
+    revisions = {}
+  }
+  const expectedRevision = Number.isInteger(revisions[sectionKey])
+    ? revisions[sectionKey]
+    : undefined
+  const response = await fetch(`/api/content/${encodeURIComponent(sectionKey)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ data, expectedRevision }),
+  })
+  const result = await response.json().catch(() => null)
+  if (!response.ok || !result?.success) {
+    throw new Error(result?.message || `Không thể lưu nhóm nội dung ${sectionKey} lên Cloudflare.`)
+  }
+  if (Number.isInteger(result.revision)) {
+    revisions[sectionKey] = result.revision
+    localStorage.setItem(STORAGE_KEYS.CMS_REVISIONS, JSON.stringify(revisions))
+  }
+}
+
+async function drainSectionWrites(sectionKey: CmsSectionKey) {
+  if (activeSectionWrites.has(sectionKey)) return
+  activeSectionWrites.add(sectionKey)
+  dispatchSyncStatus(sectionKey, 'saving')
+  try {
+    while (pendingSectionWrites.has(sectionKey)) {
+      const latestData = pendingSectionWrites.get(sectionKey)
+      pendingSectionWrites.delete(sectionKey)
+      await persistCmsSection(sectionKey, latestData)
+    }
+    dispatchSyncStatus(sectionKey, 'saved')
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Không thể lưu dữ liệu lên Cloudflare.'
+    dispatchSyncStatus(sectionKey, 'error', message)
+    console.error(`Failed to sync ${sectionKey} to Cloudflare`, error)
+  } finally {
+    activeSectionWrites.delete(sectionKey)
+    if (pendingSectionWrites.has(sectionKey)) void drainSectionWrites(sectionKey)
+  }
+}
+
+export function scheduleCloudflareSync(sectionKey?: CmsSectionKey, data?: unknown) {
+  if (typeof window === 'undefined') return
+  if (!sectionKey) {
+    void saveAllDataToSourceCode().catch((error) => console.error('Failed to sync site data', error))
+    return
+  }
+  pendingSectionWrites.set(sectionKey, data)
+  void drainSectionWrites(sectionKey)
 }
 
 export function saveStoredVideos(data: VideoItem[]) {
   try {
     localStorage.setItem(STORAGE_KEYS.VIDEOS, JSON.stringify(removeLegacyPlaceholderVideos(data)))
     window.dispatchEvent(new Event('viendong_storage_update'))
-    scheduleCloudflareSync()
+    scheduleCloudflareSync('videos', removeLegacyPlaceholderVideos(data))
   } catch (err) {
     console.error('Failed to save videos', err)
   }
@@ -345,7 +413,7 @@ export function saveStoredVideoCategories(data: string[]) {
   try {
     localStorage.setItem(STORAGE_KEYS.VIDEO_CATS, JSON.stringify(data))
     window.dispatchEvent(new Event('viendong_storage_update'))
-    scheduleCloudflareSync()
+    scheduleCloudflareSync('videoCategories', data)
   } catch (err) {
     console.error('Failed to save video categories', err)
   }
@@ -382,7 +450,7 @@ export function saveStoredNews(data: NewsItem[]) {
     const sanitized = data.map(sanitizeNewsRecord)
     localStorage.setItem(STORAGE_KEYS.NEWS, JSON.stringify(sanitized))
     window.dispatchEvent(new Event('viendong_storage_update'))
-    scheduleCloudflareSync()
+    scheduleCloudflareSync('news', sanitized)
   } catch (err) {
     console.error('Failed to save news', err)
   }
@@ -401,7 +469,7 @@ export function saveStoredNewsCategories(data: string[]) {
   try {
     localStorage.setItem(STORAGE_KEYS.NEWS_CATS, JSON.stringify(data))
     window.dispatchEvent(new Event('viendong_storage_update'))
-    scheduleCloudflareSync()
+    scheduleCloudflareSync('newsCategories', data)
   } catch (err) {
     console.error('Failed to save news categories', err)
   }
@@ -420,7 +488,7 @@ export function saveStoredBanners(data: BannerSlideItem[]) {
   try {
     localStorage.setItem(STORAGE_KEYS.BANNERS, JSON.stringify(data))
     window.dispatchEvent(new Event('viendong_storage_update'))
-    scheduleCloudflareSync()
+    scheduleCloudflareSync('banners', data)
   } catch (err) {
     console.error('Failed to save banners', err)
   }
@@ -439,7 +507,6 @@ export function saveStoredQuotes(data: QuoteRequestItem[]) {
   try {
     localStorage.setItem(STORAGE_KEYS.QUOTES, JSON.stringify(data))
     window.dispatchEvent(new Event('viendong_storage_update'))
-    scheduleCloudflareSync()
   } catch (err) {
     console.error('Failed to save quotes', err)
   }
@@ -544,7 +611,7 @@ export function saveStoredSiteSettings(data: SiteSettings) {
   try {
     localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(data))
     window.dispatchEvent(new Event('viendong_storage_update'))
-    scheduleCloudflareSync()
+    scheduleCloudflareSync('settings', data)
   } catch (err) {
     console.error('Failed to save site settings', err)
   }
@@ -564,7 +631,7 @@ export function saveStoredHomePageContent(data: HomePageContent) {
   try {
     localStorage.setItem(STORAGE_KEYS.HOME_PAGE, JSON.stringify(data))
     window.dispatchEvent(new Event('viendong_storage_update'))
-    scheduleCloudflareSync()
+    scheduleCloudflareSync('homePage', data)
   } catch (err) {
     console.error('Failed to save home page content', err)
   }
@@ -588,7 +655,7 @@ export function resetAllToDefault() {
 
 export function getCurrentFullSiteData() {
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     initialVideoCategories: getStoredVideoCategories(),
     initialVideos: getStoredVideos(),
     initialNewsCategories: getStoredNewsCategories(),
@@ -606,11 +673,39 @@ export function getCurrentFullSiteData() {
  */
 export async function fetchCloudflareSiteData(): Promise<boolean> {
   try {
+    const contentResponse = await fetch('/api/content')
+    if (contentResponse.ok) {
+      const contentResult = await contentResponse.json()
+      if (contentResult?.success && contentResult.sections && typeof contentResult.sections === 'object') {
+        const sections = contentResult.sections
+        if (contentResult.revisions && typeof contentResult.revisions === 'object') {
+          const revisions = Object.fromEntries(
+            Object.entries(contentResult.revisions)
+              .filter(([, value]: [string, any]) => Number.isInteger(value?.revision))
+              .map(([key, value]: [string, any]) => [key, value.revision]),
+          )
+          localStorage.setItem(STORAGE_KEYS.CMS_REVISIONS, JSON.stringify(revisions))
+        }
+        const imported = importAllDataFromJSON({
+          initialVideoCategories: sections.videoCategories,
+          initialVideos: sections.videos,
+          initialNewsCategories: sections.newsCategories,
+          initialNews: sections.news,
+          initialBannerSlides: sections.banners,
+          initialSiteSettings: sections.settings,
+          initialProducts: sections.products,
+          initialHomePageContent: sections.homePage,
+        }, { syncToCloudflare: false })
+        if (imported) return true
+      }
+    }
+
+    // Compatibility fallback while production is being migrated from KV to D1.
     const res = await fetch('/api/site-data')
     if (res.ok) {
       const data = await res.json()
       if (data && data.exists !== false && (data.initialVideos || data.initialNews || data.initialBannerSlides || data.initialProducts)) {
-        importAllDataFromJSON(data)
+        importAllDataFromJSON(data, { syncToCloudflare: false })
         return true
       }
     }
@@ -627,21 +722,24 @@ export async function fetchCloudflareSiteData(): Promise<boolean> {
 export async function saveAllDataToSourceCode(): Promise<{ success: boolean; message: string }> {
   const fullData = getCurrentFullSiteData()
 
-  // 1. Try Cloudflare Worker KV API (/api/site-data)
+  // 1. Save each editable group independently in Cloudflare D1.
   try {
-    const cfResponse = await fetch('/api/site-data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(fullData),
-    })
-    if (cfResponse.ok) {
-      const result = await cfResponse.json()
-      if (result.success) {
-        return {
-          success: true,
-          message: '✅ Đã lưu thành công trực tiếp vào Cloudflare Database!',
-        }
-      }
+    const sections: Array<[CmsSectionKey, unknown]> = [
+      ['videoCategories', fullData.initialVideoCategories],
+      ['videos', fullData.initialVideos],
+      ['newsCategories', fullData.initialNewsCategories],
+      ['news', fullData.initialNews],
+      ['banners', fullData.initialBannerSlides],
+      ['settings', fullData.initialSiteSettings],
+      ['products', fullData.initialProducts],
+      ['homePage', fullData.initialHomePageContent],
+    ]
+    for (const [sectionKey, data] of sections) {
+      await persistCmsSection(sectionKey, data)
+    }
+    return {
+      success: true,
+      message: '✅ Đã lưu thành công từng nhóm nội dung vào Cloudflare D1!',
     }
   } catch (err) {
     // Continue to local fallback
@@ -666,8 +764,8 @@ export async function saveAllDataToSourceCode(): Promise<{ success: boolean; mes
   }
 
   return {
-    success: true,
-    message: '✅ Đã lưu vào bộ nhớ trình duyệt thành công!',
+    success: false,
+    message: 'Không thể lưu lên Cloudflare. Dữ liệu chỉ còn trong trình duyệt này; vui lòng không đóng trang và thử lại.',
   }
 }
 
@@ -704,7 +802,10 @@ export async function importRemoteQuotes(quotes: QuoteRequestItem[]): Promise<vo
 }
 
 /** Import and apply site data from JSON file */
-export function importAllDataFromJSON(jsonData: any): boolean {
+export function importAllDataFromJSON(
+  jsonData: any,
+  options: { syncToCloudflare?: boolean } = { syncToCloudflare: true },
+): boolean {
   if (!jsonData || typeof jsonData !== 'object' || Array.isArray(jsonData)) return false
 
   // Accept both the current portable backup format and the older Settings-tab format.
@@ -749,7 +850,7 @@ export function importAllDataFromJSON(jsonData: any): boolean {
       localStorage.setItem(STORAGE_KEYS.PRODUCTS_SEED_VERSION, CURRENT_PRODUCT_SEED_VERSION)
     }
     window.dispatchEvent(new Event('viendong_storage_update'))
-    scheduleCloudflareSync()
+    if (options.syncToCloudflare !== false) scheduleCloudflareSync()
     return true
   } catch (err) {
     previousValues.forEach((value, key) => {

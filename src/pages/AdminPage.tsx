@@ -117,6 +117,20 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
   }, [])
 
   useEffect(() => {
+    const handleCloudSync = (event: Event) => {
+      const detail = (event as CustomEvent<{
+        status?: string
+        message?: string
+      }>).detail
+      if (detail?.status === 'error') {
+        showToast(`LƯU CLOUDFLARE THẤT BẠI: ${detail.message || 'Vui lòng thử lại.'}`)
+      }
+    }
+    window.addEventListener('viendong_cloud_sync', handleCloudSync)
+    return () => window.removeEventListener('viendong_cloud_sync', handleCloudSync)
+  }, [])
+
+  useEffect(() => {
     fetchQuoteRequests()
       .then(setQuotes)
       .catch((error) => showToast(error instanceof Error ? error.message : 'Không thể tải yêu cầu báo giá.'))
