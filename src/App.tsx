@@ -163,13 +163,13 @@ function getPathFromRoute(page: Page, id?: string): string {
 function updateSeoMetadata(page: Page, id?: string) {
   if (typeof document === 'undefined') return
 
-  let title = 'Thiết Bị Điện ABB | Viễn Đông Electric — Nhà Phân Phối Cấp 1'
+  let title = 'Viễn Đông Electric | Nhà phân phối thiết bị điện dân dụng của ABB'
   let description =
     'Viễn Đông Electric phân phối chính hãng thiết bị điện ABB: Aptomat MCB, MCCB, ACB, contactor, công tắc ổ cắm cao cấp.'
 
   switch (page) {
     case 'home':
-      title = 'Thiết Bị Điện ABB Chính Hãng | Viễn Đông Electric'
+      title = 'Viễn Đông Electric | Nhà phân phối thiết bị điện dân dụng của ABB'
       break
     case 'about':
       title = 'Giới Thiệu Doanh Nghiệp | Công Ty TNHH Thiết Bị Điện Viễn Đông'

@@ -1,19 +1,12 @@
 import { useState, useMemo, useEffect } from 'react'
 import { getStoredProducts, ProductItem, ProductVariant } from '@/data/siteData'
+import { getDefaultVariant, getEnabledVariants, hasVariantOptions, productColorDot } from '@/utils/productVariants'
+import ProductImageBranding from '@/components/ProductImageBranding'
 
 interface ProductDetailPageProps {
   productId: string
   onNavigate: (page: string, productId?: string) => void
   onAddToCart: (product: { id: string; name: string; sku: string }) => void
-}
-
-const colorDot: Record<string, string> = {
-  'Trắng': '#FFFFFF',
-  'Bạc': '#D1D5DB',
-  'Vàng': '#EAB308',
-  'Xám Đậm': '#4B5563',
-  'Xám': '#4B5563',
-  'Đen': '#1F2937',
 }
 
 export default function ProductDetailPage({ productId, onNavigate, onAddToCart }: ProductDetailPageProps) {
@@ -42,19 +35,13 @@ export default function ProductDetailPage({ productId, onNavigate, onAddToCart }
 
   // Enabled color variants
   const enabledVariants = useMemo(() => {
-    return product.variants ? product.variants.filter((v) => v.enabled) : []
+    return getEnabledVariants(product)
   }, [product])
+  const showVariantOptions = hasVariantOptions(product, enabledVariants)
 
   // Selected variant state (defaults to first enabled variant)
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant>(() => {
-    return enabledVariants[0] || (product.variants && product.variants[0]) || {
-      color: 'Trắng',
-      colorCode: 'P01',
-      hex: '#FFFFFF',
-      sku: product.baseSku,
-      image: '',
-      enabled: true,
-    }
+    return getDefaultVariant(product)
   })
   const [selectedImage, setSelectedImage] = useState(selectedVariant.image)
 
@@ -123,31 +110,25 @@ export default function ProductDetailPage({ productId, onNavigate, onAddToCart }
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-12">
         {/* Product Images View */}
         <div>
-          <div className="bg-white border border-gray-200 rounded-2xl aspect-square flex items-center justify-center mb-4 p-8 relative shadow-sm overflow-hidden group">
-            {selectedImage ? (
-              <img
-                src={selectedImage}
-                alt={`${product.name} ${selectedVariant.color}`}
-                className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-300"
-              />
-            ) : (
-              <div className="text-center text-gray-300">
-                <svg width="96" height="96" viewBox="0 0 64 64" fill="none" className="mx-auto mb-2 opacity-30">
-                  <rect x="6" y="10" width="52" height="44" rx="4" stroke="#1B2A4A" strokeWidth="2.5" />
-                  <rect x="12" y="16" width="12" height="12" rx="2" fill="#FF000F" />
-                </svg>
-                <p className="text-xs">Hình ảnh chuẩn đang cập nhật</p>
-              </div>
-            )}
-
-            {product.badge && (
-              <span className="absolute top-4 left-4 px-2.5 py-1 text-xs font-bold text-white rounded-full bg-[#FF000F] shadow-xs">
-                {product.badge}
-              </span>
-            )}
-            <span className="absolute top-4 right-4 px-2 py-1 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg">
-              {product.series}
-            </span>
+          <div className="bg-white border border-gray-200 rounded-2xl mb-4 shadow-sm overflow-hidden group">
+            <ProductImageBranding series={product.series} badge={product.badge} size="detail" />
+            <div className="aspect-square flex items-center justify-center p-8 relative">
+              {selectedImage ? (
+                <img
+                  src={selectedImage}
+                  alt={`${product.name} ${selectedVariant.color}`}
+                  className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-300"
+                />
+              ) : (
+                <div className="text-center text-gray-300">
+                  <svg width="96" height="96" viewBox="0 0 64 64" fill="none" className="mx-auto mb-2 opacity-30">
+                    <rect x="6" y="10" width="52" height="44" rx="4" stroke="#1B4C98" strokeWidth="2.5" />
+                    <rect x="12" y="16" width="12" height="12" rx="2" fill="#FF000F" />
+                  </svg>
+                  <p className="text-xs">Hình ảnh chuẩn đang cập nhật</p>
+                </div>
+              )}
+            </div>
           </div>
 
           {galleryImages.length > 1 && (
@@ -167,28 +148,28 @@ export default function ProductDetailPage({ productId, onNavigate, onAddToCart }
           )}
 
           {/* Color or breaker-pole variants */}
-          {enabledVariants.length > 1 && (
+          {showVariantOptions && (
             <div className="space-y-2">
               <span className="text-xs font-bold text-gray-600 uppercase tracking-wider block">
-                {product.category === 'breaker' ? 'Chọn số cực:' : 'Chọn biến thể màu xem trước:'}
+                {product.category === 'breaker' ? 'Chọn số cực:' : 'Tùy chọn màu sắc:'}
               </span>
               <div className="flex gap-2 flex-wrap">
                 {enabledVariants.map((v) => {
                   const isSelected = selectedVariant.color === v.color
                   return (
                     <button
-                      key={v.color}
+                      key={v.sku}
                       onClick={() => setSelectedVariant(v)}
                       className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all ${
                         isSelected
-                          ? 'border-[#FF000F] bg-red-50/40 ring-1 ring-[#FF000F] shadow-xs'
+                          ? 'border-gray-500 bg-gray-50 ring-1 ring-gray-400 shadow-xs'
                           : 'border-gray-200 bg-white hover:border-gray-400'
                       }`}
                     >
                       {product.category !== 'breaker' && (
                         <span
                           className="w-3.5 h-3.5 rounded-full border border-gray-300 shadow-xs"
-                          style={{ backgroundColor: colorDot[v.color] || v.hex }}
+                          style={{ backgroundColor: productColorDot[v.color] || v.hex }}
                         />
                       )}
                       <span className="text-xs font-bold text-gray-800">{v.color}</span>
@@ -206,7 +187,7 @@ export default function ProductDetailPage({ productId, onNavigate, onAddToCart }
             <span className="text-xs font-bold px-2 py-0.5 rounded-md uppercase tracking-wider bg-red-50 text-[#FF000F] border border-red-200">
               Dòng {product.series}
             </span>
-            <span className="text-xs font-bold px-2 py-0.5 rounded-md uppercase tracking-wider bg-blue-50 text-[#0055A4] border border-blue-200">
+            <span className="text-xs font-bold px-2 py-0.5 rounded-md uppercase tracking-wider bg-blue-50 text-[#1B4C98] border border-blue-200">
               Thương hiệu ABB Thụy Sĩ
             </span>
           </div>
@@ -219,7 +200,7 @@ export default function ProductDetailPage({ productId, onNavigate, onAddToCart }
           <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-200 mb-5">
             <div>
               <span className="text-[11px] text-gray-500 block uppercase font-medium">Mã SKU đặt hàng:</span>
-              <span className="text-sm font-mono font-bold text-[#0055A4]">{selectedVariant.sku}</span>
+              <span className="text-sm font-mono font-bold text-[#1B4C98]">{selectedVariant.sku}</span>
             </div>
             <div className="h-8 w-px bg-gray-200" />
             <div>
@@ -244,7 +225,7 @@ export default function ProductDetailPage({ productId, onNavigate, onAddToCart }
           {/* Pricing Policy (NO PRICES DISPLAYED) */}
           <div className="bg-blue-50/60 border border-blue-200 rounded-xl p-4 mb-6">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-sm font-extrabold text-[#0055A4] uppercase tracking-wide">
+              <span className="text-sm font-extrabold text-[#1B4C98] uppercase tracking-wide">
                 Chính sách báo giá kênh phân phối & Dự án
               </span>
               <span className="text-xs font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
@@ -288,7 +269,7 @@ export default function ProductDetailPage({ productId, onNavigate, onAddToCart }
           <div className="flex items-center gap-3 pt-4 border-t border-gray-100">
             <a
               href="tel:0903333333"
-              className="flex-1 py-2.5 text-xs font-bold text-center border border-[#0055A4] text-[#0055A4] rounded-xl hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
+              className="flex-1 py-2.5 text-xs font-bold text-center border border-[#1B4C98] text-[#1B4C98] rounded-xl hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
             >
               <span>📞</span> Hotline: 090 333 3333
             </a>
@@ -353,7 +334,7 @@ export default function ProductDetailPage({ productId, onNavigate, onAddToCart }
                 </div>
                 <div className="flex justify-between py-2 border-b border-gray-100 text-xs">
                   <span className="text-gray-500 font-medium">Mã SKU biến thể màu ({selectedVariant.color}):</span>
-                  <span className="font-mono font-bold text-[#0055A4]">{selectedVariant.sku}</span>
+                  <span className="font-mono font-bold text-[#1B4C98]">{selectedVariant.sku}</span>
                 </div>
                 <div className="flex justify-between py-2 border-b border-gray-100 text-xs">
                   <span className="text-gray-500 font-medium">Thông số kỹ thuật:</span>
@@ -399,19 +380,22 @@ export default function ProductDetailPage({ productId, onNavigate, onAddToCart }
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {relatedProducts.map((rel) => {
-              const relImg = rel.variants && rel.variants[0]?.image
+              const relImg = getDefaultVariant(rel).image
               return (
                 <div
                   key={rel.id}
                   onClick={() => onNavigate('productDetail', rel.id)}
                   className="bg-white border border-gray-200 rounded-xl p-3 hover:shadow-md transition-all cursor-pointer group"
                 >
-                  <div className="aspect-square bg-gray-50 rounded-lg mb-2 flex items-center justify-center p-2">
-                    {relImg ? (
-                      <img src={relImg} alt={rel.name} className="w-full h-full object-contain group-hover:scale-105 transition-transform" />
-                    ) : (
-                      <span className="text-gray-300">⚡</span>
-                    )}
+                  <div className="bg-gray-50 rounded-lg mb-2 overflow-hidden">
+                    <ProductImageBranding series={rel.series} badge={rel.badge} size="compact" />
+                    <div className="aspect-square flex items-center justify-center p-2">
+                      {relImg ? (
+                        <img src={relImg} alt={rel.name} className="w-full h-full object-contain group-hover:scale-105 transition-transform" />
+                      ) : (
+                        <span className="text-gray-300">⚡</span>
+                      )}
+                    </div>
                   </div>
                   <p className="text-[10px] text-blue-600 font-bold uppercase">{rel.series}</p>
                   <h4 className="text-xs font-bold text-gray-900 line-clamp-1">{rel.name}</h4>

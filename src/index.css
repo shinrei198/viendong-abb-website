@@ -1,6 +1,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Roboto+Condensed:wght@600;700&display=swap');
 @import 'tailwindcss';
 
+/* Every Tailwind blue utility is derived from the Viễn Đông logo blue. */
+@theme {
+  --color-blue-50: color-mix(in srgb, #1B4C98 6%, white);
+  --color-blue-100: color-mix(in srgb, #1B4C98 12%, white);
+  --color-blue-200: color-mix(in srgb, #1B4C98 24%, white);
+  --color-blue-300: color-mix(in srgb, #1B4C98 38%, white);
+  --color-blue-400: color-mix(in srgb, #1B4C98 62%, white);
+  --color-blue-500: #1B4C98;
+  --color-blue-600: #1B4C98;
+  --color-blue-700: #1B4C98;
+  --color-blue-800: #1B4C98;
+  --color-blue-900: #1B4C98;
+  --color-blue-950: #1B4C98;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #1a1a1a;
@@ -21,6 +36,7 @@
   --radius-card: 10px;
   --radius-panel: 12px;
   --navy: #1B4C98;
+  --brand-blue: #1B4C98;
   --red: #FF000F;
   --blue-light: #f7f7f7;
   --blue-mid: #555555;

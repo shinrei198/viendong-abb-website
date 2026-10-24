@@ -352,7 +352,7 @@ export default function MapPage({ onNavigate }: MapPageProps) {
         {/* Become a distributor CTA */}
         <div
           className="mt-10 rounded-lg p-8 flex flex-col md:flex-row items-center justify-between gap-6"
-          style={{ background: 'linear-gradient(135deg, #003d7a 0%, #0055A4 60%, #1e74d4 100%)' }}
+          style={{ background: 'linear-gradient(135deg, #1B4C98 0%, #1B4C98 60%, #1B4C98 100%)' }}
         >
           <div className="text-white">
             <h3 className="text-2xl font-bold mb-1" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>

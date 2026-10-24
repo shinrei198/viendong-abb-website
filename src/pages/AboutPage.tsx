@@ -28,7 +28,7 @@ function SectionHeading({ number, title }: { number: string; title: string }) {
   return (
     <div className="lg:col-span-3">
       <span className="text-xs font-semibold tracking-[0.2em] text-[#E31E24]">{number}</span>
-      <h2 className="mt-4 text-3xl font-semibold tracking-[-0.025em] text-[#102B55] sm:text-4xl">{title}</h2>
+      <h2 className="mt-4 text-3xl font-semibold tracking-[-0.025em] text-[#1B4C98] sm:text-4xl">{title}</h2>
       <div className="mt-6 h-px w-12 bg-[#1B4C98]" />
     </div>
   )
@@ -46,7 +46,7 @@ function ContentCard({
   return (
     <article className="rounded-2xl border border-slate-200 bg-[#F8FAFC] p-7 sm:p-9">
       <span className="text-xs font-semibold tracking-[0.2em] text-[#E31E24]">{number}</span>
-      {title && <h3 className="mt-6 text-2xl font-semibold tracking-[-0.02em] text-[#102B55]">{title}</h3>}
+      {title && <h3 className="mt-6 text-2xl font-semibold tracking-[-0.02em] text-[#1B4C98]">{title}</h3>}
       <div className={title ? 'mt-5 border-t border-slate-200 pt-5' : 'mt-6'}>{children}</div>
     </article>
   )
@@ -78,7 +78,7 @@ export default function AboutPage({ onNavigate }: AboutPageProps) {
         </div>
       </div>
 
-      <section className="relative overflow-hidden bg-[#102B55] text-white">
+      <section className="relative overflow-hidden bg-[#1B4C98] text-white">
         <div className="absolute inset-y-0 right-0 hidden w-[46%] lg:block">
           <div className="absolute inset-0 bg-[linear-gradient(135deg,transparent_0%,rgba(255,255,255,0.045)_100%)]" />
           <div className="absolute -right-24 top-1/2 h-80 w-80 -translate-y-1/2 rounded-full border border-white/10" />

@@ -235,7 +235,7 @@ export default function AdminProductsTab({
             <h2 className="text-base font-extrabold text-gray-900 uppercase tracking-wide">
               Quản lý Danh mục Sản phẩm ABB
             </h2>
-            <span className="px-2.5 py-0.5 text-xs font-bold rounded-full bg-blue-100 text-[#0055A4]">
+            <span className="px-2.5 py-0.5 text-xs font-bold rounded-full bg-blue-100 text-[#1B4C98]">
               {products.length} mã
             </span>
           </div>
@@ -254,7 +254,7 @@ export default function AdminProductsTab({
           <button
             onClick={handleCloudflareSync}
             disabled={syncing}
-            className="px-4 py-2 bg-[#0055A4] hover:bg-blue-800 text-white font-bold text-xs uppercase tracking-wider rounded-lg shadow-sm transition-all flex items-center gap-1.5 disabled:opacity-50"
+            className="px-4 py-2 bg-[#1B4C98] hover:bg-blue-800 text-white font-bold text-xs uppercase tracking-wider rounded-lg shadow-sm transition-all flex items-center gap-1.5 disabled:opacity-50"
           >
             <span>☁️</span> {syncing ? 'Đang lưu...' : 'Lưu Database'}
           </button>
@@ -267,7 +267,7 @@ export default function AdminProductsTab({
           onClick={() => { setSelectedSeries('all'); setPage(1) }}
           className={`p-3 rounded-xl border text-left transition-all ${
             selectedSeries === 'all'
-              ? 'bg-blue-50/80 border-[#0055A4] shadow-xs'
+              ? 'bg-blue-50/80 border-[#1B4C98] shadow-xs'
               : 'bg-white border-gray-200 hover:border-gray-300'
           }`}
         >
@@ -280,12 +280,12 @@ export default function AdminProductsTab({
             onClick={() => { setSelectedSeries(series); setPage(1) }}
             className={`p-3 rounded-xl border text-left transition-all ${
               selectedSeries === series
-                ? 'bg-blue-50/80 border-[#0055A4] shadow-xs'
+                ? 'bg-blue-50/80 border-[#1B4C98] shadow-xs'
                 : 'bg-white border-gray-200 hover:border-gray-300'
             }`}
           >
             <div className="text-[10px] font-bold text-gray-500 uppercase truncate">{series}</div>
-            <div className="text-base font-extrabold text-[#0055A4]">{seriesCount[series] || 0}</div>
+            <div className="text-base font-extrabold text-[#1B4C98]">{seriesCount[series] || 0}</div>
           </button>
         ))}
       </div>
@@ -367,7 +367,7 @@ export default function AdminProductsTab({
                     {/* Name & Specs */}
                     <td className="py-2.5 px-4">
                       <div className="flex items-center gap-1.5 mb-0.5">
-                        <span className="font-bold text-gray-900 text-xs hover:text-[#0055A4] cursor-pointer" onClick={() => handleEdit(p)}>
+                        <span className="font-bold text-gray-900 text-xs hover:text-[#1B4C98] cursor-pointer" onClick={() => handleEdit(p)}>
                           {p.name}
                         </span>
                         {p.badge && (
@@ -381,7 +381,7 @@ export default function AdminProductsTab({
 
                     {/* Series */}
                     <td className="py-2.5 px-4">
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold text-[#0055A4] bg-blue-50 border border-blue-200">
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold text-[#1B4C98] bg-blue-50 border border-blue-200">
                         {p.series}
                       </span>
                     </td>
@@ -433,7 +433,7 @@ export default function AdminProductsTab({
                       <div className="flex items-center justify-center gap-2">
                         <button
                           onClick={() => handleEdit(p)}
-                          className="px-2.5 py-1 text-xs font-semibold text-[#0055A4] hover:bg-blue-50 rounded-md border border-blue-200"
+                          className="px-2.5 py-1 text-xs font-semibold text-[#1B4C98] hover:bg-blue-50 rounded-md border border-blue-200"
                         >
                           Sửa
                         </button>
@@ -514,7 +514,7 @@ export default function AdminProductsTab({
             <form onSubmit={handleSaveForm} className="overflow-y-auto p-6 space-y-6 flex-1">
               {/* SECTION 1: THÔNG TIN CHUNG (PARENT) */}
               <div className="bg-blue-50/40 p-4 rounded-xl border border-blue-200 space-y-4">
-                <h4 className="text-xs font-bold text-[#0055A4] uppercase tracking-wider flex items-center gap-1.5">
+                <h4 className="text-xs font-bold text-[#1B4C98] uppercase tracking-wider flex items-center gap-1.5">
                   <span>1.</span> Thông tin chung (Áp dụng đồng loạt cho toàn bộ màu)
                 </h4>
 

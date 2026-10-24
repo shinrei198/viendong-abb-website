@@ -44,7 +44,6 @@ export default function Footer({ onNavigate }: FooterProps) {
 
         {/* Chính sách */}
         <div>
-          <div className="w-6 h-0.5 bg-red-600 mb-3" />
           <h4 className="text-sm font-bold uppercase tracking-wider mb-5 text-white">Chính sách</h4>
           <ul className="space-y-2.5">
             {['Chính sách bảo mật', 'Chính sách đổi trả', 'Điều khoản dịch vụ', 'Chính sách bảo hành', 'Chính sách đại lý'].map((item) => (
@@ -57,7 +56,6 @@ export default function Footer({ onNavigate }: FooterProps) {
 
         {/* Hỗ trợ */}
         <div>
-          <div className="w-6 h-0.5 bg-red-600 mb-3" />
           <h4 className="text-sm font-bold uppercase tracking-wider mb-5 text-white">Hỗ trợ</h4>
           <ul className="space-y-2.5">
             {[
@@ -80,7 +78,6 @@ export default function Footer({ onNavigate }: FooterProps) {
 
         {/* Newsletter + Social */}
         <div>
-          <div className="w-6 h-0.5 bg-red-600 mb-3" />
           <h4 className="text-sm font-bold uppercase tracking-wider mb-5 text-white">Đăng ký nhận tin</h4>
           <p className="text-white/40 text-sm mb-3">Nhận thông tin sản phẩm và khuyến mãi từ Viễn Đông.</p>
           <div className="flex mb-5">

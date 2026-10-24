@@ -1004,7 +1004,7 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
       <div className="mx-auto max-w-[1500px] px-4 pt-6 lg:px-6">
         <div className="flex items-start gap-6">
           <aside className="sticky top-20 hidden h-[calc(100vh-6rem)] w-64 shrink-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm lg:flex">
-            <div className="border-b border-slate-200 bg-gradient-to-br from-[#173f7d] to-[#1B4C98] px-5 py-5 text-white">
+            <div className="border-b border-slate-200 bg-gradient-to-br from-[#1B4C98] to-[#1B4C98] px-5 py-5 text-white">
               <h2 className="text-base font-bold">Settings</h2>
             </div>
             <nav className="flex-1 space-y-1 overflow-y-auto p-3" aria-label="Settings">

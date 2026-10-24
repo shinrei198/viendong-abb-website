@@ -197,8 +197,8 @@ export const initialBannerSlides: BannerSlideItem[] = defaultSiteData.initialBan
 export const initialSiteSettings: SiteSettings = defaultSiteData.initialSiteSettings as SiteSettings
 export const initialProducts: ProductItem[] = ((defaultSiteData as any).initialProducts || initialProductsData) as ProductItem[]
 export const initialHomePageContent: HomePageContent = ((defaultSiteData as any).initialHomePageContent || {
-  partnerTitle: 'Viễn Đông Electric — Nhà phân phối chính thức của ABB tại Việt Nam',
-  partnerSubtitle: 'Authorized Distribution Partner · Hỗ trợ & Bảo hành chính hãng',
+  partnerTitle: 'Viễn Đông Electric',
+  partnerSubtitle: 'Nhà phân phối chính thức thiết bị điện dân dụng của ABB',
   categorySectionTitle: 'Danh mục sản phẩm',
   categories: [
     { id: 'home-cat-breaker', name: 'MCB · RCCB · RCBO', description: 'Dòng SH200, GSH201 — 111 sản phẩm', count: 111, imageUrl: '', targetCategory: 'breaker', isActive: true },
@@ -617,11 +617,26 @@ export function saveStoredSiteSettings(data: SiteSettings) {
   }
 }
 
+const LEGACY_HOME_PARTNER_TITLE = 'Viễn Đông Electric — Nhà phân phối chính thức của ABB tại Việt Nam'
+const LEGACY_HOME_PARTNER_SUBTITLE = 'Authorized Distribution Partner · Hỗ trợ & Bảo hành chính hãng'
+
+function normalizeHomePagePartnerCopy<T extends Partial<HomePageContent>>(content: T): T {
+  return {
+    ...content,
+    partnerTitle: content.partnerTitle === LEGACY_HOME_PARTNER_TITLE
+      ? 'Viễn Đông Electric'
+      : content.partnerTitle,
+    partnerSubtitle: content.partnerSubtitle === LEGACY_HOME_PARTNER_SUBTITLE
+      ? 'Nhà phân phối chính thức thiết bị điện dân dụng của ABB'
+      : content.partnerSubtitle,
+  }
+}
+
 export function getStoredHomePageContent(): HomePageContent {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.HOME_PAGE)
     if (!raw) return initialHomePageContent
-    return { ...initialHomePageContent, ...JSON.parse(raw) }
+    return normalizeHomePagePartnerCopy({ ...initialHomePageContent, ...JSON.parse(raw) })
   } catch {
     return initialHomePageContent
   }
@@ -809,6 +824,7 @@ export function importAllDataFromJSON(
   if (!jsonData || typeof jsonData !== 'object' || Array.isArray(jsonData)) return false
 
   // Accept both the current portable backup format and the older Settings-tab format.
+  const incomingHomePageContent = jsonData.initialHomePageContent ?? jsonData.homePageContent
   const normalized = {
     initialVideos: jsonData.initialVideos ?? jsonData.videos,
     initialVideoCategories: jsonData.initialVideoCategories ?? jsonData.videoCats,
@@ -820,7 +836,9 @@ export function importAllDataFromJSON(
     initialProducts: Array.isArray(jsonData.initialProducts ?? jsonData.products)
       ? mergeSeededBreakerProducts(jsonData.initialProducts ?? jsonData.products)
       : jsonData.initialProducts ?? jsonData.products,
-    initialHomePageContent: jsonData.initialHomePageContent ?? jsonData.homePageContent,
+    initialHomePageContent: incomingHomePageContent && typeof incomingHomePageContent === 'object' && !Array.isArray(incomingHomePageContent)
+      ? normalizeHomePagePartnerCopy(incomingHomePageContent)
+      : incomingHomePageContent,
   }
 
   const entries: Array<[string, unknown, 'array' | 'object']> = [

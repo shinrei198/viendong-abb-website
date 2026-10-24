@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { getStoredProducts, ProductItem, ProductVariant } from '@/data/siteData'
+import { getEnabledVariants, hasVariantOptions, productColorDot } from '@/utils/productVariants'
+import ProductImageBranding from '@/components/ProductImageBranding'
 
 interface ProductsPageProps {
   onNavigate: (page: string, productId?: string) => void
@@ -82,15 +84,6 @@ export const categoryTree = [
   },
 ]
 
-const colorDot: Record<string, string> = {
-  'Trắng': '#FFFFFF',
-  'Bạc': '#D1D5DB',
-  'Vàng': '#EAB308',
-  'Xám Đậm': '#4B5563',
-  'Xám': '#4B5563',
-  'Đen': '#1F2937',
-}
-
 const font = "'Roboto Condensed', 'Roboto', sans-serif"
 
 interface ProductPaginationProps {
@@ -115,7 +108,7 @@ function ProductPagination({ currentPage, totalPages, onPageChange }: ProductPag
     onPageChange(nextPage)
   }
 
-  const buttonClass = 'w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 transition-colors hover:border-[#0055A4] hover:text-[#0055A4] disabled:cursor-not-allowed disabled:opacity-35'
+  const buttonClass = 'w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 transition-colors hover:border-[#1B4C98] hover:text-[#1B4C98] disabled:cursor-not-allowed disabled:opacity-35'
 
   return (
     <div className="flex items-center justify-end gap-1.5" aria-label="Điều hướng trang sản phẩm">
@@ -140,7 +133,7 @@ function ProductPagination({ currentPage, totalPages, onPageChange }: ProductPag
               e.currentTarget.blur()
             }
           }}
-          className="h-7 w-11 rounded-md border border-gray-200 px-1 text-center text-xs font-bold text-gray-800 focus:border-[#0055A4] focus:outline-none"
+          className="h-7 w-11 rounded-md border border-gray-200 px-1 text-center text-xs font-bold text-gray-800 focus:border-[#1B4C98] focus:outline-none"
           aria-label="Nhập số trang sản phẩm"
         />
         <span>/ {totalPages}</span>
@@ -202,7 +195,7 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
 
   // Helper function to get active variant of a product
   const getActiveVariant = (p: ProductItem): ProductVariant => {
-    const enabledVariants = p.variants ? p.variants.filter((v) => v.enabled) : []
+    const enabledVariants = getEnabledVariants(p)
     const chosenColor = selectedColors[p.id]
     if (chosenColor) {
       const found = enabledVariants.find((v) => v.color === chosenColor)
@@ -270,7 +263,7 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
   return (
     <div className="bg-white min-h-screen">
       {/* Page header */}
-      <div style={{ background: 'linear-gradient(135deg, #003d7a 0%, #0055A4 100%)' }} className="py-10 px-6">
+      <div style={{ background: 'linear-gradient(135deg, #1B4C98 0%, #1B4C98 100%)' }} className="py-10 px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
             <nav className="flex items-center gap-2 text-blue-200 text-xs mb-2">
@@ -350,7 +343,7 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
                       <div
                         className={`flex items-center justify-between px-3 py-2 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
                           isParentSelected
-                            ? 'bg-blue-50 text-[#0055A4] font-bold'
+                            ? 'bg-blue-50 text-[#1B4C98] font-bold'
                             : 'text-gray-700 hover:bg-gray-50'
                         }`}
                         onClick={() => handleCatSelect(cat.id)}
@@ -380,7 +373,7 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
                             onClick={() => { setSelectedCat(cat.id); setSelectedSubcat('all') }}
                             className={`w-full text-left px-2.5 py-1 text-[11px] rounded-md transition-colors ${
                               isParentSelected && selectedSubcat === 'all'
-                                ? 'text-[#0055A4] font-bold bg-blue-50/60'
+                                ? 'text-[#1B4C98] font-bold bg-blue-50/60'
                                 : 'text-gray-500 hover:text-gray-800'
                             }`}
                           >
@@ -392,7 +385,7 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
                               onClick={() => { setSelectedCat(cat.id); setSelectedSubcat(sub.id) }}
                               className={`w-full text-left px-2.5 py-1 text-[11px] rounded-md transition-colors flex items-center justify-between ${
                                 selectedSubcat === sub.id
-                                  ? 'text-[#0055A4] font-bold bg-blue-50/60'
+                                  ? 'text-[#1B4C98] font-bold bg-blue-50/60'
                                   : 'text-gray-500 hover:text-gray-800'
                               }`}
                             >
@@ -433,7 +426,7 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
                 <select
                   value={pageSize}
                   onChange={(e) => setPageSize(Number(e.target.value))}
-                  className="h-8 rounded-lg border border-gray-200 bg-white px-2 text-xs font-semibold text-gray-700 focus:border-[#0055A4] focus:outline-none"
+                  className="h-8 rounded-lg border border-gray-200 bg-white px-2 text-xs font-semibold text-gray-700 focus:border-[#1B4C98] focus:outline-none"
                   aria-label="Số sản phẩm mỗi trang"
                 >
                   <option value={12}>12 / trang</option>
@@ -506,73 +499,61 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
             <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
               {paginatedProducts.map((p) => {
                 const activeVariant = getActiveVariant(p)
-                const enabledVariants = p.variants ? p.variants.filter((v) => v.enabled) : []
+                const enabledVariants = getEnabledVariants(p)
+                const showVariantOptions = hasVariantOptions(p, enabledVariants)
 
                 return (
                   <div
                     key={p.id}
-                    className="bg-white rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 group flex flex-col justify-between border border-[#c8daf4] hover:border-[#0055A4]/40"
+                    className="bg-white rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 group flex flex-col justify-between border border-[#c8daf4] hover:border-[#1B4C98]/40"
                   >
                     <div>
                       {/* Product Image Area */}
-                      <div className="relative aspect-square bg-gradient-to-br from-gray-50 to-white flex items-center justify-center p-3 border-b border-gray-100">
-                        {p.badge && (
-                          <span
-                            className="absolute top-2 left-2 z-10 px-2 py-0.5 text-[10px] font-bold text-white rounded-full shadow-xs"
-                            style={{
-                              backgroundColor:
-                                p.badge === 'Mới' ? '#2563eb' : p.badge === 'Hot' ? '#ea580c' : 'var(--red)',
-                            }}
-                          >
-                            {p.badge}
-                          </span>
-                        )}
+                      <div className="bg-gradient-to-br from-gray-50 to-white border-b border-gray-100">
+                        <ProductImageBranding series={p.series} badge={p.badge} />
+                        <div className="relative aspect-square flex items-center justify-center p-3">
+                          {activeVariant.image ? (
+                            <img
+                              src={activeVariant.image}
+                              alt={p.name}
+                              className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-300">
+                              <svg width="48" height="48" viewBox="0 0 64 64" fill="none">
+                                <rect x="8" y="12" width="48" height="40" rx="4" stroke="#1B4C98" strokeWidth="2.5" />
+                                <rect x="14" y="18" width="10" height="10" rx="2" fill="#FF000F" />
+                                <rect x="14" y="32" width="36" height="3" rx="1" fill="#1B4C98" />
+                              </svg>
+                            </div>
+                          )}
 
-                        <span className="absolute top-2 right-2 z-10 px-1.5 py-0.5 text-[9px] font-bold text-blue-700 bg-blue-50/90 rounded-md border border-blue-200">
-                          {p.series}
-                        </span>
-
-                        {activeVariant.image ? (
-                          <img
-                            src={activeVariant.image}
-                            alt={p.name}
-                            className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-300">
-                            <svg width="48" height="48" viewBox="0 0 64 64" fill="none">
-                              <rect x="8" y="12" width="48" height="40" rx="4" stroke="#0055A4" strokeWidth="2.5" />
-                              <rect x="14" y="18" width="10" height="10" rx="2" fill="#FF000F" />
-                              <rect x="14" y="32" width="36" height="3" rx="1" fill="#0055A4" />
-                            </svg>
-                          </div>
-                        )}
-
-                        {/* Interactive color or breaker-pole variants */}
-                        {enabledVariants.length > 1 && (
-                          <div className="absolute bottom-2 left-2 right-2 flex items-center justify-center gap-1.5 bg-white/80 backdrop-blur-xs py-1 px-2 rounded-full border border-gray-200/60 shadow-xs">
-                            {enabledVariants.map((v) => {
-                              const isSelected = activeVariant.color === v.color
-                              return (
-                                <button
-                                  key={v.color}
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    setSelectedColors((prev) => ({ ...prev, [p.id]: v.color }))
-                                  }}
-                                  title={p.category === 'breaker' ? `Xem phiên bản ${v.color} (${v.sku})` : `Xem màu ${v.color} (${v.sku})`}
-                                  className={p.category === 'breaker'
-                                    ? `min-w-7 rounded-md border px-1.5 py-0.5 text-[9px] font-bold transition-all ${isSelected ? 'border-[#FF000F] bg-red-50 text-[#FF000F]' : 'border-gray-300 bg-white text-gray-600 hover:border-gray-400'}`
-                                    : `w-3.5 h-3.5 rounded-full transition-all ${isSelected ? 'ring-2 ring-[#FF000F] scale-125 shadow-xs' : 'border border-gray-300 hover:scale-110'}`}
-                                  style={p.category === 'breaker' ? undefined : { backgroundColor: colorDot[v.color] || v.hex }}
-                                >
-                                  {p.category === 'breaker' ? v.color : null}
-                                </button>
-                              )
-                            })}
-                          </div>
-                        )}
+                          {/* Interactive color or breaker-pole variants */}
+                          {showVariantOptions && (
+                            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-center gap-1.5 bg-white/80 backdrop-blur-xs py-1 px-2 rounded-full border border-gray-200/60 shadow-xs">
+                              {enabledVariants.map((v) => {
+                                const isSelected = activeVariant.color === v.color
+                                return (
+                                  <button
+                                    key={v.color}
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      setSelectedColors((prev) => ({ ...prev, [p.id]: v.color }))
+                                    }}
+                                    title={p.category === 'breaker' ? `Xem phiên bản ${v.color} (${v.sku})` : `Xem màu ${v.color} (${v.sku})`}
+                                    className={p.category === 'breaker'
+                                      ? `min-w-7 rounded-md border px-1.5 py-0.5 text-[9px] font-bold transition-all ${isSelected ? 'border-gray-500 bg-gray-100 text-gray-800' : 'border-gray-300 bg-white text-gray-600 hover:border-gray-400'}`
+                                      : `w-3.5 h-3.5 rounded-full transition-all ${isSelected ? 'ring-2 ring-gray-500 ring-offset-1 ring-offset-white scale-110 shadow-xs' : 'border border-gray-300 hover:scale-110'}`}
+                                    style={p.category === 'breaker' ? undefined : { backgroundColor: productColorDot[v.color] || v.hex }}
+                                  >
+                                    {p.category === 'breaker' ? v.color : null}
+                                  </button>
+                                )
+                              })}
+                            </div>
+                          )}
+                        </div>
                       </div>
 
                       {/* Product Meta */}
@@ -588,7 +569,7 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
 
                         <h4
                           onClick={() => onNavigate('productDetail', p.id)}
-                          className="text-[12px] font-bold text-gray-900 leading-snug mb-1 line-clamp-2 hover:text-[#0055A4] cursor-pointer"
+                          className="text-[12px] font-bold text-gray-900 leading-snug mb-1 line-clamp-2 hover:text-[#1B4C98] cursor-pointer"
                         >
                           {p.name}
                         </h4>
@@ -610,7 +591,7 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
                     {/* Action Buttons & B2B Status (NO PRICE) */}
                     <div className="p-3 pt-0 border-t border-gray-50">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-[10px] font-bold text-[#0055A4] uppercase tracking-wide">
+                        <span className="text-[10px] font-bold text-[#1B4C98] uppercase tracking-wide">
                           Liên hệ báo giá
                         </span>
                         <span className="text-[9px] text-green-600 font-semibold flex items-center gap-1">
@@ -653,19 +634,23 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
             <div className="space-y-3">
               {paginatedProducts.map((p) => {
                 const activeVariant = getActiveVariant(p)
-                const enabledVariants = p.variants ? p.variants.filter((v) => v.enabled) : []
+                const enabledVariants = getEnabledVariants(p)
+                const showVariantOptions = hasVariantOptions(p, enabledVariants)
 
                 return (
                   <div
                     key={p.id}
                     className="bg-white rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 hover:shadow-md transition-all border border-[#c8daf4]"
                   >
-                    <div className="w-20 h-20 bg-gray-50 rounded-xl flex items-center justify-center flex-shrink-0 border border-gray-100 p-1 relative">
-                      {activeVariant.image ? (
-                        <img src={activeVariant.image} alt={p.name} className="w-full h-full object-contain" />
-                      ) : (
-                        <div className="text-gray-300">⚡</div>
-                      )}
+                    <div className="w-28 h-28 bg-gray-50 rounded-xl flex flex-col flex-shrink-0 border border-gray-100 overflow-hidden">
+                      <ProductImageBranding series={p.series} badge={p.badge} size="compact" />
+                      <div className="flex min-h-0 flex-1 items-center justify-center p-1">
+                        {activeVariant.image ? (
+                          <img src={activeVariant.image} alt={p.name} className="w-full h-full object-contain" />
+                        ) : (
+                          <div className="text-gray-300">⚡</div>
+                        )}
+                      </div>
                     </div>
 
                     <div className="flex-1 min-w-0">
@@ -685,7 +670,7 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
 
                       <h4
                         onClick={() => onNavigate('productDetail', p.id)}
-                        className="font-bold text-gray-900 text-sm hover:text-[#0055A4] cursor-pointer"
+                        className="font-bold text-gray-900 text-sm hover:text-[#1B4C98] cursor-pointer"
                       >
                         {p.name}
                       </h4>
@@ -698,7 +683,7 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
                       </div>
 
                       {/* Color dots in list view */}
-                      {enabledVariants.length > 1 && (
+                      {showVariantOptions && (
                         <div className="flex items-center gap-2 mt-2">
                           <span className="text-[10px] text-gray-400">Đổi màu:</span>
                           {enabledVariants.map((v) => (
@@ -707,10 +692,10 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
                               onClick={() => setSelectedColors((prev) => ({ ...prev, [p.id]: v.color }))}
                               className={`w-4 h-4 rounded-full transition-all ${
                                 activeVariant.color === v.color
-                                  ? 'ring-2 ring-[#FF000F] scale-110'
+                                  ? 'ring-2 ring-gray-500 ring-offset-1 ring-offset-white scale-110'
                                   : 'border border-gray-300'
                               }`}
-                              style={{ backgroundColor: colorDot[v.color] || v.hex }}
+                              style={{ backgroundColor: productColorDot[v.color] || v.hex }}
                               title={`Màu ${v.color}`}
                             />
                           ))}
@@ -719,7 +704,7 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
                     </div>
 
                     <div className="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-2 flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100">
-                      <span className="text-xs font-bold text-[#0055A4]">Liên hệ báo giá</span>
+                      <span className="text-xs font-bold text-[#1B4C98]">Liên hệ báo giá</span>
                       <div className="flex gap-2">
                         <button
                           onClick={() => onNavigate('productDetail', p.id)}

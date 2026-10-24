@@ -289,41 +289,6 @@ export default function HeroSlider({ banners, onNavigate }: HeroSliderProps) {
         )}
       </div>
 
-      {/* ── NAVIGATION ARROWS (50% TRANSPARENCY) ──────────────────────────────── */}
-      {activeBanners.length > 1 && (
-        <>
-          {/* Prev Arrow */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation()
-              prevSlide()
-            }}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 bg-black/40 hover:bg-[#FF000F] text-white flex items-center justify-center backdrop-blur-xs transition-all duration-200 border border-white/20 hover:border-transparent opacity-80 hover:opacity-100 hover:scale-110 shadow-lg"
-            title="Slide trước"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-
-          {/* Next Arrow */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation()
-              nextSlide()
-            }}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 bg-black/40 hover:bg-[#FF000F] text-white flex items-center justify-center backdrop-blur-xs transition-all duration-200 border border-white/20 hover:border-transparent opacity-80 hover:opacity-100 hover:scale-110 shadow-lg"
-            title="Slide tiếp theo"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        </>
-      )}
-
       {/* ── 10s PROGRESS BAR (TOP) ───────────────────────────────────────────── */}
       {activeBanners.length > 1 && (
         <div className="absolute top-0 left-0 right-0 h-1 bg-white/20 z-30">
@@ -338,27 +303,6 @@ export default function HeroSlider({ banners, onNavigate }: HeroSliderProps) {
         </div>
       )}
 
-      {/* ── PAGINATION DOTS (BOTTOM CENTER) ──────────────────────────────────── */}
-      {activeBanners.length > 1 && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-black/40 backdrop-blur-xs px-3 py-1.5 rounded-full border border-white/10">
-          {activeBanners.map((b, idx) => (
-            <button
-              key={b.id}
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation()
-                goToSlide(idx)
-              }}
-              className={`h-2 transition-all rounded-full ${
-                idx === currentIndex
-                  ? 'w-6 bg-[#FF000F]'
-                  : 'w-2 bg-white/50 hover:bg-white/80'
-              }`}
-              title={`Chuyển đến Slide ${idx + 1}`}
-            />
-          ))}
-        </div>
-      )}
     </div>
   )
 }

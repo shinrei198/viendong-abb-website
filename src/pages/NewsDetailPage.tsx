@@ -183,7 +183,7 @@ export default function NewsDetailPage({ articleId, onNavigate }: NewsDetailPage
               href={`https://zalo.me/share?url=${encodeURIComponent(window.location.href)}`}
               target="_blank"
               rel="noreferrer"
-              className="px-3 py-1 text-xs font-bold text-white bg-[#0068ff] hover:opacity-90 transition-opacity"
+              className="px-3 py-1 text-xs font-bold text-white bg-[#1B4C98] hover:opacity-90 transition-opacity"
             >
               Zalo
             </a>
@@ -205,7 +205,6 @@ export default function NewsDetailPage({ articleId, onNavigate }: NewsDetailPage
       <section className="bg-[#f7f7f7] py-14 px-6 border-t border-gray-200 mt-12">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">
-            <div className="w-8 h-1 bg-[#FF000F] mb-2.5" />
             <h3 className="text-xl sm:text-2xl font-bold text-[#1a1a1a] font-['Roboto_Condensed'] uppercase tracking-wide">
               Tin tức liên quan cùng chuyên mục
             </h3>

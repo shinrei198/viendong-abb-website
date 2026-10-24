@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { isSafeContentUrl } from '@/utils/sanitize'
+import { getDefaultVariant } from '@/utils/productVariants'
 import imgMCB from '@/imports/MBB.jpg'
 import imgAFDD from '@/imports/Thie__t_bi__pha_t_hie__n_ho___quang__ie__n_AFDDs.jpg'
 import imgSurgeArrest from '@/imports/Thie__t_bi___o_ng_ca__t_MCB.jpg'
@@ -23,6 +24,7 @@ import {
 import { NewsThumbnailView } from '@/components/ThumbnailCropper'
 import VideoModal from '@/components/VideoModal'
 import HeroSlider from '@/components/HeroSlider'
+import ProductImageBranding from '@/components/ProductImageBranding'
 
 interface HomePageProps {
   onNavigate: (page: string, id?: string) => void
@@ -30,6 +32,8 @@ interface HomePageProps {
 }
 
 const font = "'Roboto Condensed', 'Roboto', sans-serif"
+const ABB_LOGO_X = 28
+const ABB_STRIP_GUTTER = 24
 
 const categoryDefaultImages: Record<string, string> = {
   'home-cat-breaker': imgMCB,
@@ -50,12 +54,7 @@ function BenefitIcon({ icon }: { icon: HomeBenefitIcon }) {
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <div>
-      <div style={{ width: 32, height: 3, backgroundColor: 'var(--red)', marginBottom: 12 }} />
-      {children}
-    </div>
-  )
+  return <div className="uppercase">{children}</div>
 }
 
 export default function HomePage({ onNavigate, onAddToCart }: HomePageProps) {
@@ -188,16 +187,30 @@ export default function HomePage({ onNavigate, onAddToCart }: HomePageProps) {
       </section>
 
       {/* ── ABB STRIP ─────────────────────────────────────── */}
-      <section className="bg-white py-4" style={{ borderTop: '3px solid var(--red)', borderBottom: '1px solid #e5e5e5' }}>
-        <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <img src={logoABB} alt="ABB Logo" className="h-7 w-auto object-contain flex-shrink-0" />
-            <div>
-              <p className="text-sm font-bold text-gray-900" style={{ fontFamily: "'Roboto', sans-serif" }}>
-                {homeContent.partnerTitle}
-              </p>
-              <p className="text-xs text-gray-400">{homeContent.partnerSubtitle}</p>
-            </div>
+      <section className="bg-white" style={{ borderTop: '3px solid var(--red)', borderBottom: '1px solid #e5e5e5' }}>
+        <div
+          className="max-w-7xl mx-auto flex items-center justify-between"
+          style={{ paddingInline: ABB_STRIP_GUTTER, gap: ABB_STRIP_GUTTER }}
+        >
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-gray-900" style={{ fontFamily: "'Roboto', sans-serif" }}>
+              {homeContent.partnerTitle}
+            </p>
+            <p className="text-xs text-gray-400">{homeContent.partnerSubtitle}</p>
+          </div>
+          <div
+            className="flex-shrink-0"
+            style={{
+              paddingBlock: ABB_LOGO_X,
+              paddingInline: Math.max(ABB_LOGO_X - ABB_STRIP_GUTTER, 0),
+            }}
+          >
+            <img
+              src={logoABB}
+              alt="ABB"
+              className="w-auto object-contain"
+              style={{ height: ABB_LOGO_X }}
+            />
           </div>
         </div>
       </section>
@@ -283,49 +296,41 @@ export default function HomePage({ onNavigate, onAddToCart }: HomePageProps) {
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {featuredProductsFromData.map((p) => {
-              const variant = p.variants.find((item) => item.enabled) || p.variants[0]
+              const variant = getDefaultVariant(p)
               const productImage = variant?.image || ''
               const productSku = variant?.sku || p.baseSku
               return (
               <div
                 key={p.id}
-                className="bg-white rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300 group"
+                className="bg-white rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300 group flex h-full flex-col"
                 style={{ border: '1px solid #e5e5e5' }}
               >
-                <div
-                  className="relative aspect-square flex items-center justify-center overflow-hidden"
-                  style={{ background: '#fafafa' }}
-                >
-                  {p.badge && (
-                    <span
-                      className="absolute top-2 left-2 px-1.5 py-0.5 text-[10px] font-bold text-white z-10"
-                      style={{ backgroundColor: 'var(--red)' }}
-                    >
-                      {p.badge}
-                    </span>
-                  )}
-                  {productImage ? (
-                    <img
-                      src={productImage}
-                      alt={p.name}
-                      className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 p-2"
-                    />
-                  ) : (
-                    <svg width="48" height="48" viewBox="0 0 64 64" fill="none" className="opacity-10 group-hover:opacity-20 transition-opacity">
-                      <rect x="8" y="12" width="48" height="40" rx="2" stroke="#1a1a1a" strokeWidth="2"/>
-                      <rect x="14" y="18" width="10" height="10" rx="1" fill="#FF000F"/>
-                      <rect x="27" y="18" width="10" height="10" rx="1" fill="#FF000F"/>
-                      <rect x="40" y="18" width="10" height="10" rx="1" fill="#FF000F"/>
-                      <rect x="14" y="32" width="36" height="2" rx="1" fill="#1a1a1a"/>
-                      <rect x="14" y="38" width="24" height="2" rx="1" fill="#1a1a1a"/>
-                    </svg>
-                  )}
+                <div style={{ background: '#fafafa' }}>
+                  <ProductImageBranding series={p.series} badge={p.badge} />
+                  <div className="relative aspect-square flex items-center justify-center overflow-hidden">
+                    {productImage ? (
+                      <img
+                        src={productImage}
+                        alt={p.name}
+                        className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 p-2"
+                      />
+                    ) : (
+                      <svg width="48" height="48" viewBox="0 0 64 64" fill="none" className="opacity-10 group-hover:opacity-20 transition-opacity">
+                        <rect x="8" y="12" width="48" height="40" rx="2" stroke="#1a1a1a" strokeWidth="2"/>
+                        <rect x="14" y="18" width="10" height="10" rx="1" fill="#FF000F"/>
+                        <rect x="27" y="18" width="10" height="10" rx="1" fill="#FF000F"/>
+                        <rect x="40" y="18" width="10" height="10" rx="1" fill="#FF000F"/>
+                        <rect x="14" y="32" width="36" height="2" rx="1" fill="#1a1a1a"/>
+                        <rect x="14" y="38" width="24" height="2" rx="1" fill="#1a1a1a"/>
+                      </svg>
+                    )}
+                  </div>
                 </div>
-                <div className="p-3">
+                <div className="p-3 flex flex-1 flex-col">
                   <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">{p.series}</p>
-                  <h4 className="text-[12px] font-bold text-gray-900 leading-tight mb-1" style={{ fontFamily: "'Roboto', sans-serif" }}>{p.name}</h4>
-                  <p className="text-[9px] text-gray-300 mb-3 font-mono">{productSku}</p>
-                  <div className="flex gap-1.5">
+                  <h4 className="text-[12px] font-bold text-gray-900 leading-tight mb-1 min-h-[30px] line-clamp-2" style={{ fontFamily: "'Roboto', sans-serif" }}>{p.name}</h4>
+                  <p className="text-[9px] text-gray-300 font-mono">{productSku}</p>
+                  <div className="flex gap-1.5 mt-auto pt-3">
                     <button
                       onClick={() => onNavigate('productDetail', p.id)}
                       className="flex-1 py-1.5 text-[11px] font-medium border transition-colors hover:bg-gray-50"
@@ -335,7 +340,7 @@ export default function HomePage({ onNavigate, onAddToCart }: HomePageProps) {
                       onClick={() => onAddToCart({ id: p.id, name: `${p.name} (${variant?.color || 'Mặc định'})`, sku: productSku })}
                       className="flex-1 py-1.5 text-[11px] font-bold text-white transition-all hover:opacity-90"
                       style={{ backgroundColor: 'var(--red)' }}
-                    >+ Giỏ</button>
+                    >+ Báo giá</button>
                   </div>
                 </div>
               </div>
@@ -487,8 +492,7 @@ export default function HomePage({ onNavigate, onAddToCart }: HomePageProps) {
       <section className="py-20 px-6" style={{ background: '#f7f7f7', borderTop: '1px solid #e5e5e5' }}>
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-14">
-            <div style={{ width: 32, height: 3, backgroundColor: 'var(--red)', margin: '0 auto 12px' }} />
-            <h2 style={{ fontFamily: font, fontWeight: 700, fontSize: 'clamp(2rem, 4vw, 3rem)', color: '#1a1a1a', lineHeight: 1.1 }}>
+            <h2 style={{ fontFamily: font, fontWeight: 700, fontSize: 'clamp(2rem, 4vw, 3rem)', color: '#1a1a1a', lineHeight: 1.1, textTransform: 'uppercase' }}>
               {homeContent.whyTitle}
             </h2>
             <p className="text-gray-400 mt-3 text-base max-w-xl mx-auto">
@@ -519,8 +523,7 @@ export default function HomePage({ onNavigate, onAddToCart }: HomePageProps) {
       {/* ── CTA ───────────────────────────────────────────── */}
       <section className="py-20 px-6" style={{ background: '#f7f7f7', borderTop: '1px solid #e5e5e5', borderBottom: '1px solid #e5e5e5' }}>
         <div className="max-w-4xl mx-auto text-center">
-          <div style={{ width: 32, height: 3, backgroundColor: 'var(--red)', margin: '0 auto 16px' }} />
-          <h2 style={{ fontFamily: font, fontWeight: 700, fontSize: 'clamp(2rem, 4vw, 3rem)', lineHeight: 1.1, color: '#1a1a1a' }} className="mb-4">
+          <h2 style={{ fontFamily: font, fontWeight: 700, fontSize: 'clamp(2rem, 4vw, 3rem)', lineHeight: 1.1, color: '#1a1a1a', textTransform: 'uppercase' }} className="mb-4">
             {homeContent.ctaTitle}
           </h2>
           <p className="text-gray-400 mb-10 text-base max-w-xl mx-auto">
@@ -549,8 +552,7 @@ export default function HomePage({ onNavigate, onAddToCart }: HomePageProps) {
       <section className="py-20 px-6 bg-white" style={{ borderBottom: '1px solid #e5e5e5' }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <div style={{ width: 32, height: 3, backgroundColor: 'var(--red)', margin: '0 auto 12px' }} />
-            <h2 style={{ fontFamily: font, fontWeight: 700, fontSize: 'clamp(2rem, 4vw, 3rem)', color: '#1a1a1a', lineHeight: 1.1 }}>
+            <h2 style={{ fontFamily: font, fontWeight: 700, fontSize: 'clamp(2rem, 4vw, 3rem)', color: '#1a1a1a', lineHeight: 1.1, textTransform: 'uppercase' }}>
               {homeContent.supportTitle}
             </h2>
             <p className="text-gray-400 mt-3 text-base max-w-xl mx-auto">

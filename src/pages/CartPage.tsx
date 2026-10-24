@@ -229,7 +229,7 @@ export default function CartPage({ items, onNavigate, onUpdateQty, onRemove, onC
               <div key={item.id} className="bg-white border border-gray-200 rounded-lg p-4 flex items-center gap-4">
                 <div className="w-14 h-14 bg-gray-50 rounded flex items-center justify-center flex-shrink-0">
                   <svg width="28" height="28" viewBox="0 0 64 64" fill="none" className="opacity-20">
-                    <rect x="6" y="10" width="52" height="44" rx="4" stroke="#1B2A4A" strokeWidth="2.5"/>
+                    <rect x="6" y="10" width="52" height="44" rx="4" stroke="#1B4C98" strokeWidth="2.5"/>
                     <rect x="12" y="16" width="12" height="12" rx="2" fill="#FF000F"/>
                   </svg>
                 </div>
@@ -437,7 +437,7 @@ export default function CartPage({ items, onNavigate, onUpdateQty, onRemove, onC
                   <div key={item.id} className="flex items-center gap-3 text-sm">
                     <div className="w-10 h-10 bg-gray-50 rounded flex-shrink-0 flex items-center justify-center">
                       <svg width="20" height="20" viewBox="0 0 64 64" fill="none" className="opacity-20">
-                        <rect x="6" y="10" width="52" height="44" rx="4" stroke="#1B2A4A" strokeWidth="2.5"/>
+                        <rect x="6" y="10" width="52" height="44" rx="4" stroke="#1B4C98" strokeWidth="2.5"/>
                       </svg>
                     </div>
                     <div className="flex-1 min-w-0">

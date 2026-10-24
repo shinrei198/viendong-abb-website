@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import logoColor from '@/imports/logo_color.png'
+import logoColor from '@/imports/logo_viendong_header.png'
 
 interface HeaderProps {
   currentPage: string
@@ -85,7 +85,7 @@ export default function Header({ currentPage, onNavigate, cartCount }: HeaderPro
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-16">
           {/* Logo */}
           <button onClick={() => onNavigate('home')} className="flex items-center gap-2 flex-shrink-0">
-            <img src={logoColor} alt="Viễn Đông Electric" className="h-11 w-auto object-contain" />
+            <img src={logoColor} alt="Viễn Đông Electric" className="h-10 w-auto object-contain" />
           </button>
 
           {/* Desktop nav */}

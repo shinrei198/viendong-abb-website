@@ -57,7 +57,7 @@ export default function NewsPage({ onNavigate }: NewsPageProps) {
   return (
     <div className="bg-white min-h-screen font-['Roboto']">
       {/* Top Banner */}
-      <section className="bg-gradient-to-r from-[#1B4C98] to-[#0e2d5c] text-white py-12 px-6">
+      <section className="bg-gradient-to-r from-[#1B4C98] to-[#1B4C98] text-white py-12 px-6">
         <div className="max-w-7xl mx-auto">
           {/* Breadcrumb */}
           <nav className="text-xs text-white/70 mb-4 flex items-center gap-2">
@@ -68,7 +68,6 @@ export default function NewsPage({ onNavigate }: NewsPageProps) {
             <span className="text-white font-semibold">Tin tức & Kỹ thuật</span>
           </nav>
 
-          <div className="w-9 h-1 bg-[#FF000F] mb-4" />
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-3 font-['Roboto_Condensed'] uppercase">
             Tin Tức & Kỹ Thuật Điện ABB
           </h1>
