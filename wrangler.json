@@ -2,6 +2,7 @@
   "name": "viendong-abb-website",
   "main": "src/worker.ts",
   "compatibility_date": "2025-01-01",
+  "keep_vars": true,
   "access": {
     "dev": {
       "aud": "local-viendong-admin",
