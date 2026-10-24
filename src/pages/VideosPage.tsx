@@ -5,9 +5,10 @@ import VideoModal from '@/components/VideoModal'
 
 interface VideosPageProps {
   onNavigate: (page: string, productId?: string) => void
+  initialVideoId?: string
 }
 
-export default function VideosPage({ onNavigate }: VideosPageProps) {
+export default function VideosPage({ onNavigate, initialVideoId }: VideosPageProps) {
   const [videos, setVideos] = useState<VideoItem[]>(getStoredVideos())
   const [categories, setCategories] = useState<string[]>(getStoredVideoCategories())
   const [selectedCat, setSelectedCat] = useState<string>('Tất cả')
@@ -26,6 +27,12 @@ export default function VideosPage({ onNavigate }: VideosPageProps) {
     window.addEventListener('viendong_storage_update', handleStorageUpdate)
     return () => window.removeEventListener('viendong_storage_update', handleStorageUpdate)
   }, [])
+
+  useEffect(() => {
+    if (!initialVideoId) return
+    const matchedVideo = videos.find((video) => video.id === initialVideoId && !video.isHidden)
+    if (matchedVideo) setActiveModalVideo(matchedVideo)
+  }, [initialVideoId, videos])
 
   // Filter videos
   const filteredVideos = videos.filter((v) => {

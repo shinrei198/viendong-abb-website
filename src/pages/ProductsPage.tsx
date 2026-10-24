@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getStoredProducts, ProductItem, ProductVariant } from '@/data/siteData'
+import { getStoredProductCategories, getStoredProducts, productMatchesCategory, ProductItem, ProductVariant } from '@/data/siteData'
 import { getEnabledVariants, hasVariantOptions, productColorDot } from '@/utils/productVariants'
 import ProductImageBranding from '@/components/ProductImageBranding'
 
@@ -153,6 +153,7 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
     const stored = getStoredProducts()
     return stored && stored.length > 0 ? stored : []
   })
+  const [productCategories, setProductCategories] = useState(getStoredProductCategories())
 
   // Selected active color for each individual product card: { [productId]: 'Vàng' }
   const [selectedColors, setSelectedColors] = useState<Record<string, string>>({})
@@ -171,18 +172,22 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
     const handleUpdate = () => {
       const stored = getStoredProducts()
       if (stored && stored.length > 0) setProducts(stored)
+      setProductCategories(getStoredProductCategories())
     }
     window.addEventListener('viendong_storage_update', handleUpdate)
     return () => window.removeEventListener('viendong_storage_update', handleUpdate)
   }, [])
 
   useEffect(() => {
-    setSelectedCat(initialCategory || 'all')
-    setSelectedSubcat('all')
-    if (initialCategory) {
-      setExpandedCats((prev) => Array.from(new Set([...prev, initialCategory])))
+    const parent = productCategories.find((category) => category.id === initialCategory)
+    const parentOfSubcategory = productCategories.find((category) => category.sub.some((sub) => sub.id === initialCategory))
+    setSelectedCat(parent?.id || parentOfSubcategory?.id || 'all')
+    setSelectedSubcat(parentOfSubcategory ? initialCategory || 'all' : 'all')
+    const expandedId = parent?.id || parentOfSubcategory?.id
+    if (expandedId) {
+      setExpandedCats((prev) => Array.from(new Set([...prev, expandedId])))
     }
-  }, [initialCategory])
+  }, [initialCategory, productCategories])
 
   const toggleExpand = (id: string) => {
     setExpandedCats((prev) => prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id])
@@ -216,8 +221,7 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
   const filtered = allList.filter((p) => {
     const matchCat =
       selectedCat === 'all' ||
-      p.category === selectedCat ||
-      (selectedCat === 'accessories' && (p.category === 'other' || p.category === 'accessories'))
+      productMatchesCategory(p, selectedCat)
 
     const matchSubcat =
       selectedSubcat === 'all' ||
@@ -252,13 +256,10 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
 
   // Dynamic count for category tree
   const getCatCount = (catId: string) => {
-    if (catId === 'accessories') {
-      return allList.filter((p) => p.category === 'other' || p.category === 'accessories').length
-    }
-    return allList.filter((p) => p.category === catId).length
+    return allList.filter((p) => productMatchesCategory(p, catId)).length
   }
 
-  const selectedCatData = categoryTree.find((c) => c.id === selectedCat)
+  const selectedCatData = productCategories.find((c) => c.id === selectedCat)
 
   return (
     <div className="bg-white min-h-screen">
@@ -333,7 +334,7 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
               </div>
 
               <div className="space-y-1">
-                {categoryTree.map((cat) => {
+                {productCategories.map((cat) => {
                   const isParentSelected = selectedCat === cat.id
                   const isExpanded = expandedCats.includes(cat.id)
                   const count = getCatCount(cat.id)

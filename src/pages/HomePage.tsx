@@ -17,6 +17,8 @@ import {
   getStoredSiteSettings,
   getStoredHomePageContent,
   getStoredProducts,
+  getStoredProductCategories,
+  countProductsForTarget,
   HomeBenefitIcon,
   ProductItem,
   createVietnameseSlug,
@@ -64,6 +66,7 @@ export default function HomePage({ onNavigate, onAddToCart }: HomePageProps) {
   const [settings, setSettings] = useState(getStoredSiteSettings())
   const [homeContent, setHomeContent] = useState(getStoredHomePageContent())
   const [products, setProducts] = useState<ProductItem[]>(getStoredProducts())
+  const [productCategories, setProductCategories] = useState(getStoredProductCategories())
   const [activeModalVideo, setActiveModalVideo] = useState<VideoItem | null>(null)
 
   useEffect(() => {
@@ -74,6 +77,7 @@ export default function HomePage({ onNavigate, onAddToCart }: HomePageProps) {
       setSettings(getStoredSiteSettings())
       setHomeContent(getStoredHomePageContent())
       setProducts(getStoredProducts())
+      setProductCategories(getStoredProductCategories())
     }
     handleStorageUpdate()
     window.addEventListener('viendong_storage_update', handleStorageUpdate)
@@ -247,7 +251,7 @@ export default function HomePage({ onNavigate, onAddToCart }: HomePageProps) {
             <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.80) 0%, rgba(0,0,0,0.0) 55%)' }} />
             <div className="absolute bottom-0 left-0 p-7">
               <span className="inline-block px-2 py-0.5 text-[10px] font-bold text-white mb-2" style={{ backgroundColor: 'var(--red)' }}>
-                {homeCategories[0].count}+ sản phẩm
+                {countProductsForTarget(products, productCategories, homeCategories[0].targetCategory)} sản phẩm
               </span>
               <h3 style={{ fontFamily: font, fontWeight: 700, fontSize: '1.9rem', color: 'white' }}>{homeCategories[0].name}</h3>
               <p className="text-white/60 text-sm mt-1">{homeCategories[0].description}</p>
@@ -271,7 +275,7 @@ export default function HomePage({ onNavigate, onAddToCart }: HomePageProps) {
               <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.76) 0%, rgba(0,0,0,0.0) 55%)' }} />
               <div className="absolute bottom-0 left-0 p-5">
                 <span className="inline-block px-1.5 py-0.5 text-[9px] font-bold text-white mb-1.5" style={{ backgroundColor: 'var(--red)' }}>
-                  {cat.count}+ SP
+                  {countProductsForTarget(products, productCategories, cat.targetCategory)} SP
                 </span>
                 <h3 style={{ fontFamily: font, fontWeight: 700, fontSize: '1.05rem', color: 'white' }}>{cat.name}</h3>
               </div>

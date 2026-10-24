@@ -31,23 +31,32 @@ import {
   ProductItem,
   getStoredProducts,
   saveStoredProducts,
+  ProductCategoryItem,
+  getStoredProductCategories,
   HomePageContent,
   getStoredHomePageContent,
   saveStoredHomePageContent,
+  AboutPageContent,
+  getStoredAboutPageContent,
+  saveStoredAboutPageContent,
 } from '@/data/siteData'
 import AdminProductsTab from '@/components/AdminProductsTab'
 import AdminHomePageTab from '@/components/AdminHomePageTab'
+import AdminUsersTab from '@/components/AdminUsersTab'
+import AdminAboutTab from '@/components/AdminAboutTab'
 import RichTextEditor from '@/components/RichTextEditor'
 import ThumbnailCropper, { NewsThumbnailView } from '@/components/ThumbnailCropper'
 import { calculateAdaptiveButtonPositions } from '@/utils/bannerLayout'
 import { uploadMedia } from '@/utils/mediaUpload'
 import { isSafeContentUrl, sanitizePlainText, sanitizeRichHtml } from '@/utils/sanitize'
+import type { AdminSession } from '@/types/admin'
 
 interface AdminPageProps {
   onNavigate: (page: string, id?: string) => void
+  session: AdminSession
 }
 
-type TabType = 'homepage' | 'banners' | 'products' | 'videos' | 'news' | 'quotes' | 'settings'
+type TabType = 'users' | 'about' | 'homepage' | 'banners' | 'products' | 'videos' | 'news' | 'quotes' | 'settings'
 
 interface ConfirmDialogState {
   isOpen: boolean
@@ -66,7 +75,7 @@ const limitText = (value: string, maxLength: number) => Array.from(value.normali
 const countText = (value: string) => Array.from(value.normalize('NFC')).length
 const limitButtonLabel = (value: string) => limitText(value, 24)
 
-export default function AdminPage({ onNavigate }: AdminPageProps) {
+export default function AdminPage({ onNavigate, session }: AdminPageProps) {
   const [activeTab, setActiveTab] = useState<TabType>('banners')
 
   // Storage states
@@ -78,7 +87,9 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
   const [quotes, setQuotes] = useState<QuoteRequestItem[]>(getStoredQuotes())
   const [settings, setSettings] = useState<SiteSettings>(getStoredSiteSettings())
   const [products, setProducts] = useState<ProductItem[]>(getStoredProducts())
+  const [productCategories, setProductCategories] = useState<ProductCategoryItem[]>(getStoredProductCategories())
   const [homePageContent, setHomePageContent] = useState<HomePageContent>(getStoredHomePageContent())
+  const [aboutPageContent, setAboutPageContent] = useState<AboutPageContent>(getStoredAboutPageContent())
 
   const [notification, setNotification] = useState<string | null>(null)
   const [isUploadingBanner, setIsUploadingBanner] = useState(false)
@@ -107,7 +118,9 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
     if (import.meta.env.DEV) setQuotes(getStoredQuotes())
     setSettings(getStoredSiteSettings())
     setProducts(getStoredProducts())
+    setProductCategories(getStoredProductCategories())
     setHomePageContent(getStoredHomePageContent())
+    setAboutPageContent(getStoredAboutPageContent())
   }
 
   useEffect(() => {
@@ -466,7 +479,6 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
       const newV: VideoItem = {
         ...videoForm,
         id: 'v_' + Date.now(),
-        views: 0,
       }
       updated = [newV, ...videos]
       showToast('Đã thêm video mới thành công!')
@@ -657,7 +669,6 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
         id: 'n_' + Date.now(),
         slug,
         tags: processedTags,
-        views: 0,
       }
       updated = [newN, ...news]
       showToast('Đã xuất bản bài viết mới!')
@@ -857,7 +868,19 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
     e.target.value = ''
   }
 
-  const adminNavigation: Array<{ id: TabType; label: string; icon: string; badge?: number }> = [
+  const canAccessTab = (tab: TabType) => {
+    if (tab === 'users') return session.permissions.includes('users.manage')
+    if (tab === 'about' || tab === 'homepage' || tab === 'banners') return session.permissions.includes('content.home.manage')
+    if (tab === 'products') return session.permissions.includes('catalog.manage')
+    if (tab === 'videos') return session.permissions.includes('content.videos.manage')
+    if (tab === 'news') return session.permissions.includes('content.news.manage')
+    if (tab === 'quotes') return session.permissions.includes('quotes.read')
+    return session.permissions.includes('settings.manage')
+  }
+
+  const allAdminNavigation: Array<{ id: TabType; label: string; icon: string; badge?: number }> = [
+    { id: 'users', label: 'Tài khoản & Phân quyền', icon: '◆' },
+    { id: 'about', label: 'Giới thiệu', icon: '◎' },
     { id: 'homepage', label: 'Nội dung Trang chủ', icon: '⌂' },
     { id: 'banners', label: 'Banner Slider', icon: '▣', badge: banners.filter((banner) => banner.isActive).length },
     { id: 'products', label: 'Sản phẩm', icon: '⚡', badge: products.length },
@@ -866,6 +889,11 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
     { id: 'quotes', label: 'Yêu cầu Báo giá', icon: '◫', badge: quotes.filter((quote) => quote.status === 'new').length },
     { id: 'settings', label: 'Cài đặt Website', icon: '⚙' },
   ]
+  const adminNavigation = allAdminNavigation.filter((tab) => canAccessTab(tab.id))
+
+  useEffect(() => {
+    if (!canAccessTab(activeTab) && adminNavigation[0]) setActiveTab(adminNavigation[0].id)
+  }, [activeTab, session.permissions])
 
   const selectAdminTab = (tab: TabType) => {
     setActiveTab(tab)
@@ -1035,7 +1063,7 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
 
           <main id="admin-content-top" className="min-w-0 flex-1 scroll-mt-24">
         {/* Quick KPI Stats Counter */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
           <div className="bg-white p-4 border border-gray-200 border-l-4 border-l-[#FF000F] shadow-sm">
             <p className="text-[11px] font-bold uppercase text-gray-500">Banner Slider</p>
             <div className="flex items-baseline justify-between mt-1">
@@ -1076,18 +1104,6 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
             </div>
           </div>
 
-          <div className="bg-white p-4 border border-gray-200 border-l-4 border-l-blue-500 shadow-sm">
-            <p className="text-[11px] font-bold uppercase text-gray-500">Lượt xem tổng</p>
-            <div className="flex items-baseline justify-between mt-1">
-              <span className="text-2xl font-black text-blue-600">
-                {(
-                  videos.reduce((acc, v) => acc + (v.views || 0), 0) +
-                  news.reduce((acc, n) => acc + (n.views || 0), 0)
-                ).toLocaleString()}
-              </span>
-              <span className="text-xs text-gray-400 font-medium">Lượt xem</span>
-            </div>
-          </div>
         </div>
 
         {/* Compact navigation for tablet/mobile; desktop uses the persistent sidebar. */}
@@ -1110,10 +1126,24 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
           ))}
         </div>
 
+        {activeTab === 'users' && <AdminUsersTab session={session} showToast={showToast} />}
+
+        {activeTab === 'about' && (
+          <AdminAboutTab
+            content={aboutPageContent}
+            onChange={setAboutPageContent}
+            onSave={() => {
+              saveStoredAboutPageContent(aboutPageContent)
+              showToast('Đã lưu nội dung trang Giới thiệu.')
+            }}
+          />
+        )}
+
         {activeTab === 'homepage' && (
           <AdminHomePageTab
             content={homePageContent}
             products={products}
+            productCategories={productCategories}
             onSave={handleSaveHomePageContent}
             showToast={showToast}
           />
@@ -1126,6 +1156,8 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
           <AdminProductsTab
             products={products}
             onProductsUpdated={setProducts}
+            productCategories={productCategories}
+            onProductCategoriesUpdated={setProductCategories}
             featuredProductIds={homePageContent.featuredProductIds}
             onFeaturedProductIdsUpdated={handleFeaturedProductsUpdated}
             showToast={showToast}
@@ -1693,13 +1725,13 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                           {selectedQuote.code}
                         </h4>
                       </div>
-                      <button
+                      {session.permissions.includes('quotes.delete') && <button
                         type="button"
                         onClick={() => handleDeleteQuoteConfirm(selectedQuote.id, selectedQuote.code)}
                         className="text-xs text-red-600 hover:underline font-semibold"
                       >
                         Xóa phiếu
-                      </button>
+                      </button>}
                     </div>
 
                     <div className="space-y-2 text-xs text-gray-700 mb-6 bg-[#f8fafc] p-4 border border-gray-100">

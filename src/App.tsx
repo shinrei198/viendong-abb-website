@@ -1,17 +1,18 @@
-import { useState, useEffect } from 'react'
+import { lazy, Suspense, useState, useEffect } from 'react'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
-import HomePage from '@/pages/HomePage'
-import ProductsPage from '@/pages/ProductsPage'
-import ProductDetailPage from '@/pages/ProductDetailPage'
-import CartPage from '@/pages/CartPage'
-import AboutPage from '@/pages/AboutPage'
-import VideosPage from '@/pages/VideosPage'
-import NewsPage from '@/pages/NewsPage'
-import NewsDetailPage from '@/pages/NewsDetailPage'
-import AdminPage from '@/pages/AdminPage'
 import FloatingButton from '@/components/FloatingButton'
-import { fetchCloudflareSiteData, getStoredNews, createVietnameseSlug } from '@/data/siteData'
+import NotFoundPage from '@/pages/NotFoundPage'
+
+const HomePage = lazy(() => import('@/pages/HomePage'))
+const ProductsPage = lazy(() => import('@/pages/ProductsPage'))
+const ProductDetailPage = lazy(() => import('@/pages/ProductDetailPage'))
+const CartPage = lazy(() => import('@/pages/CartPage'))
+const AboutPage = lazy(() => import('@/pages/AboutPage'))
+const VideosPage = lazy(() => import('@/pages/VideosPage'))
+const NewsPage = lazy(() => import('@/pages/NewsPage'))
+const NewsDetailPage = lazy(() => import('@/pages/NewsDetailPage'))
+const AdminRoute = lazy(() => import('@/components/AdminRoute'))
 
 interface CartItem {
   id: string
@@ -67,6 +68,7 @@ export type Page =
   | 'newsDetail'
   | 'videos'
   | 'admin'
+  | 'notFound'
 
 /** Parse clean SEO URL to application route state */
 function parseRouteFromPath(): { page: Page; id?: string } {
@@ -106,19 +108,14 @@ function parseRouteFromPath(): { page: Page; id?: string } {
 
   // 5. Videos
   if (path === '/video' || path === '/videos') {
-    return { page: 'videos' }
+    return { page: 'videos', id: new URLSearchParams(window.location.search).get('video') || undefined }
   }
 
-  // 6. Distributors / Map / Contact -> redirect to 'about'
-  if (
-    path === '/he-thong-phan-phoi' ||
-    path === '/dai-ly' ||
-    path === '/map' ||
-    path === '/lien-he' ||
-    path === '/contact'
-  ) {
+  // Contact remains available through the About page. The dormant map/distributor routes stay hidden.
+  if (path === '/lien-he' || path === '/contact') {
     return { page: 'about' }
   }
+  if (path === '/he-thong-phan-phoi' || path === '/dai-ly' || path === '/map') return { page: 'notFound' }
 
   // 7. Cart & Quote Request
   if (path === '/gio-hang' || path === '/cart' || path === '/bao-gia') {
@@ -130,7 +127,7 @@ function parseRouteFromPath(): { page: Page; id?: string } {
     return { page: 'admin' }
   }
 
-  return { page: 'home' }
+  return { page: 'notFound' }
 }
 
 /** Convert route to clean SEO URL path */
@@ -149,18 +146,20 @@ function getPathFromRoute(page: Page, id?: string): string {
     case 'newsDetail':
       return `/tin-tuc/${encodeURIComponent(id || 'n1')}`
     case 'videos':
-      return '/video'
+      return id ? `/video?video=${encodeURIComponent(id)}` : '/video'
     case 'cart':
       return '/gio-hang'
     case 'admin':
       return '/admin'
+    case 'notFound':
+      return '/404'
     default:
       return '/'
   }
 }
 
 /** Dynamically update document title & SEO meta tags */
-function updateSeoMetadata(page: Page, id?: string) {
+async function updateSeoMetadata(page: Page, id?: string) {
   if (typeof document === 'undefined') return
 
   let title = 'Viễn Đông Electric | Nhà phân phối thiết bị điện dân dụng của ABB'
@@ -190,6 +189,7 @@ function updateSeoMetadata(page: Page, id?: string) {
         'Tổng hợp tin tức công nghệ năng lượng ABB, cẩm nang chọn thiết bị điện an toàn cho căn hộ, nhà máy và dự án.'
       break
     case 'newsDetail': {
+      const { getStoredNews, createVietnameseSlug } = await import('@/data/siteData')
       const allNews = getStoredNews()
       const normalize = (s?: string) => (s || '').toLowerCase().replace(/[-_]+/g, '_')
       const target = normalize(id)
@@ -220,6 +220,10 @@ function updateSeoMetadata(page: Page, id?: string) {
     case 'admin':
       title = 'Hệ Thống Quản Trị | Viễn Đông Electric'
       break
+    case 'notFound':
+      title = '404 · Không Tìm Thấy Trang | Viễn Đông Electric'
+      description = 'Trang bạn tìm kiếm không tồn tại hoặc đã được di chuyển.'
+      break
   }
 
   document.title = title
@@ -234,6 +238,7 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>(initialRoute.page)
   const [currentProductId, setCurrentProductId] = useState<string>(initialRoute.id || 'p1')
   const [currentArticleId, setCurrentArticleId] = useState<string>(initialRoute.id || 'n1')
+  const [currentVideoId, setCurrentVideoId] = useState<string | undefined>(initialRoute.page === 'videos' ? initialRoute.id : undefined)
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(
     initialRoute.page === 'products' ? initialRoute.id : undefined
   )
@@ -241,8 +246,8 @@ export default function App() {
 
   // Initialize data from Cloudflare KV and sync route on mount
   useEffect(() => {
-    fetchCloudflareSiteData()
-    updateSeoMetadata(initialRoute.page, initialRoute.id)
+    void import('@/data/siteData').then((module) => module.fetchCloudflareSiteData())
+    void updateSeoMetadata(initialRoute.page, initialRoute.id)
   }, [])
 
   // Listen to browser Back/Forward (popstate) navigation
@@ -253,7 +258,8 @@ export default function App() {
       if (route.page === 'products') setSelectedCategory(route.id)
       if (route.page === 'productDetail' && route.id) setCurrentProductId(route.id)
       if (route.page === 'newsDetail' && route.id) setCurrentArticleId(route.id)
-      updateSeoMetadata(route.page, route.id)
+      if (route.page === 'videos') setCurrentVideoId(route.id)
+      void updateSeoMetadata(route.page, route.id)
     }
 
     window.addEventListener('popstate', handlePopState)
@@ -263,11 +269,11 @@ export default function App() {
   // Scroll to top on page change
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
-  }, [currentPage, currentArticleId, currentProductId, selectedCategory])
+  }, [currentPage, currentArticleId, currentProductId, currentVideoId, selectedCategory])
 
   const navigate = (page: string, id?: string) => {
     // The map/distributor page is intentionally dormant for now.
-    const targetPage = (page === 'contact' || page === 'map' ? 'about' : page) as Page
+    const targetPage = (page === 'contact' ? 'about' : page === 'map' ? 'notFound' : page) as Page
     const targetId = id || (targetPage === 'productDetail' ? currentProductId : targetPage === 'newsDetail' ? currentArticleId : undefined)
     const newPath = getPathFromRoute(targetPage, targetId)
 
@@ -285,9 +291,11 @@ export default function App() {
       setCurrentProductId(id)
     } else if (targetPage === 'newsDetail' && id) {
       setCurrentArticleId(id)
+    } else if (targetPage === 'videos') {
+      setCurrentVideoId(id)
     }
 
-    updateSeoMetadata(targetPage, targetId)
+    void updateSeoMetadata(targetPage, targetId)
   }
 
   const addToCart = (product: { id: string; name: string; sku: string }) => {
@@ -340,13 +348,13 @@ export default function App() {
           />
         )
       case 'videos':
-        return <VideosPage onNavigate={navigate} />
+        return <VideosPage onNavigate={navigate} initialVideoId={currentVideoId} />
       case 'news':
         return <NewsPage onNavigate={navigate} />
       case 'newsDetail':
         return <NewsDetailPage articleId={currentArticleId} onNavigate={navigate} />
       case 'admin':
-        return <AdminPage onNavigate={navigate} />
+        return <AdminRoute onNavigate={navigate} />
       case 'cart':
         return (
           <CartPage
@@ -357,6 +365,8 @@ export default function App() {
             onClear={clearCart}
           />
         )
+      case 'notFound':
+        return <NotFoundPage onNavigate={navigate} />
       default:
         return (
           <div className="max-w-2xl mx-auto px-4 py-20 text-center">
@@ -382,7 +392,11 @@ export default function App() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Header currentPage={currentPage} onNavigate={navigate} cartCount={cart.reduce((sum, item) => sum + item.qty, 0)} />
-      <main style={{ flex: 1 }}>{renderPage()}</main>
+      <main style={{ flex: 1 }}>
+        <Suspense fallback={<div className="flex min-h-[45vh] items-center justify-center text-sm font-semibold text-slate-500">Đang tải nội dung…</div>}>
+          {renderPage()}
+        </Suspense>
+      </main>
       {currentPage !== 'admin' && <Footer onNavigate={navigate} />}
       {currentPage !== 'admin' && <FloatingButton />}
     </div>

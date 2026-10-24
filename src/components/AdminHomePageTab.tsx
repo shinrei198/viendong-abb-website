@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
+import { countProductsForTarget } from '@/data/siteData'
 import type {
   HomeBenefitIcon,
   HomeBenefitItem,
   HomeCategoryItem,
   HomePageContent,
+  ProductCategoryItem,
   ProductItem,
 } from '@/data/siteData'
 import { uploadMedia } from '@/utils/mediaUpload'
@@ -11,6 +13,7 @@ import { uploadMedia } from '@/utils/mediaUpload'
 interface AdminHomePageTabProps {
   content: HomePageContent
   products: ProductItem[]
+  productCategories: ProductCategoryItem[]
   onSave: (content: HomePageContent) => void
   showToast: (message: string) => void
 }
@@ -30,7 +33,7 @@ function SectionCard({ title, description, children }: { title: string; descript
   )
 }
 
-export default function AdminHomePageTab({ content, products, onSave, showToast }: AdminHomePageTabProps) {
+export default function AdminHomePageTab({ content, products, productCategories, onSave, showToast }: AdminHomePageTabProps) {
   const [draft, setDraft] = useState<HomePageContent>(content)
   const [isDirty, setIsDirty] = useState(false)
   const [uploadingCategory, setUploadingCategory] = useState<number | null>(null)
@@ -119,8 +122,8 @@ export default function AdminHomePageTab({ content, products, onSave, showToast 
               <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
                 <label><span className={labelClass}>Tên danh mục</span><input className={inputClass} value={category.name} onChange={(e) => updateCategory(index, { name: e.target.value })} /></label>
                 <label><span className={labelClass}>Mô tả</span><input className={inputClass} value={category.description} onChange={(e) => updateCategory(index, { description: e.target.value })} /></label>
-                <label><span className={labelClass}>Số sản phẩm</span><input type="number" min="0" className={inputClass} value={category.count} onChange={(e) => updateCategory(index, { count: Math.max(0, Number(e.target.value) || 0) })} /></label>
-                <label><span className={labelClass}>Bộ lọc khi bấm</span><select className={inputClass} value={category.targetCategory} onChange={(e) => updateCategory(index, { targetCategory: e.target.value })}><option value="all">Tất cả</option><option value="faceplate">Mặt che</option><option value="socket">Ổ cắm</option><option value="switch">Công tắc</option><option value="media-socket">Ổ cắm media</option><option value="accessories">Phụ kiện</option><option value="breaker">Cầu dao</option></select></label>
+                <label><span className={labelClass}>Số sản phẩm thực tế</span><output className={`${inputClass} block bg-gray-50 font-bold text-[#1B4C98]`}>{countProductsForTarget(products, productCategories, category.targetCategory)} sản phẩm</output></label>
+                <label><span className={labelClass}>Bộ lọc khi bấm</span><select className={inputClass} value={category.targetCategory} onChange={(e) => updateCategory(index, { targetCategory: e.target.value })}><option value="all">Tất cả sản phẩm</option>{productCategories.map((item) => <optgroup key={item.id} label={item.label}><option value={item.id}>Tất cả {item.short}</option>{item.sub.map((sub) => <option key={sub.id} value={sub.id}>{sub.label}</option>)}</optgroup>)}</select></label>
               </div>
               <div className="mt-3">
                 <span className={labelClass}>Ảnh danh mục (để trống sẽ dùng ảnh mặc định)</span>
@@ -155,7 +158,7 @@ export default function AdminHomePageTab({ content, products, onSave, showToast 
             </div>
           ))}
         </div>
-        {draft.categories.length < 5 && <button type="button" onClick={() => updateDraft({ ...draft, categories: [...draft.categories, { id: `home-cat-${Date.now()}`, name: 'Danh mục mới', description: '', count: 0, imageUrl: '', targetCategory: 'all', isActive: true }] })} className="border border-dashed border-[#1B4C98] px-4 py-2 text-xs font-bold text-[#1B4C98]">+ Thêm danh mục</button>}
+        {draft.categories.length < 5 && <button type="button" onClick={() => updateDraft({ ...draft, categories: [...draft.categories, { id: `home-cat-${Date.now()}`, name: 'Danh mục mới', description: '', imageUrl: '', targetCategory: 'all', isActive: true }] })} className="border border-dashed border-[#1B4C98] px-4 py-2 text-xs font-bold text-[#1B4C98]">+ Thêm danh mục</button>}
       </SectionCard>
 
       <SectionCard title="Sản phẩm nổi bật" description="Chọn tối đa 6 sản phẩm thật từ database. Ảnh, tên và SKU sẽ tự lấy theo biến thể đang bật đầu tiên.">

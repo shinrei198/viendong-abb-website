@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import logoColor from '@/imports/logo_viendong_header.png'
+import GlobalSearch from '@/components/GlobalSearch'
 
 interface HeaderProps {
   currentPage: string
@@ -52,30 +53,12 @@ export default function Header({ currentPage, onNavigate, cartCount }: HeaderPro
               (028) 39435276
             </span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="hidden sm:flex items-center gap-2">
-              {['Đại lý', 'Nhà thầu', 'Thợ điện'].map((label) => (
-                <span key={label} className="px-2 py-0.5 rounded text-[10px] font-semibold border border-white/30 text-white/80">
-                  {label}
-                </span>
-              ))}
-            </div>
-            
-            {/* Quick Admin entry link */}
-            <button
-              onClick={() => onNavigate('admin')}
-              className={`px-2.5 py-0.5 rounded text-[11px] font-bold transition-all flex items-center gap-1 ${
-                currentPage === 'admin'
-                  ? 'bg-red-600 text-white shadow-sm'
-                  : 'bg-white/15 text-white hover:bg-white hover:text-[#1B4C98]'
-              }`}
-              title="Mở Trang Quản Trị Admin"
-            >
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
-              </svg>
-              Quản trị Admin
-            </button>
+          <div className="hidden sm:flex items-center gap-2">
+            {['Đại lý', 'Nhà thầu', 'Thợ điện'].map((label) => (
+              <span key={label} className="px-2 py-0.5 rounded text-[10px] font-semibold border border-white/30 text-white/80">
+                {label}
+              </span>
+            ))}
           </div>
         </div>
       </div>
@@ -178,11 +161,7 @@ export default function Header({ currentPage, onNavigate, cartCount }: HeaderPro
 
           {/* Right actions */}
           <div className="flex items-center gap-2">
-            <button className="hidden md:flex items-center gap-1 text-gray-500 hover:text-gray-900 p-2">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-              </svg>
-            </button>
+            <GlobalSearch onNavigate={onNavigate} />
 
             <button onClick={() => onNavigate('cart')} className="relative p-2 text-gray-500 hover:text-gray-900">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -200,6 +179,7 @@ export default function Header({ currentPage, onNavigate, cartCount }: HeaderPro
             </button>
 
             <button
+              onClick={() => { window.location.href = 'mailto:viendongelectric@gmail.com?subject=Đăng ký đại lý' }}
               className="hidden md:block px-4 py-2 text-sm font-semibold text-white rounded transition-all hover:opacity-90 active:scale-95"
               style={{ backgroundColor: 'var(--red)' }}
             >
@@ -258,6 +238,7 @@ export default function Header({ currentPage, onNavigate, cartCount }: HeaderPro
               ))}
             </div>
             <button
+              onClick={() => { window.location.href = 'mailto:viendongelectric@gmail.com?subject=Đăng ký đại lý' }}
               className="w-full mt-2 px-4 py-2.5 text-sm font-semibold text-white rounded"
               style={{ backgroundColor: 'var(--red)' }}
             >

@@ -36,8 +36,7 @@
       "quote": "An toàn điện là nền tảng sống còn của mọi công trình. ABB cam kết mang đến những giải pháp bảo vệ tin cậy nhất cho gia đình và doanh nghiệp Việt Nam.",
       "quoteAuthor": "Đại diện kỹ thuật ABB Khu vực Đông Nam Á",
       "status": "published",
-      "isFeatured": true,
-      "views": 3120
+      "isFeatured": true
     },
     {
       "id": "n2",
@@ -59,8 +58,7 @@
       "quote": "Đừng bao giờ tiết kiệm chi phí cho thiết bị bảo vệ. Một chiếc RCBO chất lượng có thể cứu cả mạng người và bảo toàn toàn bộ tài sản trong nhà.",
       "quoteAuthor": "Kỹ sư Nguyễn Thành An — Chuyên gia An toàn Điện Viễn Đông",
       "status": "published",
-      "isFeatured": true,
-      "views": 4890
+      "isFeatured": true
     },
     {
       "id": "n3",
@@ -80,8 +78,7 @@
       "summary": "Giải thưởng ghi nhận nỗ lực vượt bậc trong việc mở rộng mạng lưới đại lý và duy trì dịch vụ giao hàng nhanh chóng, hỗ trợ kỹ thuật tận tâm.",
       "content": "<p>Tại Hội nghị Khách hàng Thường niên ABB 2025, Công ty TNHH Thiết Bị Điện Viễn Đông đã vinh dự được xướng tên ở hạng mục <em>\"Nhà Phân Phối Cấp 1 Xuất Sắc Nhất Toàn Quốc\"</em>.</p><p>Với hệ thống kho bãi hiện đại và đội ngũ kỹ thuật giàu kinh nghiệm, Viễn Đông cam kết luôn đồng hành cùng các đại lý và nhà thầu với chính sách chiết khấu tốt nhất.</p>",
       "status": "published",
-      "isFeatured": false,
-      "views": 2450
+      "isFeatured": false
     },
     {
       "id": "n4",
@@ -101,8 +98,7 @@
       "summary": "Hơn 60% các vụ cháy nổ nhà ở bắt nguồn từ sự cố phóng tia lửa điện hồ quang ngầm mà aptomat truyền thống không thể phát hiện.",
       "content": "<p>Thiết bị phát hiện sự cố hồ quang (Arc Fault Detection Device - AFDD) của ABB là giải pháp bảo vệ cấp cao nhất hiện nay theo chuẩn IEC 62606.</p><p>AFDD liên tục phân tích dạng sóng dòng điện bằng vi xử lý thông minh để phát hiện ngay lập tức các tia lửa điện do chuột cắn dây hoặc ốc siết tiếp xúc bị lỏng.</p>",
       "status": "published",
-      "isFeatured": false,
-      "views": 1890
+      "isFeatured": false
     },
     {
       "id": "n5",
@@ -122,8 +118,7 @@
       "summary": "Chương trình hỗ trợ thưởng doanh số quý, cung cấp bảng mẫu trưng bày sản phẩm (demo board) và đào tạo kỹ thuật miễn phí cho nhân viên đại lý.",
       "content": "<p>Viễn Đông Electric công bố bảng chính sách thương mại dành cho đối tác đại lý cấp 2 và các cửa hàng thiết bị điện dân dụng trên toàn quốc.</p><p>Liên hệ Hotline <strong>(028) 39435276</strong> hoặc gửi yêu cầu để nhận bảng chiết khấu chi tiết.</p>",
       "status": "published",
-      "isFeatured": false,
-      "views": 3200
+      "isFeatured": false
     }
   ],
   "initialQuoteRequests": [

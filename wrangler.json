@@ -2,6 +2,15 @@
   "name": "viendong-abb-website",
   "main": "src/worker.ts",
   "compatibility_date": "2025-01-01",
+  "access": {
+    "dev": {
+      "aud": "local-viendong-admin",
+      "identity": {
+        "email": "local-admin@viendong.test",
+        "name": "Local Admin"
+      }
+    }
+  },
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",

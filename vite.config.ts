@@ -4,7 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 import path from 'node:path'
 import fs from 'node:fs'
 
-import siteConfiguration from './.figma/make/site.json'
+import siteConfiguration from './.figma/make/site.json' with { type: 'json' }
 
 // Vite config — https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -16,6 +16,16 @@ export default defineConfig(({ mode }) => {
     build: {
       sourcemap: emitSourcemaps ? 'inline' : false,
       minify: !emitSourcemaps,
+      rolldownOptions: {
+        output: {
+          chunkFileNames: (chunk) => {
+            const isAdminChunk = chunk.moduleIds.some((id) => (
+              /[\\/]src[\\/](?:pages[\\/]AdminPage|components[\\/]Admin|components[\\/]ThumbnailCropper)/.test(id)
+            ))
+            return isAdminChunk ? 'admin-assets/[name]-[hash].js' : 'assets/[name]-[hash].js'
+          },
+        },
+      },
     },
     plugins: [
       react(),
@@ -28,7 +38,7 @@ export default defineConfig(({ mode }) => {
     ],
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, './src'),
+        '@': path.resolve(import.meta.dirname, './src'),
       },
     },
     server: {
@@ -374,7 +384,7 @@ function saveSiteDataPlugin(): Plugin {
           const folder = requestUrl.searchParams.get('folder') || ''
           if (!allowedFolders.has(folder)) {
             res.statusCode = 400
-            res.setHeader('Content-Type', 'application/json')
+            res.setHeader('Content-Type', 'application/json; charset=utf-8')
             res.end(JSON.stringify({ success: false, message: 'Nhóm media không hợp lệ.' }))
             return
           }
@@ -395,15 +405,15 @@ function saveSiteDataPlugin(): Plugin {
               const dateFolder = new Date().toISOString().slice(0, 10)
               const fileName = `${crypto.randomUUID()}-${baseName}.webp`
               const relativeDirectory = path.join('media', folder, dateFolder)
-              const outputDirectory = path.resolve(__dirname, 'public', relativeDirectory)
+              const outputDirectory = path.resolve(import.meta.dirname, 'public', relativeDirectory)
               fs.mkdirSync(outputDirectory, { recursive: true })
               fs.writeFileSync(path.join(outputDirectory, fileName), output)
               const url = `/${relativeDirectory.replace(/\\/g, '/')}/${fileName}`
-              res.setHeader('Content-Type', 'application/json')
+              res.setHeader('Content-Type', 'application/json; charset=utf-8')
               res.end(JSON.stringify({ success: true, url, key: `${folder}/${dateFolder}/${fileName}`, bytes: output.length, localPreview: true }))
             } catch (err: any) {
               res.statusCode = 400
-              res.setHeader('Content-Type', 'application/json')
+              res.setHeader('Content-Type', 'application/json; charset=utf-8')
               res.end(JSON.stringify({ success: false, message: err?.message || 'Không thể xử lý ảnh.' }))
             }
           })
@@ -418,13 +428,13 @@ function saveSiteDataPlugin(): Plugin {
           req.on('end', () => {
             try {
               const data = JSON.parse(body)
-              const filePath = path.resolve(__dirname, './src/data/defaultSiteData.json')
+              const filePath = path.resolve(import.meta.dirname, './src/data/defaultSiteData.json')
               fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8')
-              res.setHeader('Content-Type', 'application/json')
+              res.setHeader('Content-Type', 'application/json; charset=utf-8')
               res.end(JSON.stringify({ success: true, message: 'Đã lưu thành công vào mã nguồn!' }))
             } catch (err: any) {
               res.statusCode = 500
-              res.setHeader('Content-Type', 'application/json')
+              res.setHeader('Content-Type', 'application/json; charset=utf-8')
               res.end(JSON.stringify({ success: false, error: err?.message || 'Error saving file' }))
             }
           })

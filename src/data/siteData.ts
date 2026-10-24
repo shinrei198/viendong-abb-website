@@ -10,7 +10,6 @@ export interface VideoItem {
   isFeatured?: boolean
   isHidden?: boolean
   linkedProductSku?: string
-  views?: number
 }
 
 export interface NewsItem {
@@ -29,7 +28,6 @@ export interface NewsItem {
   quoteAuthor?: string
   status: 'published' | 'draft'
   isFeatured?: boolean
-  views?: number
 }
 
 export interface QuoteRequestItem {
@@ -106,7 +104,8 @@ export interface HomeCategoryItem {
   id: string
   name: string
   description: string
-  count: number
+  /** Legacy only. Counts are always calculated from the live product catalog. */
+  count?: number
   imageUrl: string
   targetCategory: string
   isActive: boolean
@@ -141,6 +140,15 @@ export interface HomePageContent {
   newsSectionTitle: string
 }
 
+export interface AboutPageContent {
+  companyEyebrow: string
+  heroTitle: string
+  heroAccent: string
+  vision: string
+  missionItems: string[]
+  coreValues: Array<{ number: string; title: string; description: string }>
+}
+
 export interface ProductVariant {
   color: string
   colorCode: string
@@ -154,8 +162,8 @@ export interface ProductItem {
   id: string
   name: string
   baseSku: string
-  series: 'VELET 120' | 'MAYPLE 120' | 'MAYPLE' | 'VELET' | 'ZITA' | 'ACUS' | 'GSH200' | 'SH200' | 'SH200L'
-  category: 'faceplate' | 'socket' | 'switch' | 'media-socket' | 'other' | 'accessories' | 'breaker'
+  series: string
+  category: string
   subCategory?: string
   specs: string
   pack?: number
@@ -164,6 +172,18 @@ export interface ProductItem {
   description?: string
   gallery?: string[]
   variants: ProductVariant[]
+}
+
+export interface ProductSubCategoryItem {
+  id: string
+  label: string
+}
+
+export interface ProductCategoryItem {
+  id: string
+  label: string
+  short: string
+  sub: ProductSubCategoryItem[]
 }
 
 import defaultSiteData from './defaultSiteData.json'
@@ -196,6 +216,26 @@ export const initialQuoteRequests: QuoteRequestItem[] = defaultSiteData.initialQ
 export const initialBannerSlides: BannerSlideItem[] = defaultSiteData.initialBannerSlides as BannerSlideItem[]
 export const initialSiteSettings: SiteSettings = defaultSiteData.initialSiteSettings as SiteSettings
 export const initialProducts: ProductItem[] = ((defaultSiteData as any).initialProducts || initialProductsData) as ProductItem[]
+export const initialProductCategories: ProductCategoryItem[] = [
+  { id: 'faceplate', label: 'Mặt che', short: 'Mặt che', sub: [
+    { id: 'faceplate-velet120', label: 'VELET 120' }, { id: 'faceplate-mayple120', label: 'MAYPLE 120' }, { id: 'faceplate-acus', label: 'ACUS' },
+  ] },
+  { id: 'socket', label: 'Ổ cắm', short: 'Ổ cắm', sub: [
+    { id: 'socket-velet120', label: 'VELET 120' }, { id: 'socket-mayple120', label: 'MAYPLE 120' }, { id: 'socket-mayple', label: 'MAYPLE' }, { id: 'socket-velet', label: 'VELET' }, { id: 'socket-zita', label: 'ZITA' }, { id: 'socket-acus', label: 'ACUS' },
+  ] },
+  { id: 'switch', label: 'Công tắc', short: 'Công tắc', sub: [
+    { id: 'switch-velet120', label: 'VELET 120' }, { id: 'switch-mayple120', label: 'MAYPLE 120' }, { id: 'switch-mayple', label: 'MAYPLE' }, { id: 'switch-velet', label: 'VELET' }, { id: 'switch-zita', label: 'ZITA' }, { id: 'switch-acus', label: 'ACUS' },
+  ] },
+  { id: 'media-socket', label: 'Ổ cắm TV, mạng, điện thoại', short: 'TV, Mạng, Thoại', sub: [
+    { id: 'media-socket-velet120', label: 'VELET 120' }, { id: 'media-socket-mayple120', label: 'MAYPLE 120' }, { id: 'media-socket-mayple', label: 'MAYPLE' }, { id: 'media-socket-velet', label: 'VELET' }, { id: 'media-socket-zita', label: 'ZITA' }, { id: 'media-socket-acus', label: 'ACUS' },
+  ] },
+  { id: 'accessories', label: 'Thiết bị và phụ kiện khác', short: 'Phụ kiện khác', sub: [
+    { id: 'other-velet120', label: 'VELET 120' }, { id: 'other-mayple120', label: 'MAYPLE 120' }, { id: 'other-mayple', label: 'MAYPLE' }, { id: 'other-velet', label: 'VELET' }, { id: 'other-zita', label: 'ZITA' }, { id: 'other-acus', label: 'ACUS' },
+  ] },
+  { id: 'breaker', label: 'Cầu dao', short: 'Cầu dao', sub: [
+    { id: 'breaker-auto', label: 'Cầu dao tự động' }, { id: 'breaker-leakage', label: 'Cầu dao chống rò' },
+  ] },
+]
 export const initialHomePageContent: HomePageContent = ((defaultSiteData as any).initialHomePageContent || {
   partnerTitle: 'Viễn Đông Electric',
   partnerSubtitle: 'Nhà phân phối chính thức thiết bị điện dân dụng của ABB',
@@ -235,6 +275,21 @@ export const initialHomePageContent: HomePageContent = ((defaultSiteData as any)
   newsSectionTitle: 'Tin tức & Kỹ thuật',
 }) as HomePageContent
 
+export const initialAboutPageContent: AboutPageContent = ((defaultSiteData as any).initialAboutPageContent || {
+  companyEyebrow: 'Công ty TNHH Thiết Bị Điện Viễn Đông',
+  heroTitle: 'Tầm nhìn · Sứ mệnh',
+  heroAccent: 'Giá trị cốt lõi',
+  vision: 'Công ty TNHH Thiết Bị Điện Viễn Đông hướng đến trở thành một trong những đơn vị phân phối thiết bị điện hàng đầu Việt Nam, là đối tác tin cậy của các chủ đầu tư, nhà thầu và doanh nghiệp trong việc cung cấp các giải pháp thiết bị điện chính hãng, chất lượng cao.',
+  missionItems: [
+    'Cung cấp các sản phẩm thiết bị điện chính hãng, đảm bảo chất lượng, an toàn và hiệu quả cho mọi công trình.',
+    'Mang đến giải pháp điện toàn diện, giúp khách hàng tối ưu chi phí đầu tư và nâng cao hiệu suất vận hành.',
+  ],
+  coreValues: [
+    { number: '01', title: 'Uy tín', description: 'Luôn giữ vững cam kết với khách hàng và đối tác bằng việc cung cấp sản phẩm chính hãng, dịch vụ chuyên nghiệp và thực hiện đúng tiến độ trong mọi dự án.' },
+    { number: '02', title: 'Chất lượng', description: 'Lấy chất lượng sản phẩm và dịch vụ làm nền tảng phát triển, lựa chọn những thương hiệu thiết bị điện uy tín nhằm mang đến hiệu quả và độ an toàn cao nhất.' },
+  ],
+}) as AboutPageContent
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // STORAGE HELPERS
@@ -249,8 +304,10 @@ const STORAGE_KEYS = {
   BANNERS: 'viendong_banners_v1',
   SETTINGS: 'viendong_settings_v1',
   PRODUCTS: 'viendong_products_v1',
+  PRODUCT_CATEGORIES: 'viendong_product_categories_v1',
   PRODUCTS_SEED_VERSION: 'viendong_products_seed_version',
   HOME_PAGE: 'viendong_home_page_v1',
+  ABOUT_PAGE: 'viendong_about_page_v1',
   CMS_REVISIONS: 'viendong_cms_revisions_v1',
 }
 
@@ -292,6 +349,40 @@ export function saveStoredProducts(data: ProductItem[]) {
   }
 }
 
+export function getStoredProductCategories(): ProductCategoryItem[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.PRODUCT_CATEGORIES)
+    if (!raw) return initialProductCategories
+    const stored = JSON.parse(raw)
+    return Array.isArray(stored) && stored.length ? stored : initialProductCategories
+  } catch {
+    return initialProductCategories
+  }
+}
+
+export function saveStoredProductCategories(data: ProductCategoryItem[]) {
+  try {
+    localStorage.setItem(STORAGE_KEYS.PRODUCT_CATEGORIES, JSON.stringify(data))
+    window.dispatchEvent(new Event('viendong_storage_update'))
+    scheduleCloudflareSync('productCategories', data)
+  } catch (err) {
+    console.error('Failed to save product categories', err)
+  }
+}
+
+export function productMatchesCategory(product: ProductItem, categoryId: string): boolean {
+  if (categoryId === 'accessories') return product.category === 'other' || product.category === 'accessories'
+  return product.category === categoryId
+}
+
+export function countProductsForTarget(products: ProductItem[], categories: ProductCategoryItem[], target: string): number {
+  if (!target || target === 'all') return products.length
+  if (categories.some((category) => category.id === target)) {
+    return products.filter((product) => productMatchesCategory(product, target)).length
+  }
+  return products.filter((product) => product.subCategory === target).length
+}
+
 const LEGACY_PLACEHOLDER_VIDEO_IDS = new Set(['v1', 'v2', 'v3', 'v4', 'v5', 'v6'])
 
 function removeLegacyPlaceholderVideos(data: VideoItem[]): VideoItem[] {
@@ -322,7 +413,9 @@ export type CmsSectionKey =
   | 'banners'
   | 'settings'
   | 'products'
+  | 'productCategories'
   | 'homePage'
+  | 'aboutPage'
 
 const pendingSectionWrites = new Map<CmsSectionKey, unknown>()
 const activeSectionWrites = new Set<CmsSectionKey>()
@@ -652,6 +745,32 @@ export function saveStoredHomePageContent(data: HomePageContent) {
   }
 }
 
+export function getStoredAboutPageContent(): AboutPageContent {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.ABOUT_PAGE)
+    if (!raw) return initialAboutPageContent
+    const stored = JSON.parse(raw)
+    return {
+      ...initialAboutPageContent,
+      ...stored,
+      missionItems: Array.isArray(stored.missionItems) ? stored.missionItems : initialAboutPageContent.missionItems,
+      coreValues: Array.isArray(stored.coreValues) ? stored.coreValues : initialAboutPageContent.coreValues,
+    }
+  } catch {
+    return initialAboutPageContent
+  }
+}
+
+export function saveStoredAboutPageContent(data: AboutPageContent) {
+  try {
+    localStorage.setItem(STORAGE_KEYS.ABOUT_PAGE, JSON.stringify(data))
+    window.dispatchEvent(new Event('viendong_storage_update'))
+    scheduleCloudflareSync('aboutPage', data)
+  } catch (err) {
+    console.error('Failed to save about page content', err)
+  }
+}
+
 
 export function resetAllToDefault() {
   localStorage.removeItem(STORAGE_KEYS.VIDEOS)
@@ -662,8 +781,10 @@ export function resetAllToDefault() {
   localStorage.removeItem(STORAGE_KEYS.QUOTES)
   localStorage.removeItem(STORAGE_KEYS.SETTINGS)
   localStorage.removeItem(STORAGE_KEYS.PRODUCTS)
+  localStorage.removeItem(STORAGE_KEYS.PRODUCT_CATEGORIES)
   localStorage.removeItem(STORAGE_KEYS.PRODUCTS_SEED_VERSION)
   localStorage.removeItem(STORAGE_KEYS.HOME_PAGE)
+  localStorage.removeItem(STORAGE_KEYS.ABOUT_PAGE)
   window.dispatchEvent(new Event('viendong_storage_update'))
   scheduleCloudflareSync()
 }
@@ -679,7 +800,9 @@ export function getCurrentFullSiteData() {
     initialBannerSlides: getStoredBanners(),
     initialSiteSettings: getStoredSiteSettings(),
     initialProducts: getStoredProducts(),
+    initialProductCategories: getStoredProductCategories(),
     initialHomePageContent: getStoredHomePageContent(),
+    initialAboutPageContent: getStoredAboutPageContent(),
   }
 }
 
@@ -709,7 +832,9 @@ export async function fetchCloudflareSiteData(): Promise<boolean> {
           initialBannerSlides: sections.banners,
           initialSiteSettings: sections.settings,
           initialProducts: sections.products,
+          initialProductCategories: sections.productCategories,
           initialHomePageContent: sections.homePage,
+          initialAboutPageContent: sections.aboutPage,
         }, { syncToCloudflare: false })
         if (imported) return true
       }
@@ -747,7 +872,9 @@ export async function saveAllDataToSourceCode(): Promise<{ success: boolean; mes
       ['banners', fullData.initialBannerSlides],
       ['settings', fullData.initialSiteSettings],
       ['products', fullData.initialProducts],
+      ['productCategories', fullData.initialProductCategories],
       ['homePage', fullData.initialHomePageContent],
+      ['aboutPage', fullData.initialAboutPageContent],
     ]
     for (const [sectionKey, data] of sections) {
       await persistCmsSection(sectionKey, data)
@@ -825,6 +952,7 @@ export function importAllDataFromJSON(
 
   // Accept both the current portable backup format and the older Settings-tab format.
   const incomingHomePageContent = jsonData.initialHomePageContent ?? jsonData.homePageContent
+  const incomingAboutPageContent = jsonData.initialAboutPageContent ?? jsonData.aboutPageContent
   const normalized = {
     initialVideos: jsonData.initialVideos ?? jsonData.videos,
     initialVideoCategories: jsonData.initialVideoCategories ?? jsonData.videoCats,
@@ -836,9 +964,11 @@ export function importAllDataFromJSON(
     initialProducts: Array.isArray(jsonData.initialProducts ?? jsonData.products)
       ? mergeSeededBreakerProducts(jsonData.initialProducts ?? jsonData.products)
       : jsonData.initialProducts ?? jsonData.products,
+    initialProductCategories: jsonData.initialProductCategories ?? jsonData.productCategories,
     initialHomePageContent: incomingHomePageContent && typeof incomingHomePageContent === 'object' && !Array.isArray(incomingHomePageContent)
       ? normalizeHomePagePartnerCopy(incomingHomePageContent)
       : incomingHomePageContent,
+    initialAboutPageContent: incomingAboutPageContent,
   }
 
   const entries: Array<[string, unknown, 'array' | 'object']> = [
@@ -850,7 +980,9 @@ export function importAllDataFromJSON(
     [STORAGE_KEYS.QUOTES, normalized.initialQuoteRequests, 'array'],
     [STORAGE_KEYS.SETTINGS, normalized.initialSiteSettings, 'object'],
     [STORAGE_KEYS.PRODUCTS, normalized.initialProducts, 'array'],
+    [STORAGE_KEYS.PRODUCT_CATEGORIES, normalized.initialProductCategories, 'array'],
     [STORAGE_KEYS.HOME_PAGE, normalized.initialHomePageContent, 'object'],
+    [STORAGE_KEYS.ABOUT_PAGE, normalized.initialAboutPageContent, 'object'],
   ].filter(([, value]) => value !== undefined) as Array<[string, unknown, 'array' | 'object']>
 
   if (entries.length === 0) return false

@@ -1,4 +1,5 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import { getStoredAboutPageContent, type AboutPageContent } from '@/data/siteData'
 
 interface AboutPageProps {
   onNavigate: (page: string, categoryId?: string) => void
@@ -53,6 +54,16 @@ function ContentCard({
 }
 
 export default function AboutPage({ onNavigate }: AboutPageProps) {
+  const [content, setContent] = useState<AboutPageContent>(getStoredAboutPageContent)
+  const missionItems = content.missionItems
+  const coreValues = content.coreValues
+
+  useEffect(() => {
+    const refresh = () => setContent(getStoredAboutPageContent())
+    window.addEventListener('viendong_storage_update', refresh)
+    return () => window.removeEventListener('viendong_storage_update', refresh)
+  }, [])
+
   return (
     <main className="min-h-screen bg-[#F5F7FA] text-slate-900">
       <div className="border-b border-slate-200 bg-white">
@@ -88,11 +99,11 @@ export default function AboutPage({ onNavigate }: AboutPageProps) {
         <div className="relative mx-auto grid max-w-7xl gap-10 px-4 py-20 sm:px-6 sm:py-24 lg:grid-cols-12 lg:px-8 lg:py-28">
           <div className="lg:col-span-8">
             <p className="mb-5 text-xs font-semibold uppercase tracking-[0.28em] text-blue-200">
-              Công ty TNHH Thiết Bị Điện Viễn Đông
+              {content.companyEyebrow}
             </p>
             <h1 className="max-w-4xl text-4xl font-semibold leading-[1.12] tracking-[-0.03em] sm:text-5xl lg:text-6xl">
-              Tầm nhìn · Sứ mệnh
-              <span className="mt-2 block text-blue-200">Giá trị cốt lõi</span>
+              {content.heroTitle}
+              <span className="mt-2 block text-blue-200">{content.heroAccent}</span>
             </h1>
           </div>
 
@@ -108,9 +119,7 @@ export default function AboutPage({ onNavigate }: AboutPageProps) {
 
           <div className="lg:col-span-9">
             <p className="max-w-4xl text-xl font-medium leading-9 tracking-[-0.01em] text-slate-700 sm:text-2xl sm:leading-10">
-              Công ty TNHH Thiết Bị Điện Viễn Đông hướng đến trở thành một trong những đơn vị phân phối
-              thiết bị điện hàng đầu Việt Nam, là đối tác tin cậy của các chủ đầu tư, nhà thầu và doanh
-              nghiệp trong việc cung cấp các giải pháp thiết bị điện chính hãng, chất lượng cao.
+              {content.vision}
             </p>
           </div>
         </div>

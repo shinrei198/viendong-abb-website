@@ -1,10 +1,12 @@
 import { useState, useMemo } from 'react'
-import { ProductItem, ProductVariant, saveStoredProducts, saveAllDataToSourceCode } from '@/data/siteData'
+import { createVietnameseSlug, productMatchesCategory, ProductCategoryItem, ProductItem, ProductVariant, saveStoredProductCategories, saveStoredProducts, saveAllDataToSourceCode } from '@/data/siteData'
 import { uploadMedia } from '@/utils/mediaUpload'
 
 interface AdminProductsTabProps {
   products: ProductItem[]
   onProductsUpdated: (products: ProductItem[]) => void
+  productCategories: ProductCategoryItem[]
+  onProductCategoriesUpdated: (categories: ProductCategoryItem[]) => void
   featuredProductIds: string[]
   onFeaturedProductIdsUpdated: (productIds: string[]) => void
   showToast: (msg: string) => void
@@ -22,6 +24,8 @@ const COLOR_PRESETS = [
 export default function AdminProductsTab({
   products,
   onProductsUpdated,
+  productCategories,
+  onProductCategoriesUpdated,
   featuredProductIds,
   onFeaturedProductIdsUpdated,
   showToast,
@@ -40,6 +44,9 @@ export default function AdminProductsTab({
   const [syncing, setSyncing] = useState(false)
   const [uploadingVariant, setUploadingVariant] = useState<number | null>(null)
   const [isFeaturedOnHome, setIsFeaturedOnHome] = useState(false)
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false)
+  const [newCategoryName, setNewCategoryName] = useState('')
+  const [newSubcategories, setNewSubcategories] = useState('')
 
   // Form state
   const [formData, setFormData] = useState<ProductItem>({
@@ -63,8 +70,7 @@ export default function AdminProductsTab({
       const matchSeries = selectedSeries === 'all' || p.series === selectedSeries
       const matchCat =
         selectedCat === 'all' ||
-        p.category === selectedCat ||
-        (selectedCat === 'accessories' && (p.category === 'other' || p.category === 'accessories'))
+        productMatchesCategory(p, selectedCat)
 
       const s = search.toLowerCase().trim()
       const matchSearch =
@@ -89,13 +95,16 @@ export default function AdminProductsTab({
   const handleEdit = (p: ProductItem) => {
     setIsNew(false)
     setEditingProduct(p)
-    setFormData(JSON.parse(JSON.stringify(p)))
+    const copied = JSON.parse(JSON.stringify(p)) as ProductItem
+    if (copied.category === 'other') copied.category = 'accessories'
+    setFormData(copied)
     setIsFeaturedOnHome(featuredProductIds.includes(p.id))
     setModalOpen(true)
   }
 
   // Handle open add modal
   const handleAddNew = () => {
+    const firstCategory = productCategories[0]
     setIsNew(true)
     setEditingProduct(null)
     setIsFeaturedOnHome(false)
@@ -104,8 +113,8 @@ export default function AdminProductsTab({
       name: '',
       baseSku: '',
       series: 'VELET 120',
-      category: 'switch',
-      subCategory: 'switch-velet120',
+      category: firstCategory?.id || 'switch',
+      subCategory: firstCategory?.sub[0]?.id || '',
       specs: '250V | Chuẩn cắm nhanh Thụy Sĩ ABB',
       pack: 10,
       badge: '',
@@ -118,6 +127,29 @@ export default function AdminProductsTab({
       ],
     })
     setModalOpen(true)
+  }
+
+  const handleAddCategory = (e: React.FormEvent) => {
+    e.preventDefault()
+    const label = newCategoryName.trim()
+    const id = createVietnameseSlug(label).replace(/_/g, '-')
+    if (!label || !id) return
+    if (productCategories.some((category) => category.id === id)) {
+      showToast('Danh mục này đã tồn tại. Vui lòng chọn tên khác.')
+      return
+    }
+    const sub = newSubcategories
+      .split('\n')
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .map((subLabel) => ({ id: `${id}-${createVietnameseSlug(subLabel).replace(/_/g, '-')}`, label: subLabel }))
+    const next = [...productCategories, { id, label, short: label, sub }]
+    saveStoredProductCategories(next)
+    onProductCategoriesUpdated(next)
+    setNewCategoryName('')
+    setNewSubcategories('')
+    setCategoryModalOpen(false)
+    showToast('✓ Đã thêm danh mục sản phẩm mới!')
   }
 
   // Handle delete product
@@ -225,6 +257,8 @@ export default function AdminProductsTab({
     })
     return counts
   }, [products])
+  const availableSeries = useMemo(() => Object.keys(seriesCount).sort((a, b) => a.localeCompare(b, 'vi')), [seriesCount])
+  const selectedFormCategory = productCategories.find((category) => category.id === formData.category)
 
   return (
     <div className="space-y-6">
@@ -245,6 +279,12 @@ export default function AdminProductsTab({
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => setCategoryModalOpen(true)}
+            className="px-4 py-2 border border-[#1B4C98] bg-white text-[#1B4C98] hover:bg-blue-50 font-bold text-xs uppercase tracking-wider rounded-lg transition-all flex items-center gap-1.5"
+          >
+            <span>+</span> Danh mục mới
+          </button>
           <button
             onClick={handleAddNew}
             className="px-4 py-2 bg-[#FF000F] hover:bg-red-700 text-white font-bold text-xs uppercase tracking-wider rounded-lg shadow-sm transition-all flex items-center gap-1.5"
@@ -274,7 +314,7 @@ export default function AdminProductsTab({
           <div className="text-[10px] font-bold text-gray-500 uppercase">Tất cả</div>
           <div className="text-base font-extrabold text-gray-900">{products.length}</div>
         </button>
-        {['VELET 120', 'MAYPLE 120', 'MAYPLE', 'VELET', 'ZITA', 'ACUS', 'GSH200', 'SH200', 'SH200L'].map((series) => (
+        {availableSeries.map((series) => (
           <button
             key={series}
             onClick={() => { setSelectedSeries(series); setPage(1) }}
@@ -318,12 +358,7 @@ export default function AdminProductsTab({
             className="px-3 py-2 text-xs border border-gray-300 rounded-lg bg-white text-gray-700 font-medium"
           >
             <option value="all">Tất cả danh mục</option>
-            <option value="faceplate">Mặt che</option>
-            <option value="socket">Ổ cắm</option>
-            <option value="switch">Công tắc</option>
-            <option value="media-socket">Ổ TV, mạng, thoại</option>
-            <option value="accessories">Phụ kiện khác</option>
-            <option value="breaker">Cầu dao</option>
+            {productCategories.map((category) => <option key={category.id} value={category.id}>{category.label}</option>)}
           </select>
           <span className="text-xs text-gray-500 whitespace-nowrap">
             Tìm thấy <strong>{filtered.length}</strong> mã
@@ -487,6 +522,24 @@ export default function AdminProductsTab({
       </div>
 
       {/* ═════════════════════════════════════════════════════════════════════ */}
+      {categoryModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+          <form onSubmit={handleAddCategory} className="w-full max-w-lg rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl">
+            <h3 className="text-lg font-extrabold text-gray-900">Thêm danh mục sản phẩm mới</h3>
+            <p className="mt-1 text-xs leading-relaxed text-gray-500">Danh mục sẽ được lưu vào database và xuất hiện đồng thời ở trang sản phẩm, bộ lọc trang chủ và biểu mẫu tạo sản phẩm.</p>
+            <label className="mt-5 block text-xs font-bold text-gray-700">Tên danh mục <span className="text-red-500">*</span></label>
+            <input autoFocus required value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} placeholder="Ví dụ: Thiết bị điều khiển thông minh" className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#1B4C98] focus:outline-none" />
+            <label className="mt-4 block text-xs font-bold text-gray-700">Danh mục con (không bắt buộc, mỗi dòng một mục)</label>
+            <textarea value={newSubcategories} onChange={(e) => setNewSubcategories(e.target.value)} rows={5} placeholder={'Bộ điều khiển\nCảm biến\nPhụ kiện'} className="mt-1 w-full resize-y rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#1B4C98] focus:outline-none" />
+            <p className="mt-2 text-[11px] text-amber-700">Để tránh làm mất liên kết sản phẩm, phiên bản này chỉ cho thêm danh mục; chưa cho xóa danh mục đang sử dụng.</p>
+            <div className="mt-6 flex justify-end gap-2">
+              <button type="button" onClick={() => setCategoryModalOpen(false)} className="rounded-lg border border-gray-300 px-4 py-2 text-xs font-bold text-gray-700 hover:bg-gray-50">Hủy</button>
+              <button type="submit" className="rounded-lg bg-[#1B4C98] px-5 py-2 text-xs font-bold text-white hover:bg-blue-800">Lưu danh mục</button>
+            </div>
+          </form>
+        </div>
+      )}
+
       {/* EDIT / CREATE PRODUCT MODAL (Parent - Variants) */}
       {/* ═════════════════════════════════════════════════════════════════════ */}
       {modalOpen && (
@@ -551,21 +604,13 @@ export default function AdminProductsTab({
                     <label className="text-xs font-bold text-gray-700 block mb-1">
                       Dòng sản phẩm (Series)
                     </label>
-                    <select
+                    <input
+                      list="product-series-options"
                       value={formData.series}
-                      onChange={(e) => setFormData({ ...formData, series: e.target.value as any })}
+                      onChange={(e) => setFormData({ ...formData, series: e.target.value })}
                       className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg bg-white"
-                    >
-                      <option value="VELET 120">VELET 120 (Chữ nhật 120×70)</option>
-                      <option value="MAYPLE 120">MAYPLE 120 (Chữ nhật 120×70)</option>
-                      <option value="MAYPLE">MAYPLE (Vuông 86×86)</option>
-                      <option value="VELET">VELET (Vuông 86×86)</option>
-                      <option value="ZITA">ZITA (Vuông 86×86 phẳng)</option>
-                      <option value="ACUS">ACUS (Vuông 86×86 Luxury)</option>
-                      <option value="GSH200">GSH200 (Cầu dao chống dòng rò)</option>
-                      <option value="SH200">SH200 (Cầu dao tự động)</option>
-                      <option value="SH200L">SH200L (Cầu dao tự động)</option>
-                    </select>
+                    />
+                    <datalist id="product-series-options">{availableSeries.map((series) => <option key={series} value={series} />)}</datalist>
                   </div>
 
                   <div>
@@ -574,15 +619,25 @@ export default function AdminProductsTab({
                     </label>
                     <select
                       value={formData.category}
-                      onChange={(e) => setFormData({ ...formData, category: e.target.value as any })}
+                      onChange={(e) => {
+                        const category = productCategories.find((item) => item.id === e.target.value)
+                        setFormData({ ...formData, category: e.target.value, subCategory: category?.sub[0]?.id || '' })
+                      }}
                       className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg bg-white"
                     >
-                      <option value="switch">Công tắc</option>
-                      <option value="socket">Ổ cắm</option>
-                      <option value="faceplate">Mặt che</option>
-                      <option value="media-socket">Ổ cắm TV, mạng, thoại</option>
-                      <option value="other">Thiết bị và phụ kiện khác</option>
-                      <option value="breaker">Cầu dao (MCB / RCCB)</option>
+                      {productCategories.map((category) => <option key={category.id} value={category.id}>{category.label}</option>)}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-gray-700 block mb-1">Danh mục con</label>
+                    <select
+                      value={formData.subCategory || ''}
+                      onChange={(e) => setFormData({ ...formData, subCategory: e.target.value })}
+                      className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg bg-white"
+                    >
+                      <option value="">— Không phân loại —</option>
+                      {selectedFormCategory?.sub.map((sub) => <option key={sub.id} value={sub.id}>{sub.label}</option>)}
                     </select>
                   </div>
 
