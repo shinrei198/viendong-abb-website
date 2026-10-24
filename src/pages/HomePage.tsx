@@ -23,7 +23,7 @@ import {
   ProductItem,
   createVietnameseSlug,
 } from '@/data/siteData'
-import { NewsThumbnailView } from '@/components/ThumbnailCropper'
+import NewsThumbnailView from '@/components/NewsThumbnailView'
 import VideoModal from '@/components/VideoModal'
 import HeroSlider from '@/components/HeroSlider'
 import ProductImageBranding from '@/components/ProductImageBranding'

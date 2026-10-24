@@ -290,7 +290,7 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
       <div className="max-w-7xl mx-auto px-4 py-8 flex flex-col lg:flex-row gap-8">
         {/* ── Left Sidebar: Sticky & Independent Scroll ── */}
         <aside className="w-full lg:w-72 flex-shrink-0">
-          <div className="max-h-[70vh] space-y-4 overflow-y-auto overscroll-auto pr-1.5 lg:sticky lg:top-20 lg:max-h-[calc(100vh-5.5rem)] lg:overscroll-contain [scrollbar-width:thin] [scrollbar-color:#c8daf4_transparent]">
+          <div className="max-h-[70vh] space-y-4 overflow-y-auto overscroll-auto pr-1.5 lg:sticky lg:top-20 lg:max-h-[calc(100vh-5.5rem)] [scrollbar-width:thin] [scrollbar-color:#c8daf4_transparent]">
             {/* Top Fixed Filter Controls */}
             <div className="bg-white rounded-2xl p-4 shadow-xs" style={{ border: '1px solid #c8daf4' }}>
               <div className="relative mb-3">

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { NewsItem, getStoredNews, createVietnameseSlug } from '@/data/siteData'
-import { NewsThumbnailView } from '@/components/ThumbnailCropper'
+import NewsThumbnailView from '@/components/NewsThumbnailView'
 import { sanitizeRichHtml } from '@/utils/sanitize'
 
 interface NewsDetailPageProps {

@@ -188,7 +188,7 @@ export default function ProductDetailPage({ productId, onNavigate, onAddToCart }
               Dòng {product.series}
             </span>
             <span className="text-xs font-bold px-2 py-0.5 rounded-md uppercase tracking-wider bg-blue-50 text-[#1B4C98] border border-blue-200">
-              Thương hiệu ABB Thụy Sĩ
+              Thiết bị điện Thụy Sĩ
             </span>
           </div>
 

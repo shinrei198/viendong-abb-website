@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { NewsItem, getStoredNews, getStoredNewsCategories, createVietnameseSlug } from '@/data/siteData'
 import Pagination from '@/components/Pagination'
-import { NewsThumbnailView } from '@/components/ThumbnailCropper'
+import NewsThumbnailView from '@/components/NewsThumbnailView'
 
 interface NewsPageProps {
   onNavigate: (page: string, articleId?: string) => void

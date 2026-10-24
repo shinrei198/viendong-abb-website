@@ -22,11 +22,7 @@ import {
   deleteRemoteQuote,
   getStoredSiteSettings,
   saveStoredSiteSettings,
-  resetAllToDefault,
-  saveAllDataToSourceCode,
   exportAllDataAsJSON,
-  importAllDataFromJSON,
-  importRemoteQuotes,
   createVietnameseSlug,
   ProductItem,
   getStoredProducts,
@@ -45,7 +41,8 @@ import AdminHomePageTab from '@/components/AdminHomePageTab'
 import AdminUsersTab from '@/components/AdminUsersTab'
 import AdminAboutTab from '@/components/AdminAboutTab'
 import RichTextEditor from '@/components/RichTextEditor'
-import ThumbnailCropper, { NewsThumbnailView } from '@/components/ThumbnailCropper'
+import ThumbnailCropper from '@/components/ThumbnailCropper'
+import NewsThumbnailView from '@/components/NewsThumbnailView'
 import { calculateAdaptiveButtonPositions } from '@/utils/bannerLayout'
 import { uploadMedia } from '@/utils/mediaUpload'
 import { isSafeContentUrl, sanitizePlainText, sanitizeRichHtml } from '@/utils/sanitize'
@@ -802,24 +799,9 @@ export default function AdminPage({ onNavigate, session }: AdminPageProps) {
     setHomePageContent(updated)
   }
 
-  const handleResetData = () => {
-    setConfirmDialog({
-      isOpen: true,
-      title: 'Khôi phục Dữ liệu Mặc định Gốc',
-      message:
-        'CẢNH BÁO: Toàn bộ banner slider, video, tin tức và yêu cầu báo giá mới tạo sẽ được thiết lập lại về mặc định ban đầu của ABB Viễn Đông.',
-      onConfirm: () => {
-        resetAllToDefault()
-        refreshData()
-        setConfirmDialog((prev) => ({ ...prev, isOpen: false }))
-        showToast('Đã khôi phục dữ liệu gốc thành công!')
-      },
-    })
-  }
-
   const handleExportBackup = () => {
     exportAllDataAsJSON({ initialQuoteRequests: quotes })
-    showToast('Đã xuất file sao lưu dữ liệu thành công!')
+    showToast('Đã tải bản sao nội dung về máy tính!')
   }
 
   // Current active button for header display
@@ -827,46 +809,6 @@ export default function AdminPage({ onNavigate, session }: AdminPageProps) {
     selectedBtnIndex !== null && bannerForm.buttons[selectedBtnIndex]
       ? bannerForm.buttons[selectedBtnIndex]
       : null
-
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const [isSavingSource, setIsSavingSource] = useState(false)
-
-  const handleSaveSource = async () => {
-    setIsSavingSource(true)
-    try {
-      const res = await saveAllDataToSourceCode()
-      showToast(res.message)
-    } catch {
-      showToast('Lỗi khi lưu vào source code!')
-    } finally {
-      setIsSavingSource(false)
-    }
-  }
-
-  const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = async (event) => {
-      try {
-        const parsed = JSON.parse(event.target?.result as string)
-        const success = importAllDataFromJSON(parsed)
-        if (success) {
-          const importedQuotes = parsed.initialQuoteRequests ?? parsed.quotes
-          if (Array.isArray(importedQuotes)) await importRemoteQuotes(importedQuotes)
-          refreshData()
-          setQuotes(await fetchQuoteRequests())
-          showToast('Đã nạp dữ liệu từ file JSON thành công!')
-        } else {
-          showToast('File JSON không đúng định dạng!')
-        }
-      } catch {
-        showToast('Không thể đọc file JSON!')
-      }
-    }
-    reader.readAsText(file)
-    e.target.value = ''
-  }
 
   const canAccessTab = (tab: TabType) => {
     if (tab === 'users') return session.permissions.includes('users.manage')
@@ -949,9 +891,6 @@ export default function AdminPage({ onNavigate, session }: AdminPageProps) {
       <header className="bg-[#1B4C98] text-white border-b-4 border-[#FF000F] sticky top-0 z-30 shadow-md">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-7 bg-[#FF000F] text-white font-black text-xs flex items-center justify-center tracking-wider">
-              ABB
-            </div>
             <div>
               <h1 className="text-base font-bold leading-tight font-['Roboto_Condensed'] uppercase tracking-wide">
                 Hệ Thống Quản Trị Viễn Đông Electric
@@ -961,60 +900,6 @@ export default function AdminPage({ onNavigate, session }: AdminPageProps) {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Hidden file input for JSON import */}
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileImport}
-              accept=".json,application/json"
-              className="hidden"
-            />
-
-            {/* 1-Click Save to Source Code Button */}
-            <button
-              onClick={handleSaveSource}
-              disabled={isSavingSource}
-              className="px-3.5 py-1.5 text-xs font-bold text-[#1B4C98] bg-[#FFCC00] hover:bg-yellow-400 active:scale-95 transition-all shadow-md flex items-center gap-1.5 border border-yellow-500 disabled:opacity-50"
-              title="Lưu toàn bộ chỉnh sửa này trực tiếp vào file mã nguồn của dự án (để chuẩn bị push GitHub)"
-            >
-              {isSavingSource ? (
-                <svg className="animate-spin h-3.5 w-3.5 text-[#1B4C98]" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-              ) : (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z" />
-                </svg>
-              )}
-              <span className="font-bold tracking-tight">Save</span>
-            </button>
-
-            {/* Backup JSON dropdown/buttons */}
-            <button
-              onClick={handleExportBackup}
-              className="px-2.5 py-1.5 text-xs font-semibold text-white/90 bg-white/10 hover:bg-white/20 transition-all flex items-center gap-1"
-              title="Tải file sao lưu JSON về máy tính"
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
-              </svg>
-              Backup
-            </button>
-
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="px-2.5 py-1.5 text-xs font-semibold text-white/90 bg-white/10 hover:bg-white/20 transition-all flex items-center gap-1"
-              title="Nhập dữ liệu từ file sao lưu JSON"
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z" />
-              </svg>
-              Restore
-            </button>
-
-            <div className="h-5 w-px bg-white/20 mx-1"></div>
-
             <button
               onClick={() => onNavigate('home')}
               className="px-3.5 py-1.5 text-xs font-semibold text-white bg-white/10 hover:bg-white hover:text-[#1B4C98] transition-all flex items-center gap-1.5"
@@ -1932,13 +1817,13 @@ export default function AdminPage({ onNavigate, session }: AdminPageProps) {
               </div>
             </form>
 
-            {/* Backup & Restore Box */}
+            {/* Portable content snapshot */}
             <div className="bg-white p-6 border border-gray-200 shadow-sm">
               <h4 className="text-sm font-bold text-[#1B4C98] uppercase mb-1">
-                Sao lưu & Khôi phục Cơ Sở Dữ Liệu
+                Bản sao nội dung
               </h4>
               <p className="text-xs text-gray-500 mb-4">
-                Bạn có thể xuất toàn bộ banner slider, video, tin tức và yêu cầu báo giá ra file JSON để lưu trữ về máy tính cá nhân.
+                Tải ảnh chụp nội dung hiện tại gồm banner, video, tin tức, sản phẩm, thiết lập và yêu cầu báo giá về máy tính. File này không bao gồm media trong R2, tài khoản quản trị hoặc toàn bộ cơ sở dữ liệu.
               </p>
               <div className="flex flex-wrap items-center gap-3">
                 <button
@@ -1946,14 +1831,7 @@ export default function AdminPage({ onNavigate, session }: AdminPageProps) {
                   onClick={handleExportBackup}
                   className="px-4 py-2 text-xs font-bold text-white bg-[#1B4C98] hover:opacity-90 flex items-center gap-1.5"
                 >
-                  📥 Xuất File Sao Lưu (.JSON)
-                </button>
-                <button
-                  type="button"
-                  onClick={handleResetData}
-                  className="px-4 py-2 text-xs font-bold text-red-600 border border-red-600 hover:bg-red-50"
-                >
-                  ⚠️ Đặt lại Dữ liệu Mặc định Gốc
+                  📥 Tải bản sao nội dung (.JSON)
                 </button>
               </div>
             </div>
