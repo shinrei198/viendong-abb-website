@@ -225,7 +225,7 @@ export const initialHomePageContent: HomePageContent = ((defaultSiteData as any)
     { id: 'benefit-support', title: 'Hỗ trợ kỹ thuật 24/7', description: 'Đội ngũ kỹ sư điện tư vấn và giải đáp mọi thắc mắc.', icon: 'support', isActive: true },
     { id: 'benefit-price', title: 'Giá đại lý tốt nhất', description: 'Chính sách chiết khấu linh hoạt cho đại lý, nhà thầu và dự án.', icon: 'price', isActive: true },
   ],
-  ctaTitle: 'Trở thành đại lý phân phối của Viễn Đông',
+  ctaTitle: 'ĐỒNG HÀNH CÙNG VIỄN ĐÔNG',
   ctaDescription: 'Tiếp cận toàn bộ danh mục ABB với chính sách chiết khấu tốt nhất thị trường.',
   ctaPrimaryLabel: 'Đăng ký làm đại lý',
   ctaPrimaryUrl: 'mailto:info@viendongelectric.vn?subject=Đăng ký làm đại lý',
