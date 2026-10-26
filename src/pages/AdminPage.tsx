@@ -2065,22 +2065,23 @@ export default function AdminPage({ onNavigate, session }: AdminPageProps) {
                     )}
 
                     <div
-                      className={`pointer-events-none absolute inset-y-0 left-0 z-10 ${previewDeviceMode === 'mobile' ? 'w-full bg-black/50' : 'w-[45%]'}`}
-                      style={previewDeviceMode === 'mobile' ? undefined : {
-                        background: 'linear-gradient(to right, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.5) 50%, rgba(0, 0, 0, 0) 100%)',
+                      className="pointer-events-none absolute inset-y-0 left-0 z-10 w-[45%]"
+                      style={{
+                        background: 'linear-gradient(to right, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.32) 50%, rgba(0, 0, 0, 0) 100%)',
                       }}
                     />
 
                     {(bannerForm.mainTitle || bannerForm.description) && (
                       <div
-                        className={`absolute z-20 ${previewDeviceMode === 'mobile' ? 'left-4 right-4 text-left' : 'left-8 max-w-[58%] text-left'}`}
+                        className={`absolute z-20 flex max-w-[58%] flex-col gap-1 text-left ${previewDeviceMode === 'mobile' ? 'left-4' : 'left-8'}`}
                         style={{
-                          top: '50%',
-                          transform: previewDeviceMode === 'mobile' ? 'translateY(-50%)' : undefined,
+                          top: previewDeviceMode === 'mobile' ? undefined : '50%',
+                          bottom: previewDeviceMode === 'mobile' ? '70px' : undefined,
+                          transform: previewDeviceMode === 'mobile' ? undefined : 'translateY(-50%)',
                         }}
                       >
-                        {bannerForm.mainTitle && <h2 className={`${previewDeviceMode === 'mobile' ? 'line-clamp-2 text-lg' : '-translate-y-1/2 text-2xl'} whitespace-pre-line overflow-hidden text-ellipsis font-bold leading-tight text-white drop-shadow-lg`}>{bannerForm.mainTitle}</h2>}
-                        {bannerForm.description && <p className={`${previewDeviceMode === 'mobile' ? 'mt-1 line-clamp-2' : bannerForm.mainTitle ? '-mt-[11px]' : ''} whitespace-pre-line text-xs leading-snug text-white/90 drop-shadow-md sm:text-sm`}>{bannerForm.description}</p>}
+                        {bannerForm.mainTitle && <h2 className={`${previewDeviceMode === 'mobile' ? 'line-clamp-2 text-lg' : 'text-2xl'} whitespace-pre-line overflow-hidden text-ellipsis font-bold leading-tight text-white drop-shadow-lg`}>{bannerForm.mainTitle}</h2>}
+                        {bannerForm.description && <p className={`${previewDeviceMode === 'mobile' ? 'line-clamp-2' : ''} whitespace-pre-line text-xs leading-snug text-white/90 drop-shadow-md sm:text-sm`}>{bannerForm.description}</p>}
                       </div>
                     )}
 

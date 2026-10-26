@@ -6,7 +6,7 @@ import imgAFDD from '@/imports/Thie__t_bi__pha_t_hie__n_ho___quang__ie__n_AFDDs.
 import imgSurgeArrest from '@/imports/Thie__t_bi___o_ng_ca__t_MCB.jpg'
 import imgZita from '@/imports/Zita.png'
 import imgVelet from '@/imports/Velet.png'
-import logoABB from '@/imports/abb-seeklogo.png'
+import logoABBAuthorized from '@/imports/abb-authorized.png'
 import {
   VideoItem,
   NewsItem,
@@ -34,7 +34,8 @@ interface HomePageProps {
 }
 
 const font = "'Roboto Condensed', 'Roboto', sans-serif"
-const ABB_LOGO_X = 28
+const ABB_LOGO_HEIGHT = 52
+const ABB_LOGO_SAFE_ZONE = 28
 const ABB_STRIP_GUTTER = 24
 
 const categoryDefaultImages: Record<string, string> = {
@@ -197,7 +198,7 @@ export default function HomePage({ onNavigate, onAddToCart }: HomePageProps) {
           style={{ paddingInline: ABB_STRIP_GUTTER, gap: ABB_STRIP_GUTTER }}
         >
           <div className="min-w-0">
-            <p className="text-sm font-bold text-gray-900" style={{ fontFamily: "'Roboto', sans-serif" }}>
+            <p className="text-[22px] font-bold leading-tight text-gray-900" style={{ fontFamily: "'Roboto', sans-serif" }}>
               {homeContent.partnerTitle}
             </p>
             <p className="text-xs text-gray-400">{homeContent.partnerSubtitle}</p>
@@ -205,15 +206,15 @@ export default function HomePage({ onNavigate, onAddToCart }: HomePageProps) {
           <div
             className="flex-shrink-0"
             style={{
-              paddingBlock: ABB_LOGO_X,
-              paddingInline: Math.max(ABB_LOGO_X - ABB_STRIP_GUTTER, 0),
+              paddingBlock: ABB_LOGO_SAFE_ZONE,
+              paddingInline: Math.max(ABB_LOGO_SAFE_ZONE - ABB_STRIP_GUTTER, 0),
             }}
           >
             <img
-              src={logoABB}
-              alt="ABB"
+              src={logoABBAuthorized}
+              alt="ABB Authorized Value Provider"
               className="w-auto object-contain"
-              style={{ height: ABB_LOGO_X }}
+              style={{ height: ABB_LOGO_HEIGHT }}
             />
           </div>
         </div>

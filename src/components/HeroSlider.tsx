@@ -206,34 +206,33 @@ export default function HeroSlider({ banners, onNavigate }: HeroSliderProps) {
           className="w-full h-full object-cover object-center pointer-events-none transition-all duration-700 select-none"
         />
 
-        {/* Responsive readability overlays: desktop gradient and full mobile shade. */}
+        {/* Left-side readability gradient shared by desktop and mobile. */}
         <div
-          className="pointer-events-none absolute inset-y-0 left-0 z-10 hidden w-[45%] sm:block"
+          className="pointer-events-none absolute inset-y-0 left-0 z-10 w-[45%]"
           style={{
-            background: 'linear-gradient(to right, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.5) 50%, rgba(0, 0, 0, 0) 100%)',
+            background: 'linear-gradient(to right, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.32) 50%, rgba(0, 0, 0, 0) 100%)',
           }}
         />
-        <div className="pointer-events-none absolute inset-0 z-10 bg-black/50 sm:hidden" />
 
         {(currentBanner.mainTitle || currentBanner.description) && (
           <div className="absolute inset-0 pointer-events-none z-20">
             <div className="max-w-7xl mx-auto px-4 h-full relative">
               <div
-                className={`absolute ${containerDim.width < 640 ? 'left-4 right-4 text-left' : 'left-4 max-w-[58%] text-left'}`}
+                className="absolute left-4 flex max-w-[58%] flex-col gap-1 text-left"
                 style={{
-                  top: '50%',
-                  transform: containerDim.width < 640 ? 'translateY(-50%)' : undefined,
+                  top: containerDim.width < 640 ? undefined : '50%',
+                  bottom: containerDim.width < 640 ? '70px' : undefined,
+                  transform: containerDim.width < 640 ? undefined : 'translateY(-50%)',
                 }}
               >
                 {currentBanner.mainTitle && (
-                  <h2 className={`${containerDim.width < 640 ? 'line-clamp-2 text-lg' : '-translate-y-1/2 text-2xl lg:text-4xl'} whitespace-pre-line overflow-hidden text-ellipsis font-bold leading-tight text-white drop-shadow-lg`}>
+                  <h2 className={`${containerDim.width < 640 ? 'line-clamp-2 text-lg' : 'text-2xl lg:text-4xl'} whitespace-pre-line overflow-hidden text-ellipsis font-bold leading-tight text-white drop-shadow-lg`}>
                     {currentBanner.mainTitle}
                   </h2>
                 )}
                 {currentBanner.description && (
                   <p
-                    className={`${containerDim.width < 640 ? 'mt-1 line-clamp-2 text-xs' : 'text-sm lg:text-base'} max-w-2xl whitespace-pre-line leading-snug text-white/90 drop-shadow-md`}
-                    style={containerDim.width >= 640 && currentBanner.mainTitle ? { marginTop: containerDim.width >= 1024 ? '-18px' : '-11px' } : undefined}
+                    className={`${containerDim.width < 640 ? 'line-clamp-2 text-xs' : 'text-sm lg:text-base'} max-w-2xl whitespace-pre-line leading-snug text-white/90 drop-shadow-md`}
                   >
                     {currentBanner.description}
                   </p>
