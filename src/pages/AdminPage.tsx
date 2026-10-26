@@ -2041,7 +2041,7 @@ export default function AdminPage({ onNavigate, session }: AdminPageProps) {
                     style={{
                       containerType: 'inline-size',
                       aspectRatio: `${imageNaturalSize.width} / ${imageNaturalSize.height}`,
-                      minHeight: previewDeviceMode === 'mobile' ? '260px' : undefined,
+                      minHeight: previewDeviceMode === 'mobile' ? '200px' : undefined,
                     }}
                     className={`relative bg-[#1a1a1a] select-none border-2 border-slate-600 shadow-2xl transition-all duration-300 ${
                       previewDeviceMode === 'desktop'
@@ -2073,14 +2073,14 @@ export default function AdminPage({ onNavigate, session }: AdminPageProps) {
 
                     {(bannerForm.mainTitle || bannerForm.description) && (
                       <div
-                        className={`absolute z-20 ${previewDeviceMode === 'mobile' ? 'left-1/2 w-[calc(100%-128px)] -translate-x-1/2 text-center' : 'left-8 max-w-[58%] text-left'}`}
+                        className={`absolute z-20 ${previewDeviceMode === 'mobile' ? 'left-4 right-4 text-left' : 'left-8 max-w-[58%] text-left'}`}
                         style={{
-                          top: previewDeviceMode === 'mobile' ? undefined : '50%',
-                          bottom: previewDeviceMode === 'mobile' ? 'calc(31% + 29px)' : undefined,
+                          top: '50%',
+                          transform: previewDeviceMode === 'mobile' ? 'translateY(-50%)' : undefined,
                         }}
                       >
-                        {bannerForm.mainTitle && <h2 className={`${previewDeviceMode === 'mobile' ? 'line-clamp-2 text-lg' : '-translate-y-1/2 whitespace-nowrap text-2xl'} overflow-hidden text-ellipsis font-bold leading-tight text-white drop-shadow-lg`}>{bannerForm.mainTitle}</h2>}
-                        {bannerForm.description && <p className={`${previewDeviceMode === 'mobile' ? 'mt-1 line-clamp-2' : bannerForm.mainTitle ? '-mt-[11px]' : ''} text-xs leading-snug text-white/90 drop-shadow-md sm:text-sm`}>{bannerForm.description}</p>}
+                        {bannerForm.mainTitle && <h2 className={`${previewDeviceMode === 'mobile' ? 'line-clamp-2 text-lg' : '-translate-y-1/2 text-2xl'} whitespace-pre-line overflow-hidden text-ellipsis font-bold leading-tight text-white drop-shadow-lg`}>{bannerForm.mainTitle}</h2>}
+                        {bannerForm.description && <p className={`${previewDeviceMode === 'mobile' ? 'mt-1 line-clamp-2' : bannerForm.mainTitle ? '-mt-[11px]' : ''} whitespace-pre-line text-xs leading-snug text-white/90 drop-shadow-md sm:text-sm`}>{bannerForm.description}</p>}
                       </div>
                     )}
 
@@ -2091,12 +2091,13 @@ export default function AdminPage({ onNavigate, session }: AdminPageProps) {
                           <div
                             className="absolute flex items-center pointer-events-auto"
                             style={{
-                              left: previewDeviceMode === 'mobile' ? '50%' : '16px',
-                              top: previewDeviceMode === 'mobile' ? '69%' : undefined,
-                              bottom: previewDeviceMode === 'mobile' ? undefined : '20%',
-                              transform: previewDeviceMode === 'mobile' ? 'translate(-50%, -50%)' : 'translateY(50%)',
+                              left: '16px',
+                              right: previewDeviceMode === 'mobile' ? '16px' : undefined,
+                              top: undefined,
+                              bottom: previewDeviceMode === 'mobile' ? '16px' : '20%',
+                              transform: previewDeviceMode === 'mobile' ? undefined : 'translateY(50%)',
                               gap: previewDeviceMode === 'mobile' ? '8px' : '33px',
-                              maxWidth: previewDeviceMode === 'mobile' ? 'calc(100% - 24px)' : undefined,
+                              maxWidth: previewDeviceMode === 'mobile' ? 'calc(100% - 32px)' : undefined,
                             }}
                           >
                             {bannerForm.buttons.slice(0, 2).map((btn, idx) => {
@@ -2111,9 +2112,9 @@ export default function AdminPage({ onNavigate, session }: AdminPageProps) {
                                 <button
                                   key={btn.id}
                                   type="button"
-                                  className={`${previewDeviceMode === 'mobile' ? 'h-[38px] px-3' : 'h-9 px-[18px]'} rounded-[4px] text-xs font-bold tracking-tight shadow-md flex items-center gap-1.5 whitespace-nowrap leading-none ${styleClass}`}
+                                  className={`${previewDeviceMode === 'mobile' ? `h-[38px] max-w-full min-w-0 whitespace-nowrap leading-none ${bannerForm.buttons.slice(0, 2).length > 1 ? 'flex-1 justify-center px-2 text-[10px]' : 'px-3 text-xs'}` : 'h-9 px-[18px] text-xs whitespace-nowrap leading-none'} rounded-[4px] font-bold tracking-tight shadow-md flex items-center gap-1.5 ${styleClass}`}
                                 >
-                                  <span className={previewDeviceMode === 'mobile' ? 'max-w-[128px] overflow-hidden text-ellipsis' : ''}>{limitButtonLabel(btn.label || `Nút ${idx + 1}`)}</span>
+                                  <span>{limitButtonLabel(btn.label || `Nút ${idx + 1}`)}</span>
                                   {btn.actionType === 'phone' && (
                                     <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
                                       <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
@@ -2137,8 +2138,8 @@ export default function AdminPage({ onNavigate, session }: AdminPageProps) {
                     <span>Headline:</span>
                     <span className="text-[10px] font-medium text-gray-400">{countText(bannerForm.mainTitle || '')}/50</span>
                   </label>
-                  <input
-                    type="text"
+                  <textarea
+                    rows={2}
                     value={bannerForm.mainTitle || ''}
                     onChange={(e) => setBannerForm({ ...bannerForm, mainTitle: limitText(e.target.value, 50) })}
                     placeholder="VD: Thiết bị điện ABB thế hệ mới"
@@ -2150,8 +2151,8 @@ export default function AdminPage({ onNavigate, session }: AdminPageProps) {
                     <span>Description:</span>
                     <span className="text-[10px] font-medium text-gray-400">{countText(bannerForm.description || '')}/120</span>
                   </label>
-                  <input
-                    type="text"
+                  <textarea
+                    rows={2}
                     value={bannerForm.description || ''}
                     onChange={(e) => setBannerForm({ ...bannerForm, description: limitText(e.target.value, 120) })}
                     placeholder="Mô tả ngắn hỗ trợ nội dung chính của banner"
@@ -2159,7 +2160,7 @@ export default function AdminPage({ onNavigate, session }: AdminPageProps) {
                   />
                 </div>
                 <p className="text-[10px] text-gray-500 sm:col-span-2">
-                  Nội dung để trống sẽ không hiển thị. Desktop canh trái; mobile tự động canh giữa.
+                  Có thể nhấn Enter để chủ động xuống dòng. Nội dung được canh trái trên cả desktop và mobile.
                 </p>
               </div>
 
