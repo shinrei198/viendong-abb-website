@@ -34,7 +34,7 @@ interface HomePageProps {
 }
 
 const font = "'Roboto Condensed', 'Roboto', sans-serif"
-const ABB_LOGO_HEIGHT = 52
+const ABB_LOGO_HEIGHT = 36.4
 const ABB_LOGO_SAFE_ZONE = 28
 const ABB_STRIP_GUTTER = 24
 
