@@ -177,7 +177,7 @@ export default function HeroSlider({ banners, onNavigate }: HeroSliderProps) {
   return (
     <div
       ref={containerRef}
-      className="relative w-full min-h-[200px] sm:min-h-0 bg-[#1a1a1a] select-none overflow-hidden group"
+      className="relative h-[200px] w-full bg-[#1a1a1a] select-none overflow-hidden group sm:h-auto"
       style={{
         containerType: 'inline-size',
         aspectRatio: aspectRatioStyle,
@@ -191,7 +191,7 @@ export default function HeroSlider({ banners, onNavigate }: HeroSliderProps) {
     >
       {/* Slide Image & Overlay Container */}
       <div
-        className={`w-full h-full relative cursor-${
+        className={`absolute inset-0 cursor-${
           currentBanner.bannerLink ? 'pointer' : 'default'
         } transition-transform duration-300 ease-out`}
         style={{
@@ -203,7 +203,7 @@ export default function HeroSlider({ banners, onNavigate }: HeroSliderProps) {
           key={currentBanner.id}
           src={currentBanner.imageUrl}
           alt={currentBanner.altText || currentBanner.title}
-          className="w-full h-full object-cover object-center pointer-events-none transition-all duration-700 select-none"
+          className="absolute inset-0 h-full w-full object-cover object-center pointer-events-none transition-all duration-700 select-none"
         />
 
         {/* Left-side readability gradient shared by desktop and mobile. */}
