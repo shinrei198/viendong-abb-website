@@ -1,0 +1,940 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+<!-- This site is hosted on Netlify. Anyone can build and deploy a site
+     like this one for free: https://netlify.new/?utm_campaign=loops&utm_source=ai-legible&utm_medium=owned&utm_content=comment&utm_id=d4e2883d-8d1a-4332-9f42-83616b0dcead
+     Netlify hosting facts for this site: static/SSR served via Netlify Edge. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>VIß╗äN ─É├öNG ELECTRIC (ABB) - Phi├¬n Bß║ún ─Éiß╗çn Thoß║íi (Mobile)</title>
+  <link rel="icon" type="image/png" href="logo-vien-dong.png" />
+  <link rel="stylesheet" href="mobile.css" />
+</head>
+<body class="phone-frame-mode">
+
+  <!--====================================================================
+      THANH CHUYß╗éN ─Éß╗öI CHß║╛ ─Éß╗ÿ XEM (KHUNG ─ÉIß╗åN THOß║áI / Rß╗ÿNG / Bß║óN M├üY T├ìNH)
+      ====================================================================-->
+  <div class="sim-toolbar">
+    <div class="sim-toolbar-left">
+      <span class="sim-badge">MOBILE VERSION</span>
+      <span class="sim-hide-xs">Giao diß╗çn ─Éiß╗çn thoß║íi ΓÇö C├┤ng ty TNHH Thiß║┐t Bß╗ï ─Éiß╗çn Viß╗àn ─É├┤ng (ABB)</span>
+    </div>
+    <div class="sim-toolbar-actions">
+      <button type="button" class="sim-btn active sim-hide-xs" id="btnFrameMode">Khung ─Éiß╗çn Thoß║íi (430px)</button>
+      <button type="button" class="sim-btn sim-hide-xs" id="btnFullMobileMode">Rß╗Öng M├án H├¼nh</button>
+      <a class='sim-btn sim-btn-desktop' href='/?view=pc'>Bß║ún M├íy T├¡nh (PC)</a>
+    </div>
+  </div>
+
+  <!--====================================================================
+      KHUNG GIAO DIß╗åN ─ÉIß╗åN THOß║áI (.mobile-shell)
+      ====================================================================-->
+  <div class="mobile-shell" id="topMobile">
+
+    <!-- Tai thß╗Å giß║ú lß║¡p Smartphone khi xem tr├¬n m├íy t├¡nh -->
+    <div class="phone-notch">
+      <span>09:41</span>
+      <div class="notch-pill"></div>
+      <span>5G ΓÇó 100%</span>
+    </div>
+
+    <!--==================================================================
+        1. HEADER MOBILE CHUß║¿N CADIVI.VN (.mb-header + .icon_menu + .formSearch_mb)
+        ==================================================================-->
+    <header class="mb-header">
+      <div class="mb-header-top">
+        <a href="#topMobile" class="mb-logo">
+          <img src="logo-vien-dong.png" alt="VIEN DONG ELECTRIC" />
+          <div class="mb-logo-text">
+            <strong>C├┤ng ty TNHH</strong>
+            <span>Thiß║┐t Bß╗ï ─Éiß╗çn Viß╗àn ─É├┤ng</span>
+          </div>
+        </a>
+
+        <div class="mb-header-right">
+          <button type="button" class="mb-search-toggle" id="mbToggleSearchBtn" title="T├¼m kiß║┐m">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <span>T├îM</span>
+          </button>
+
+          <!-- N├║t vu├┤ng ─æß╗Å MENU chuß║⌐n 100% CADIVI.VN Mobile -->
+          <button type="button" class="icon_menu" id="openDrawerBtn" aria-label="Mß╗ƒ Menu">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            <span>MENU</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ├ö t├¼m kiß║┐m Mobile (.formSearch_mb) chuß║⌐n CADIVI.VN -->
+      <div class="formSearch_mb" id="mbSearchBar">
+        <form id="mbHeaderSearchForm" onsubmit="return false;">
+          <div class="input-group">
+            <input type="search" id="mbHeaderInput" class="form-control" placeholder="T├¼m m├ú SKU ABB (VD: 4TYA500...)" />
+            <button type="submit" class="btn" aria-label="T├¼m">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Thanh tr╞░ß╗út chß╗ìn nhanh 6 d├▓ng sß║ún phß║⌐m ABB -->
+      <div class="mb-quick-pills">
+        <a href="#mb-kho-abb" class="mb-pill active" data-mb-series="all">Tß║Ñt cß║ú 1.448 M├ú</a>
+        <a href="#mb-kho-abb" class="mb-pill" data-mb-series="1.Acus">1. ABB Acus</a>
+        <a href="#mb-kho-abb" class="mb-pill" data-mb-series="2. Velet86">2. Velet 86</a>
+        <a href="#mb-kho-abb" class="mb-pill" data-mb-series="3.Zita">3. ABB Zita</a>
+        <a href="#mb-kho-abb" class="mb-pill" data-mb-series="4.Mayple86">4. Mayple 86</a>
+        <a href="#mb-kho-abb" class="mb-pill" data-mb-series="5.Velet120">5. Velet 120</a>
+        <a href="#mb-kho-abb" class="mb-pill" data-mb-series="6.Mayple120">6. Mayple 120</a>
+      </div>
+    </header>
+
+    <!--==================================================================
+        OFF-CANVAS MENU DRAWER (.divmm) CHUß║¿N 100% CADIVI.VN
+        ==================================================================-->
+    <div class="divmm" id="mbDrawer">
+      <div class="divmmbg" id="closeDrawerBg"></div>
+      <div class="mmContent">
+        <div class="mmTitle">
+          <span>DANH Mß╗ñC VIß╗äN ─É├öNG (ABB)</span>
+          <button type="button" class="close-mmenu" id="closeDrawerBtn">Γ£ò</button>
+        </div>
+        <div class="mmMenu">
+          <ul>
+            <li><a href="#topMobile" class="drawer-link">Trang chß╗º</a></li>
+            <li>
+              <div class="mm-row">
+                <a href="#mb-gioi-thieu" class="drawer-link">Giß╗¢i thiß╗çu Viß╗àn ─É├┤ng</a>
+                <button type="button" class="button-submenu" data-sub="sub-about">+</button>
+              </div>
+              <ul class="mm-sub-list" id="sub-about">
+                <li><a href="#mb-gioi-thieu" class="drawer-link">Tß║ºm nh├¼n ΓÇô Sß╗⌐ mß╗çnh ΓÇô Gi├í trß╗ï cß╗æt l├╡i</a></li>
+                <li><a href="#mb-gioi-thieu" class="drawer-link">Lß╗ïch sß╗¡ h├¼nh th├ánh (2009ΓÇô2026)</a></li>
+                <li><a href="#mb-gioi-thieu" class="drawer-link">Hß╗ô s╞í ph├íp l├╜ &amp; S╞í ─æß╗ô tß╗ò chß╗⌐c</a></li>
+                <li><a href="assets/docs/HSNL_VIENDONG_2022.pdf" target="_blank">Tß║úi Hß╗ô s╞í n─âng lß╗▒c (PDF)</a></li>
+                <li><a href="assets/docs/Bo_Nhan_Dien_Thuong_Hieu_Vien_Dong_Electric.pdf" target="_blank">Bß╗Ö nhß║¡n diß╗çn th╞░╞íng hiß╗çu (PDF)</a></li>
+              </ul>
+            </li>
+            <li>
+              <div class="mm-row">
+                <a href="#mb-san-pham" class="drawer-link">6 D├▓ng Sß║ún Phß║⌐m ABB</a>
+                <button type="button" class="button-submenu" data-sub="sub-prod">+</button>
+              </div>
+              <ul class="mm-sub-list open" id="sub-prod">
+                <li><a href="#mb-kho-abb" class="drawer-link" data-mb-series="1.Acus">1. ABB Acus Series (492 m├ú)</a></li>
+                <li><a href="#mb-kho-abb" class="drawer-link" data-mb-series="2. Velet86">2. ABB Velet 86 Series (350 m├ú)</a></li>
+                <li><a href="#mb-kho-abb" class="drawer-link" data-mb-series="3.Zita">3. ABB Zita Series (228 m├ú)</a></li>
+                <li><a href="#mb-kho-abb" class="drawer-link" data-mb-series="4.Mayple86">4. ABB Mayple 86 Series (106 m├ú)</a></li>
+                <li><a href="#mb-kho-abb" class="drawer-link" data-mb-series="5.Velet120">5. ABB Velet 120 Series (181 m├ú)</a></li>
+                <li><a href="#mb-kho-abb" class="drawer-link" data-mb-series="6.Mayple120">6. ABB Mayple 120 Series (91 m├ú)</a></li>
+              </ul>
+            </li>
+            <li><a href="#mb-kho-abb" class="drawer-link">Tra cß╗⌐u 1.448 m├ú SKU ABB</a></li>
+            <li><a href="#mb-du-toan" class="drawer-link">C├┤ng cß╗Ñ dß╗▒ to├ín thiß║┐t bß╗ï ABB</a></li>
+            <li><a href="#mb-du-an" class="drawer-link">Dß╗▒ ├ín ti├¬u biß╗âu</a></li>
+            <li><a href="#mb-tin-tuc" class="drawer-link">Tin tß╗⌐c &amp; Sß╗▒ kiß╗çn</a></li>
+            <li><a href="#mb-lien-he" class="drawer-link">Li├¬n hß╗ç &amp; B├ío gi├í</a></li>
+            <li><a href='/' style='color:var(--primary-blue) !important;'>Chuyß╗ân sang Bß║ún M├íy T├¡nh (PC)</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!--==================================================================
+        2. BANNER MOBILE SLIDER (.mb-banner)
+        ==================================================================-->
+    <section class="mb-banner">
+      <!-- Slide 1 -->
+      <div class="mb-banner-slide mb-bg-1 active">
+        <div class="mb-banner-tag">NH├Ç PH├éN PHß╗ÉI CH├ìNH THß╗¿C ABB ΓÇó Tß╗¬ 10/10/2009</div>
+        <h2>PH├éN PHß╗ÉI THIß║╛T Bß╗è ─ÉIß╗åN <span>ABB CH├ìNH H├âNG</span> H├ÇNG ─Éß║ªU VIß╗åT NAM</h2>
+        <p>H╞ín 15 n─âm cung ß╗⌐ng c├┤ng tß║»c, ß╗ò cß║»m v├á giß║úi ph├íp thiß║┐t bß╗ï ─æiß╗çn ABB chß║Ñt l╞░ß╗úng cao, ─æß║ºy ─æß╗º CO/CQ cho d├ón dß╗Ñng v├á dß╗▒ ├ín.</p>
+        <div class="mb-banner-products">
+          <div class="mb-banner-prod">
+            <img src="assets/abb/1.Acus/Gold/4TYA500311P0306.webp" alt="ABB Acus" />
+            <strong>ABB Acus</strong>
+          </div>
+          <div class="mb-banner-prod">
+            <img src="assets/abb/2. Velet86/Black/4TYA503111P0506.webp" alt="ABB Velet 86" />
+            <strong>Velet 86</strong>
+          </div>
+          <div class="mb-banner-prod">
+            <img src="assets/abb/3.Zita/Gold/4TYA501211P0306.webp" alt="ABB Zita" />
+            <strong>ABB Zita</strong>
+          </div>
+        </div>
+        <div class="view-more">
+          <a href="#mb-kho-abb"><span>Tra cß╗⌐u 1.448 m├ú SKU ABB</span></a>
+        </div>
+      </div>
+
+      <!-- Slide 2 -->
+      <div class="mb-banner-slide mb-bg-2">
+        <div class="mb-banner-tag">GIß║óI PH├üP M├ö-─ÉUN CHß╗« NHß║¼T 120MM ABB</div>
+        <h2>D├ÆNG C├öNG Tß║«C ß╗ö Cß║«M <span>ABB VELET 120 &amp; MAYPLE 120</span></h2>
+        <p>Hß╗ç khung mß║╖t viß╗ün chß╗» nhß║¡t 120mm lß║»p gh├⌐p linh hoß║ít tß╗½ 1ΓÇô6 m├┤-─æun c├┤ng tß║»c, ß╗ò cß║»m 3 chß║Ñu, USB A+C v├á Dimmer.</p>
+        <div class="mb-banner-products">
+          <div class="mb-banner-prod">
+            <img src="assets/abb/5.Velet120/Gold/4TYX505223P0300.webp" alt="Velet 120 Frame" />
+            <strong>Mß║╖t Viß╗ün 120</strong>
+          </div>
+          <div class="mb-banner-prod">
+            <img src="assets/abb/5.Velet120/Gold/4TYB505241P0303.webp" alt="Velet 120 Socket" />
+            <strong>ß╗ö Cß║»m 3 Chß║Ñu</strong>
+          </div>
+          <div class="mb-banner-prod">
+            <img src="assets/abb/6.Mayple120/White/4TYX506223P0100.webp" alt="Mayple 120" />
+            <strong>Mayple 120</strong>
+          </div>
+        </div>
+        <div class="view-more">
+          <a href="#mb-san-pham"><span>Kh├ím ph├í 6 d├▓ng ABB</span></a>
+        </div>
+      </div>
+
+      <!-- Slide 3 -->
+      <div class="mb-banner-slide mb-bg-3">
+        <div class="mb-banner-tag">MST: 0309430819 ΓÇó QUß║¼N 4, TP. Hß╗Æ CH├ì MINH</div>
+        <h2>─Éß╗ÉI T├üC TIN Cß║¼Y Cß╗ªA <span>CHß╗ª ─Éß║ªU T╞» &amp; NH├Ç THß║ªU M&amp;E</span></h2>
+        <p>─Éß╗ông h├ánh c├╣ng h├áng loß║ít dß╗▒ ├ín trß╗ìng ─æiß╗âm: The Landmark 81, Empire City, The River Thß╗º Thi├¬m, Masteri An Ph├║, MGallery...</p>
+        <div class="mb-banner-products">
+          <div class="mb-banner-prod">
+            <img src="logo-vien-dong.png" alt="Viß╗àn ─É├┤ng Electric" />
+            <strong>Uy T├¡n 2009</strong>
+          </div>
+          <div class="mb-banner-prod">
+            <img src="assets/abb/4.Mayple86/Dark Grey/4TYA502112P0407.webp" alt="Mayple 86" />
+            <strong>Mayple 86</strong>
+          </div>
+          <div class="mb-banner-prod">
+            <img src="assets/abb/1.Acus/Gold/4TYH500111P0300.webp" alt="Thiß║┐t bß╗ï kh├ích sß║ín" />
+            <strong>Kh├ích Sß║ín 5*</strong>
+          </div>
+        </div>
+        <div class="view-more">
+          <a href="assets/docs/HSNL_VIENDONG_2022.pdf" target="_blank"><span>Xem Hß╗ô S╞í N─âng Lß╗▒c PDF</span></a>
+        </div>
+      </div>
+
+      <div class="mb-banner-dots">
+        <button type="button" class="mb-dot active" data-bdot="0" aria-label="Slide 1"></button>
+        <button type="button" class="mb-dot" data-bdot="1" aria-label="Slide 2"></button>
+        <button type="button" class="mb-dot" data-bdot="2" aria-label="Slide 3"></button>
+      </div>
+    </section>
+
+    <!--==================================================================
+        3. Sß║óN PHß║¿M ABB (.mb-product) ΓÇö L╞»ß╗ÜI 2 Cß╗ÿT CHUß║¿N MOBILE CADIVI.VN
+        ==================================================================-->
+    <section id="mb-san-pham">
+      <div class="mb-sec-title">
+        <h2>Sß║ún phß║⌐m ABB chß╗º lß╗▒c</h2>
+        <p>Chß║ím v├áo chß║Ñm m├áu ─æß╗â ─æß╗òi m├áu thß╗▒c tß║┐ ΓÇó Chß║ím t├¬n d├▓ng ─æß╗â lß╗ìc m├ú</p>
+      </div>
+
+      <div class="mb-prod-grid">
+        <!-- 1. ABB Acus -->
+        <div class="mb-prod-card">
+          <div>
+            <div class="mb-prod-img">
+              <img src="assets/abb/1.Acus/Gold/4TYA500311P0306.webp" alt="ABB Acus" id="mb-img-1" />
+            </div>
+            <div class="mb-swatches">
+              <button type="button" class="mb-swatch sw-Gold active" data-target="mb-img-1" data-src="assets/abb/1.Acus/Gold/4TYA500311P0306.webp"></button>
+              <button type="button" class="mb-swatch sw-White" data-target="mb-img-1" data-src="assets/abb/1.Acus/White/4TYA500311P0106.webp"></button>
+              <button type="button" class="mb-swatch sw-Silver" data-target="mb-img-1" data-src="assets/abb/1.Acus/Silver/4TYA500311P0206.webp"></button>
+              <button type="button" class="mb-swatch sw-Dark-Grey" data-target="mb-img-1" data-src="assets/abb/1.Acus/Dark Grey/4TYA500311P0406.webp"></button>
+              <button type="button" class="mb-swatch sw-Black" data-target="mb-img-1" data-src="assets/abb/1.Acus/Black/4TYA500311P0506.webp"></button>
+            </div>
+            <div class="mb-prod-sub">Chuß║⌐n vu├┤ng 86mm ΓÇó 5 m├áu</div>
+          </div>
+          <a href="#mb-kho-abb" class="mb-prod-title" data-mb-series="1.Acus">ABB ACUS (492 M├â)</a>
+        </div>
+
+        <!-- 2. ABB Velet 86 -->
+        <div class="mb-prod-card">
+          <div>
+            <div class="mb-prod-img">
+              <img src="assets/abb/2. Velet86/Black/4TYA503111P0506.webp" alt="ABB Velet 86" id="mb-img-2" />
+            </div>
+            <div class="mb-swatches">
+              <button type="button" class="mb-swatch sw-Black active" data-target="mb-img-2" data-src="assets/abb/2. Velet86/Black/4TYA503111P0506.webp"></button>
+              <button type="button" class="mb-swatch sw-Gold" data-target="mb-img-2" data-src="assets/abb/2. Velet86/Gold/4TYA503111P0306.webp"></button>
+              <button type="button" class="mb-swatch sw-Dark-Grey" data-target="mb-img-2" data-src="assets/abb/2. Velet86/Dark Grey/4TYA503111P0406.webp"></button>
+              <button type="button" class="mb-swatch sw-White" data-target="mb-img-2" data-src="assets/abb/2. Velet86/White/4TYA503111P0106.webp"></button>
+            </div>
+            <div class="mb-prod-sub">Chuß║⌐n vu├┤ng 86mm ΓÇó 4 m├áu</div>
+          </div>
+          <a href="#mb-kho-abb" class="mb-prod-title" data-mb-series="2. Velet86">VELET 86 (350 M├â)</a>
+        </div>
+
+        <!-- 3. ABB Zita -->
+        <div class="mb-prod-card">
+          <div>
+            <div class="mb-prod-img">
+              <img src="assets/abb/3.Zita/Gold/4TYA501211P0306.webp" alt="ABB Zita" id="mb-img-3" />
+            </div>
+            <div class="mb-swatches">
+              <button type="button" class="mb-swatch sw-Gold active" data-target="mb-img-3" data-src="assets/abb/3.Zita/Gold/4TYA501211P0306.webp"></button>
+              <button type="button" class="mb-swatch sw-Dark-Grey" data-target="mb-img-3" data-src="assets/abb/3.Zita/Dark Grey/4TYA501211P0406.webp"></button>
+              <button type="button" class="mb-swatch sw-White" data-target="mb-img-3" data-src="assets/abb/3.Zita/White/4TYA501211P0106.webp"></button>
+            </div>
+            <div class="mb-prod-sub">Chuß║⌐n vu├┤ng 86mm ΓÇó 3 m├áu</div>
+          </div>
+          <a href="#mb-kho-abb" class="mb-prod-title" data-mb-series="3.Zita">ABB ZITA (228 M├â)</a>
+        </div>
+
+        <!-- 4. ABB Mayple 86 -->
+        <div class="mb-prod-card">
+          <div>
+            <div class="mb-prod-img">
+              <img src="assets/abb/4.Mayple86/Dark Grey/4TYA502112P0407.webp" alt="ABB Mayple 86" id="mb-img-4" />
+            </div>
+            <div class="mb-swatches">
+              <button type="button" class="mb-swatch sw-Dark-Grey active" data-target="mb-img-4" data-src="assets/abb/4.Mayple86/Dark Grey/4TYA502112P0407.webp"></button>
+              <button type="button" class="mb-swatch sw-White" data-target="mb-img-4" data-src="assets/abb/4.Mayple86/White/4TYA502112P0107.webp"></button>
+            </div>
+            <div class="mb-prod-sub">Chuß║⌐n vu├┤ng 86mm ΓÇó 2 m├áu</div>
+          </div>
+          <a href="#mb-kho-abb" class="mb-prod-title" data-mb-series="4.Mayple86">MAYPLE 86 (106 M├â)</a>
+        </div>
+
+        <!-- 5. ABB Velet 120 -->
+        <div class="mb-prod-card">
+          <div>
+            <div class="mb-prod-img">
+              <img src="assets/abb/5.Velet120/Gold/4TYX505223P0300.webp" alt="ABB Velet 120" id="mb-img-5" />
+            </div>
+            <div class="mb-swatches">
+              <button type="button" class="mb-swatch sw-Gold active" data-target="mb-img-5" data-src="assets/abb/5.Velet120/Gold/4TYX505223P0300.webp"></button>
+              <button type="button" class="mb-swatch sw-Black" data-target="mb-img-5" data-src="assets/abb/5.Velet120/Black/4TYX505223P0500.webp"></button>
+              <button type="button" class="mb-swatch sw-Dark-Grey" data-target="mb-img-5" data-src="assets/abb/5.Velet120/Dark Grey/4TYX505223P0400.webp"></button>
+              <button type="button" class="mb-swatch sw-White" data-target="mb-img-5" data-src="assets/abb/5.Velet120/White/4TYX505223P0100.webp"></button>
+            </div>
+            <div class="mb-prod-sub">M├┤-─æun chß╗» nhß║¡t 120mm</div>
+          </div>
+          <a href="#mb-kho-abb" class="mb-prod-title" data-mb-series="5.Velet120">VELET 120 (181 M├â)</a>
+        </div>
+
+        <!-- 6. ABB Mayple 120 -->
+        <div class="mb-prod-card">
+          <div>
+            <div class="mb-prod-img">
+              <img src="assets/abb/6.Mayple120/White/4TYX506223P0100.webp" alt="ABB Mayple 120" id="mb-img-6" />
+            </div>
+            <div class="mb-swatches">
+              <button type="button" class="mb-swatch sw-White active" data-target="mb-img-6" data-src="assets/abb/6.Mayple120/White/4TYX506223P0100.webp"></button>
+              <button type="button" class="mb-swatch sw-Dark-Grey" data-target="mb-img-6" data-src="assets/abb/6.Mayple120/Dark Grey/4TYX506223P0400.webp"></button>
+            </div>
+            <div class="mb-prod-sub">M├┤-─æun chß╗» nhß║¡t 120mm</div>
+          </div>
+          <a href="#mb-kho-abb" class="mb-prod-title" data-mb-series="6.Mayple120">MAYPLE 120 (91 M├â)</a>
+        </div>
+      </div>
+    </section>
+
+    <!--==================================================================
+        4. KHO TRA Cß╗¿U TRß╗░C TUYß║╛N 1.448 M├â SKU ABB TR├èN MOBILE
+        ==================================================================-->
+    <section class="mb-explorer" id="mb-kho-abb">
+      <div style="margin-bottom:10px;">
+        <h2 style="font-family:var(--font-heading);font-size:20px;color:var(--primary-red);text-transform:uppercase;">
+          TH╞» VIß╗åN 1.448 M├â Sß║óN PHß║¿M ABB
+        </h2>
+        <p style="font-size:12.5px;color:#555555;">Chß║ím v├áo tß╗½ng sß║ún phß║⌐m ─æß╗â ph├│ng to ß║únh &amp; xem th├┤ng sß╗æ</p>
+      </div>
+
+      <div class="mb-filter-grid">
+        <div>
+          <label class="mb-label" for="mbSeriesSelect">D├▓ng ABB (Series)</label>
+          <select id="mbSeriesSelect" class="mb-select">
+            <option value="all">Tß║Ñt cß║ú 6 D├▓ng (1.448)</option>
+            <option value="1.Acus">1. ABB Acus (492)</option>
+            <option value="2. Velet86">2. Velet 86 (350)</option>
+            <option value="3.Zita">3. ABB Zita (228)</option>
+            <option value="4.Mayple86">4. Mayple 86 (106)</option>
+            <option value="5.Velet120">5. Velet 120 (181)</option>
+            <option value="6.Mayple120">6. Mayple 120 (91)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="mb-label" for="mbColorSelect">M├áu sß║»c</label>
+          <select id="mbColorSelect" class="mb-select">
+            <option value="all">Tß║Ñt cß║ú m├áu</option>
+            <option value="White">White (Trß║»ng)</option>
+            <option value="Gold">Gold (V├áng)</option>
+            <option value="Silver">Silver (Bß║íc)</option>
+            <option value="Dark Grey">Dark Grey (X├ím)</option>
+            <option value="Black">Black (─Éen)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="mb-label" for="mbTypeSelect">Nh├│m thiß║┐t bß╗ï</label>
+          <select id="mbTypeSelect" class="mb-select">
+            <option value="all">Tß║Ñt cß║ú nh├│m</option>
+            <option value="4TYA">C├┤ng tß║»c (4TYA)</option>
+            <option value="4TYB">ß╗ö cß║»m nguß╗ôn (4TYB)</option>
+            <option value="4TYD">Mß║íng/TV/Tel (4TYD)</option>
+            <option value="4TYH">Dimmer/KS/USB (4TYH)</option>
+            <option value="4TYX">Mß║╖t viß╗ün/Phß╗Ñ kiß╗çn (4TYX)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="mb-label" for="mbSkuSearch">T├¼m m├ú SKU</label>
+          <input type="search" id="mbSkuSearch" class="mb-input" placeholder="VD: 4TYA500..." />
+        </div>
+      </div>
+
+      <div class="mb-status-bar" id="mbResultStatus">
+        ─Éang tß║úi danh mß╗Ñc 1.448 m├ú ABB...
+      </div>
+
+      <div class="mb-sku-grid" id="mbSkuGrid"></div>
+
+      <div style="text-align:center;margin-top:14px;">
+        <div class="view-more">
+          <a href="#mb-kho-abb" id="mbLoadMoreBtn"><span>Xem th├¬m sß║ún phß║⌐m ABB (+12 m├ú)</span></a>
+        </div>
+      </div>
+    </section>
+
+    <!--==================================================================
+        5. C├öNG Cß╗ñ Dß╗░ TO├üN NHANH THIß║╛T Bß╗è ABB TR├èN ─ÉIß╗åN THOß║áI
+        ==================================================================-->
+    <section class="mb-calc-box" id="mb-du-toan">
+      <h3>C├öNG Cß╗ñ Dß╗░ TO├üN NHANH THIß║╛T Bß╗è ABB</h3>
+      <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:8px;margin-bottom:10px;">
+        <div>
+          <label class="mb-label">D├▓ng ABB</label>
+          <select id="mbCalcSeries" class="mb-select">
+            <option value="ABB Acus">ABB Acus</option>
+            <option value="ABB Velet 86">Velet 86</option>
+            <option value="ABB Zita">ABB Zita</option>
+            <option value="ABB Mayple 86">Mayple 86</option>
+            <option value="ABB Velet 120">Velet 120</option>
+            <option value="ABB Mayple 120">Mayple 120</option>
+          </select>
+        </div>
+        <div>
+          <label class="mb-label">Sß╗æ ph├▓ng</label>
+          <input type="number" id="mbCalcRooms" class="mb-input" value="4" min="1" max="200" />
+        </div>
+        <div>
+          <label class="mb-label">Sß╗æ WC</label>
+          <input type="number" id="mbCalcBath" class="mb-input" value="2" min="1" max="100" />
+        </div>
+      </div>
+      <div style="background:#f8f9fa;border-left:4px solid var(--primary-red);padding:10px;">
+        <strong id="mbCalcTotal" style="color:var(--primary-red);font-size:15px;display:block;">Tß╗òng cß╗Öng: ~42 Thiß║┐t bß╗ï (ABB Acus)</strong>
+        <div id="mbCalcDetail" style="font-size:12.5px;color:#333333;margin-top:3px;"></div>
+      </div>
+    </section>
+
+    <!--==================================================================
+        6. GIß╗ÜI THIß╗åU & Hß╗Æ S╞á N─éNG Lß╗░C (.mb-about)
+        ==================================================================-->
+    <section class="mb-about" id="mb-gioi-thieu">
+      <div class="mb-sec-title" style="margin:-14px -12px 12px;">
+        <h2>Giß╗¢i thiß╗çu Viß╗àn ─É├┤ng Electric</h2>
+      </div>
+
+      <div class="mb-about-banner">
+        <h3>C├öNG TY TNHH THIß║╛T Bß╗è ─ÉIß╗åN VIß╗äN ─É├öNG</h3>
+        <p>Th├ánh lß║¡p ng├áy <strong>10/10/2009</strong> (MST: <strong>0309430819</strong>), Viß╗àn ─É├┤ng l├á nh├á ph├ón phß╗æi ch├¡nh thß╗⌐c cß╗ºa <strong>ABB Viß╗çt Nam tß║íi miß╗ün Nam</strong>, cung ß╗⌐ng thiß║┐t bß╗ï ─æiß╗çn ch├¡nh h├úng cho d├ón dß╗Ñng v├á c├┤ng nghiß╗çp.</p>
+        <div class="mb-stat-row">
+          <div class="mb-stat-box">
+            <strong>2009</strong>
+            <span>Th├ánh lß║¡p</span>
+          </div>
+          <div class="mb-stat-box">
+            <strong>1.448+</strong>
+            <span>M├ú SKU ABB</span>
+          </div>
+          <div class="mb-stat-box">
+            <strong>100%</strong>
+            <span>Ch├¡nh h├úng</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Accordion 1: Tß║ºm nh├¼n - Sß╗⌐ mß╗çnh - Gi├í trß╗ï cß╗æt l├╡i -->
+      <div class="mb-accordion-item open">
+        <button type="button" class="mb-accordion-btn">
+          <span>1. Tß║ºm Nh├¼n ΓÇô Sß╗⌐ Mß╗çnh ΓÇô Gi├í Trß╗ï Cß╗æt L├╡i</span>
+          <span>Γû╛</span>
+        </button>
+        <div class="mb-accordion-body">
+          <p style="margin-bottom:6px;">ΓÇó <strong>Tß║ºm nh├¼n:</strong> Trß╗ƒ th├ánh mß╗Öt trong nhß╗»ng ─æ╞ín vß╗ï ph├ón phß╗æi thiß║┐t bß╗ï ─æiß╗çn h├áng ─æß║ºu Viß╗çt Nam, l├á ─æß╗æi t├íc tin cß║¡y cß╗ºa chß╗º ─æß║ºu t╞░, nh├á thß║ºu v├á doanh nghiß╗çp.</p>
+          <p style="margin-bottom:6px;">ΓÇó <strong>Sß╗⌐ mß╗çnh:</strong> Cung cß║Ñp thiß║┐t bß╗ï ─æiß╗çn ABB ch├¡nh h├úng, an to├án, gi├║p kh├ích h├áng tß╗æi ╞░u chi ph├¡ ─æß║ºu t╞░ v├á n├óng cao hiß╗çu suß║Ñt vß║¡n h├ánh.</p>
+          <p>ΓÇó <strong>Gi├í trß╗ï cß╗æt l├╡i:</strong> <strong>Uy t├¡n</strong> (─æ├║ng cam kß║┐t, ─æ├║ng tiß║┐n ─æß╗Ö) &amp; <strong>Chß║Ñt l╞░ß╗úng</strong> (100% ch├¡nh h├úng CO/CQ).</p>
+        </div>
+      </div>
+
+      <!-- Accordion 2: Lß╗ïch sß╗¡ h├¼nh th├ánh 2009 - 2026 -->
+      <div class="mb-accordion-item">
+        <button type="button" class="mb-accordion-btn">
+          <span>2. Lß╗ïch Sß╗¡ H├¼nh Th├ánh &amp; Ph├ít Triß╗ân (2009ΓÇô2026)</span>
+          <span>Γû╛</span>
+        </button>
+        <div class="mb-accordion-body">
+          <p style="margin-bottom:6px;">ΓÇó <strong>10/10/2009:</strong> Th├ánh lß║¡p C├┤ng ty TNHH Thiß║┐t Bß╗ï ─Éiß╗çn Viß╗àn ─É├┤ng.</p>
+          <p style="margin-bottom:6px;">ΓÇó <strong>2010 ΓÇô 2015:</strong> Cß╗ºng cß╗æ hoß║ít ─æß╗Öng kinh doanh v├á mß╗ƒ rß╗Öng danh mß╗Ñc thiß║┐t bß╗ï ─æiß╗çn.</p>
+          <p style="margin-bottom:6px;">ΓÇó <strong>2016 ΓÇô 2020:</strong> Ph├ít triß╗ân quy tr├¼nh ph├ón phß╗æi dß╗▒ ├ín chuy├¬n nghiß╗çp tr├¬n to├án quß╗æc.</p>
+          <p>ΓÇó <strong>2021 ΓÇô 2026:</strong> Trß╗ƒ th├ánh <strong>nh├á ph├ón phß╗æi mß╗¢i cß╗ºa ABB Viß╗çt Nam tß║íi miß╗ün Nam</strong>, mß╗ƒ rß╗Öng giß║úi ph├íp nh├á th├┤ng minh v├á d├ón dß╗Ñng.</p>
+        </div>
+      </div>
+
+      <!-- Accordion 3: Hß╗ô s╞í ph├íp l├╜ & T├ái liß╗çu PDF -->
+      <div class="mb-accordion-item">
+        <button type="button" class="mb-accordion-btn">
+          <span>3. Hß╗ô S╞í Ph├íp L├╜ &amp; Tß║úi Catalogue PDF</span>
+          <span>Γû╛</span>
+        </button>
+        <div class="mb-accordion-body">
+          <p style="margin-bottom:5px;">ΓÇó <strong>T├¬n quß╗æc tß║┐:</strong> VIEN DONG ELECTRIC CO., LTD</p>
+          <p style="margin-bottom:5px;">ΓÇó <strong>M├ú sß╗æ thuß║┐:</strong> 0309430819 ΓÇó <strong>Vß╗æn ─æiß╗üu lß╗ç:</strong> 8.800.000.000 VN─É</p>
+          <p style="margin-bottom:10px;">ΓÇó <strong>Gi├ím ─æß╗æc:</strong> ├öng Trß║ºn Ho├áng H├╣ng</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <a href="assets/docs/HSNL_VIENDONG_2022.pdf" target="_blank" style="background:var(--primary-red);color:#ffffff !important;padding:7px 12px;font-size:12.5px;font-weight:700;">Tß║úi Hß╗ô S╞í N─âng Lß╗▒c (PDF)</a>
+            <a href="assets/docs/Bo_Nhan_Dien_Thuong_Hieu_Vien_Dong_Electric.pdf" target="_blank" style="background:var(--primary-blue);color:#ffffff !important;padding:7px 12px;font-size:12.5px;font-weight:700;">Bß╗Ö Nhß║¡n Diß╗çn (PDF)</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!--==================================================================
+        7. Dß╗░ ├üN TI├èU BIß╗éU VUß╗ÉT NGANG (.mb-project-scroll)
+        ==================================================================-->
+    <section id="mb-du-an">
+      <div class="mb-sec-title">
+        <h2>Dß╗▒ ├ín ti├¬u biß╗âu</h2>
+        <p>Vuß╗æt ngang ─æß╗â xem c├íc dß╗▒ ├ín trß╗ìng ─æiß╗âm cß╗ºa Viß╗àn ─É├┤ng Electric</p>
+      </div>
+
+      <div class="mb-project-scroll">
+        <div class="mb-proj-card">
+          <div class="mb-proj-art">
+            <span>TP. Hß╗ô Ch├¡ Minh</span>
+            <h4>THE LANDMARK 81 ΓÇô KHß╗ÉI HOTEL</h4>
+            <p>Chß╗º ─æß║ºu t╞░: Vincommerce ΓÇó Cung ß╗⌐ng hß╗ç thß╗æng thiß║┐t bß╗ï ─æiß╗çn ch├¡nh h├úng.</p>
+          </div>
+          <div class="mb-proj-foot">1. Dß╗▒ ├ín The Landmark 81 ΓÇô Khß╗æi Hotel</div>
+        </div>
+
+        <div class="mb-proj-card">
+          <div class="mb-proj-art">
+            <span>K─ÉT Thß╗º Thi├¬m ΓÇó TP.HCM</span>
+            <h4>KHU PHß╗¿C Hß╗óP EMPIRE CITY</h4>
+            <p>Chß╗º ─æß║ºu t╞░: Li├¬n doanh ─Éß║┐ V╞░╞íng ΓÇó Nh├á thß║ºu M&amp;E: R.E.E.</p>
+          </div>
+          <div class="mb-proj-foot">2. Khu phß╗⌐c hß╗úp Empire City Thß╗º Thi├¬m</div>
+        </div>
+
+        <div class="mb-proj-card">
+          <div class="mb-proj-art">
+            <span>Thß╗º Thi├¬m ΓÇó TP.HCM</span>
+            <h4>Dß╗░ ├üN THE RIVER THß╗ª THI├èM</h4>
+            <p>Chß╗º ─æß║ºu t╞░: Thß╗º Thi├¬m River Park ΓÇó Tß╗òng thß║ºu: Ricons.</p>
+          </div>
+          <div class="mb-proj-foot">3. C─ân hß╗Ö hß║íng sang The River Thß╗º Thi├¬m</div>
+        </div>
+
+        <div class="mb-proj-card">
+          <div class="mb-proj-art">
+            <span>TP. Thß╗º ─Éß╗⌐c ΓÇó TP.HCM</span>
+            <h4>C─éN Hß╗ÿ CAO Cß║ñP MASTERI AN PH├Ü</h4>
+            <p>Chß╗º ─æß║ºu t╞░: Thß║úo ─Éiß╗ün Investment ΓÇó Tß╗òng thß║ºu: Unicons.</p>
+          </div>
+          <div class="mb-proj-foot">4. Dß╗▒ ├ín Masteri An Ph├║</div>
+        </div>
+
+        <div class="mb-proj-card">
+          <div class="mb-proj-art">
+            <span>Hß╗ô Tr├ám ΓÇó BR-VT</span>
+            <h4>Tß╗ö Hß╗óP NGHß╗ê D╞»ß╗áNG MGALLERY</h4>
+            <p>Chß╗º ─æß║ºu t╞░: Tß║¡p ─æo├án Novaland ΓÇó Cung ß╗⌐ng thiß║┐t bß╗ï ─æiß╗çn nghß╗ë d╞░ß╗íng 5 sao.</p>
+          </div>
+          <div class="mb-proj-foot">5. Dß╗▒ ├ín MGallery Hß╗ô Tr├ám</div>
+        </div>
+      </div>
+    </section>
+
+    <!--==================================================================
+        8. TIN Tß╗¿C & Sß╗░ KIß╗åN MOBILE (.mb-news)
+        ==================================================================-->
+    <section class="mb-news" id="mb-tin-tuc">
+      <div class="mb-sec-title" style="margin:-14px -12px 12px;">
+        <h2>Tin tß╗⌐c &amp; Sß╗▒ kiß╗çn</h2>
+      </div>
+
+      <div class="mb-news-hot">
+        <div class="mb-news-hot-visual">
+          <div style="display:flex;justify-content:center;gap:10px;background:#ffffff;padding:10px;margin-bottom:8px;">
+            <img src="logo-vien-dong.png" alt="Viß╗àn ─É├┤ng" style="height:40px;" />
+            <img src="assets/abb/1.Acus/Gold/4TYA500311P0306.webp" alt="ABB Acus" style="height:52px;" />
+            <img src="assets/abb/2. Velet86/Black/4TYA503111P0506.webp" alt="ABB Velet" style="height:52px;" />
+          </div>
+          <p style="font-size:12.5px;color:#ffffff;">Nh├á ph├ón phß╗æi ch├¡nh thß╗⌐c thiß║┐t bß╗ï ─æiß╗çn ABB Viß╗çt Nam tß║íi miß╗ün Nam</p>
+        </div>
+        <div class="mb-news-hot-title">
+          <a href="#mb-san-pham">VIß╗äN ─É├öNG ELECTRIC ─Éß║¿Y Mß║áNH PH├éN PHß╗ÉI 6 D├ÆNG THIß║╛T Bß╗è ─ÉIß╗åN ABB CH├ìNH H├âNG</a>
+        </div>
+      </div>
+
+      <ul class="mb-news-list">
+        <li>
+          <img src="assets/abb/1.Acus/Gold/4TYA500311P0306.webp" alt="ABB Acus" />
+          <a href="#mb-kho-abb" data-mb-series="1.Acus">Ra mß║»t bß╗Ö s╞░u tß║¡p c├┤ng tß║»c ß╗ò cß║»m tr├án viß╗ün ABB Acus Series (492 m├ú SKU)</a>
+        </li>
+        <li>
+          <img src="assets/abb/5.Velet120/Gold/4TYX505223P0300.webp" alt="ABB Velet 120" />
+          <a href="#mb-kho-abb" data-mb-series="5.Velet120">Giß║úi ph├íp c├┤ng tß║»c ß╗ò cß║»m m├┤-─æun chß╗» nhß║¡t 120mm ABB Velet 120 &amp; Mayple 120</a>
+        </li>
+        <li>
+          <img src="logo-vien-dong.png" alt="Hß╗ô s╞í n─âng lß╗▒c" />
+          <a href="assets/docs/HSNL_VIENDONG_2022.pdf" target="_blank">H├ánh tr├¼nh h╞ín 15 n─âm Uy t├¡n &amp; Chß║Ñt l╞░ß╗úng cß╗ºa Thiß║┐t Bß╗ï ─Éiß╗çn Viß╗àn ─É├┤ng (2009ΓÇô2026)</a>
+        </li>
+      </ul>
+    </section>
+
+    <!--==================================================================
+        9. FOOTER MOBILE CHUß║¿N CADIVI.VN (#mb-lien-he)
+        ==================================================================-->
+    <footer class="mb-footer" id="mb-lien-he">
+      <div class="mb-footer-red">
+        <div class="name">C├┤ng ty TNHH Thiß║┐t Bß╗ï ─Éiß╗çn Viß╗àn ─É├┤ng</div>
+        <p>Γû¬ ─Éß╗ïa chß╗ë: 187A Bß║┐n V├ón ─Éß╗ôn, Ph╞░ß╗¥ng 2, Quß║¡n 4, TP. Hß╗ô Ch├¡ Minh</p>
+        <p>Γû¬ ─Éiß╗çn thoß║íi: <a href="tel:02839435276">(84.28) 3943 5276</a> - <a href="tel:02839435278">3943 5278</a></p>
+        <p>Γû¬ Fax: 028.3943.5309 | MST: 0309430819</p>
+        <p>Γû¬ Email: <a href="mailto:viendongelectric@gmail.com">viendongelectric@gmail.com</a></p>
+        <p>Γû¬ Website: <a href="#topMobile">www.viendongelectric.vn</a></p>
+      </div>
+
+      <div class="mb-footer-links">
+        <div>
+          <h4>Th├┤ng tin</h4>
+          <ul>
+            <li><a href="#mb-gioi-thieu">Giß╗¢i thiß╗çu c├┤ng ty</a></li>
+            <li><a href="assets/docs/HSNL_VIENDONG_2022.pdf" target="_blank">Hß╗ô s╞í n─âng lß╗▒c PDF</a></li>
+            <li><a href="#mb-du-an">Dß╗▒ ├ín ti├¬u biß╗âu</a></li>
+            <li><a href='/'>Bß║ún M├íy T├¡nh (PC)</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Sß║ún phß║⌐m ABB</h4>
+          <ul>
+            <li><a href="#mb-kho-abb" data-mb-series="1.Acus">ABB Acus Series</a></li>
+            <li><a href="#mb-kho-abb" data-mb-series="2. Velet86">ABB Velet 86 Series</a></li>
+            <li><a href="#mb-kho-abb" data-mb-series="3.Zita">ABB Zita Series</a></li>
+            <li><a href="#mb-kho-abb" data-mb-series="5.Velet120">ABB Velet 120 Series</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="mb-copyright">
+        Copyright ┬⌐ 2009ΓÇô2026 <strong>C├öNG TY TNHH THIß║╛T Bß╗è ─ÉIß╗åN VIß╗äN ─É├öNG</strong>
+      </div>
+    </footer>
+
+    <!--==================================================================
+        THANH ─ÉIß╗ÇU H╞»ß╗ÜNG Cß╗É ─Éß╗èNH D╞»ß╗ÜI ─É├üY ─ÉIß╗åN THOß║áI (BOTTOM ACTION BAR)
+        ==================================================================-->
+    <nav class="mb-bottom-nav">
+      <a href="#topMobile" class="mb-nav-item">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l9 8h-3v9h-5v-6H11v6H6v-9H3l9-8z"/></svg>
+        <span>Trang chß╗º</span>
+      </a>
+      <a href="#mb-kho-abb" class="mb-nav-item">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        <span>1.448 M├ú ABB</span>
+      </a>
+      <a href="assets/docs/HSNL_VIENDONG_2022.pdf" target="_blank" class="mb-nav-item">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+        <span>Hß╗ô s╞í PDF</span>
+      </a>
+      <a href="tel:02839435276" class="mb-nav-item call-now">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+        <span>Gß╗ìi B├ío Gi├í</span>
+      </a>
+    </nav>
+
+  </div>
+
+  <!-- MODAL PH├ôNG TO Sß║óN PHß║¿M ABB TR├èN ─ÉIß╗åN THOß║áI -->
+  <div class="mb-modal-backdrop" id="mbModal">
+    <div class="mb-modal-dialog">
+      <button type="button" id="mbModalClose" style="position:absolute;top:10px;right:10px;width:30px;height:30px;border:none;background:#eeeeee;font-weight:700;cursor:pointer;">Γ£ò</button>
+      <div style="font-size:11px;font-weight:700;color:var(--primary-red);text-transform:uppercase;margin-bottom:6px;">
+        THIß║╛T Bß╗è ─ÉIß╗åN ABB CH├ìNH H├âNG ΓÇó VIß╗äN ─É├öNG ELECTRIC
+      </div>
+      <div style="background:#f7f7f7;border:1px solid #e2e2e2;padding:14px;text-align:center;margin-bottom:10px;">
+        <img id="mbModalImg" src="" alt="ABB SKU" style="max-height:180px;margin:0 auto;object-fit:contain;" />
+      </div>
+      <h3 id="mbModalTitle" style="font-family:var(--font-heading);font-size:18px;color:#222222;margin-bottom:6px;"></h3>
+      <p id="mbModalSpec" style="background:#fae8e9;color:var(--primary-red);font-size:13px;font-weight:700;padding:8px 10px;margin-bottom:12px;"></p>
+      <div class="view-more">
+        <a href="tel:02839435276" style="width:100%;text-align:center;"><span>Gß╗ìi ─æß║╖t h├áng: 028.3943.5276</span></a>
+      </div>
+    </div>
+  </div>
+
+  <script src="abb-catalog.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // 1. Chuyß╗ân ─æß╗òi Khung ─Éiß╗çn Thoß║íi (430px) / Rß╗Öng M├án H├¼nh
+      const btnFrameMode = document.getElementById("btnFrameMode");
+      const btnFullMobileMode = document.getElementById("btnFullMobileMode");
+      if (btnFrameMode && btnFullMobileMode) {
+        btnFrameMode.addEventListener("click", () => {
+          document.body.classList.add("phone-frame-mode");
+          btnFrameMode.classList.add("active");
+          btnFullMobileMode.classList.remove("active");
+        });
+        btnFullMobileMode.addEventListener("click", () => {
+          document.body.classList.remove("phone-frame-mode");
+          btnFullMobileMode.classList.add("active");
+          btnFrameMode.classList.remove("active");
+        });
+      }
+
+      // 2. Off-canvas Menu Drawer (.divmm) chuß║⌐n CADIVI.VN
+      const mbDrawer = document.getElementById("mbDrawer");
+      const openDrawerBtn = document.getElementById("openDrawerBtn");
+      const closeDrawerBtn = document.getElementById("closeDrawerBtn");
+      const closeDrawerBg = document.getElementById("closeDrawerBg");
+
+      const closeDrawer = () => mbDrawer && mbDrawer.classList.remove("show");
+      if (openDrawerBtn && mbDrawer) {
+        openDrawerBtn.addEventListener("click", () => mbDrawer.classList.add("show"));
+      }
+      if (closeDrawerBtn) closeDrawerBtn.addEventListener("click", closeDrawer);
+      if (closeDrawerBg) closeDrawerBg.addEventListener("click", closeDrawer);
+
+      document.querySelectorAll(".button-submenu").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const sub = document.getElementById(btn.getAttribute("data-sub"));
+          if (sub) {
+            const isOpen = sub.classList.toggle("open");
+            btn.textContent = isOpen ? "ΓêÆ" : "+";
+          }
+        });
+      });
+
+      document.querySelectorAll(".drawer-link").forEach((link) => {
+        link.addEventListener("click", () => closeDrawer());
+      });
+
+      // 3. Toggle thanh t├¼m kiß║┐m tr├¬n Header
+      const mbToggleSearchBtn = document.getElementById("mbToggleSearchBtn");
+      const mbHeaderInput = document.getElementById("mbHeaderInput");
+      if (mbToggleSearchBtn && mbHeaderInput) {
+        mbToggleSearchBtn.addEventListener("click", () => {
+          mbHeaderInput.focus();
+        });
+      }
+
+      // 4. Banner Slider tß╗▒ ─æß╗Öng
+      const slides = document.querySelectorAll(".mb-banner-slide");
+      const bdots = document.querySelectorAll(".mb-dot");
+      let curSlide = 0;
+      const showSlide = (idx) => {
+        curSlide = (idx + slides.length) % slides.length;
+        slides.forEach((s, i) => s.classList.toggle("active", i === curSlide));
+        bdots.forEach((d, i) => d.classList.toggle("active", i === curSlide));
+      };
+      bdots.forEach((d) => {
+        d.addEventListener("click", () => showSlide(parseInt(d.getAttribute("data-bdot"), 10)));
+      });
+      setInterval(() => showSlide(curSlide + 1), 5000);
+
+      // 5. ─Éß╗òi m├áu Swatch tr├¬n 6 d├▓ng ABB
+      document.querySelectorAll(".mb-swatch").forEach((sw) => {
+        sw.addEventListener("click", () => {
+          const target = document.getElementById(sw.getAttribute("data-target"));
+          const src = sw.getAttribute("data-src");
+          if (target && src) target.src = encodeURI(src);
+          sw.parentElement.querySelectorAll(".mb-swatch").forEach((s) => s.classList.remove("active"));
+          sw.classList.add("active");
+        });
+      });
+
+      // 6. Accordion Giß╗¢i thiß╗çu
+      document.querySelectorAll(".mb-accordion-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          btn.parentElement.classList.toggle("open");
+        });
+      });
+
+      // 7. C├┤ng cß╗Ñ Dß╗▒ to├ín nhanh ABB
+      const mbCalcSeries = document.getElementById("mbCalcSeries");
+      const mbCalcRooms = document.getElementById("mbCalcRooms");
+      const mbCalcBath = document.getElementById("mbCalcBath");
+      const mbCalcTotal = document.getElementById("mbCalcTotal");
+      const mbCalcDetail = document.getElementById("mbCalcDetail");
+      const updateMbCalc = () => {
+        const sr = mbCalcSeries.value;
+        const r = Math.max(1, parseInt(mbCalcRooms.value, 10) || 1);
+        const b = Math.max(1, parseInt(mbCalcBath.value, 10) || 1);
+        const sw = r * 3 + b * 2;
+        const sk = r * 5 + b * 1;
+        const dt = r * 2;
+        const fr = sw + sk + dt;
+        mbCalcTotal.textContent = `Tß╗òng cß╗Öng: ~${fr} Bß╗Ö thiß║┐t bß╗ï (${sr})`;
+        mbCalcDetail.textContent = `Gß╗ôm: ${sw} C├┤ng tß║»c ΓÇó ${sk} ß╗ö cß║»m nguß╗ôn ΓÇó ${dt} ß╗ö cß║»m Mß║íng/TV ΓÇó ${fr} Mß║╖t viß╗ün`;
+      };
+      [mbCalcSeries, mbCalcRooms, mbCalcBath].forEach((el) => {
+        if (el) {
+          el.addEventListener("input", updateMbCalc);
+          el.addEventListener("change", updateMbCalc);
+        }
+      });
+      updateMbCalc();
+
+      // 8. Kho 1.448 m├ú SKU ABB tr├¬n Mobile
+      const catalog = Array.isArray(window.ABB_CATALOG) ? window.ABB_CATALOG : [];
+      const mbSeriesSelect = document.getElementById("mbSeriesSelect");
+      const mbColorSelect = document.getElementById("mbColorSelect");
+      const mbTypeSelect = document.getElementById("mbTypeSelect");
+      const mbSkuSearch = document.getElementById("mbSkuSearch");
+      const mbSkuGrid = document.getElementById("mbSkuGrid");
+      const mbResultStatus = document.getElementById("mbResultStatus");
+      const mbLoadMoreBtn = document.getElementById("mbLoadMoreBtn");
+
+      const SERIES_NAME = {
+        "1.Acus": "ABB Acus",
+        "2. Velet86": "ABB Velet 86",
+        "3.Zita": "ABB Zita",
+        "4.Mayple86": "ABB Mayple 86",
+        "5.Velet120": "ABB Velet 120",
+        "6.Mayple120": "ABB Mayple 120"
+      };
+
+      const describeSku = (sku) => {
+        const u = sku.toUpperCase();
+        if (u.startsWith("4TYA")) return "C├┤ng tß║»c ─æiß╗çn ABB";
+        if (u.startsWith("4TYB")) return "ß╗ö cß║»m nguß╗ôn / ─Éa n─âng ABB";
+        if (u.startsWith("4TYD")) return "ß╗ö cß║»m Mß║íng / TV / Tel";
+        if (u.startsWith("4TYH")) return "Dimmer / Kh├ích sß║ín / USB";
+        if (u.startsWith("4TYX")) return "Mß║╖t viß╗ün & Phß╗Ñ kiß╗çn ABB";
+        return "Thiß║┐t bß╗ï ─æiß╗çn ABB";
+      };
+
+      let filtered = [];
+      let limit = 12;
+
+      const mbModal = document.getElementById("mbModal");
+      const mbModalImg = document.getElementById("mbModalImg");
+      const mbModalTitle = document.getElementById("mbModalTitle");
+      const mbModalSpec = document.getElementById("mbModalSpec");
+      const mbModalClose = document.getElementById("mbModalClose");
+
+      if (mbModalClose) mbModalClose.addEventListener("click", () => mbModal.classList.remove("open"));
+      if (mbModal) {
+        mbModal.addEventListener("click", (e) => {
+          if (e.target === mbModal) mbModal.classList.remove("open");
+        });
+      }
+
+      const renderCatalog = () => {
+        const sr = mbSeriesSelect.value;
+        const cl = mbColorSelect.value;
+        const tp = mbTypeSelect.value;
+        const kw = mbSkuSearch.value.trim().toUpperCase();
+
+        filtered = catalog.filter((item) => {
+          if (sr !== "all" && item.s !== sr) return false;
+          if (cl !== "all" && item.c !== cl) return false;
+          if (tp !== "all" && !item.k.toUpperCase().startsWith(tp)) return false;
+          if (kw && !item.k.toUpperCase().includes(kw)) return false;
+          return true;
+        });
+
+        const showing = filtered.slice(0, limit);
+        mbResultStatus.innerHTML = `Hiß╗ân thß╗ï <strong>${showing.length}</strong> / <strong>${filtered.length}</strong> m├ú SKU ABB ch├¡nh h├úng`;
+
+        mbSkuGrid.innerHTML = showing.map((item) => {
+          const imgPath = encodeURI(`assets/abb/${item.s}/${item.c}/${item.f}`);
+          const sLabel = SERIES_NAME[item.s] || item.s;
+          const desc = describeSku(item.k);
+          return `
+            <div class="mb-sku-card" data-sku="${item.k}" data-series="${sLabel}" data-color="${item.c}" data-desc="${desc}" data-img="${imgPath}">
+              <div class="mb-sku-thumb">
+                <img src="${imgPath}" alt="${item.k}" loading="lazy" />
+              </div>
+              <div class="mb-sku-tags">
+                <span class="mb-tag-series">${sLabel}</span>
+                <span class="mb-tag-color">${item.c}</span>
+              </div>
+              <div class="mb-sku-code">${item.k}</div>
+              <div class="mb-sku-desc">${desc}</div>
+            </div>
+          `;
+        }).join("");
+
+        mbSkuGrid.querySelectorAll(".mb-sku-card").forEach((card) => {
+          card.addEventListener("click", () => {
+            mbModalImg.src = card.getAttribute("data-img");
+            mbModalTitle.textContent = `M├â H├ÇNG: ${card.getAttribute("data-sku")}`;
+            mbModalSpec.textContent = `${card.getAttribute("data-series")} ΓÇó M├áu: ${card.getAttribute("data-color")} ΓÇó ${card.getAttribute("data-desc")}`;
+            mbModal.classList.add("open");
+          });
+        });
+
+        if (mbLoadMoreBtn) {
+          mbLoadMoreBtn.parentElement.style.display = showing.length >= filtered.length ? "none" : "inline-block";
+        }
+      };
+
+      [mbSeriesSelect, mbColorSelect, mbTypeSelect].forEach((el) => {
+        el.addEventListener("change", () => {
+          limit = 12;
+          renderCatalog();
+        });
+      });
+      mbSkuSearch.addEventListener("input", () => {
+        limit = 12;
+        renderCatalog();
+      });
+      if (mbLoadMoreBtn) {
+        mbLoadMoreBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          limit += 12;
+          renderCatalog();
+        });
+      }
+
+      // Li├¬n kß║┐t chß╗ìn nhanh Series
+      document.querySelectorAll("[data-mb-series]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const s = btn.getAttribute("data-mb-series");
+          mbSeriesSelect.value = s;
+          document.querySelectorAll(".mb-pill").forEach((p) => {
+            p.classList.toggle("active", p.getAttribute("data-mb-series") === s);
+          });
+          limit = 12;
+          renderCatalog();
+        });
+      });
+
+      // T├¼m kiß║┐m tß╗½ Header
+      const mbHeaderSearchForm = document.getElementById("mbHeaderSearchForm");
+      if (mbHeaderSearchForm && mbHeaderInput) {
+        mbHeaderSearchForm.addEventListener("submit", (e) => {
+          e.preventDefault();
+          mbSkuSearch.value = mbHeaderInput.value.trim();
+          mbSeriesSelect.value = "all";
+          limit = 12;
+          renderCatalog();
+          document.getElementById("mb-kho-abb").scrollIntoView({ behavior: "smooth" });
+        });
+      }
+
+      renderCatalog();
+    });
+  </script>
+</body>
+</html>
