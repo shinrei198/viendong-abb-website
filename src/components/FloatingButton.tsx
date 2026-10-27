@@ -19,7 +19,7 @@ export default function FloatingButton() {
   }, [])
 
   return (
-    <div className="fixed bottom-6 right-5 z-50 flex flex-col items-center gap-3">
+    <div className="fixed bottom-20 md:bottom-6 right-4 md:right-5 z-50 flex flex-col items-center gap-3">
       {/* Action items */}
       <div
         className="flex flex-col items-center gap-3 transition-all duration-300 origin-bottom"

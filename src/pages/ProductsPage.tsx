@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getStoredProductCategories, getStoredProducts, productMatchesCategory, ProductItem, ProductVariant } from '@/data/siteData'
+import { getStoredProducts, productMatchesCategory, ProductItem, ProductVariant } from '@/data/siteData'
 import { getEnabledVariants, hasVariantOptions, productColorDot } from '@/utils/productVariants'
 import ProductImageBranding from '@/components/ProductImageBranding'
 
@@ -9,79 +9,44 @@ interface ProductsPageProps {
   initialCategory?: string
 }
 
-// ── Category tree (Cấu trúc quan hệ Cha - Con chuẩn 6 nhóm) ────────────────
+// ── Category tree retained for backward compatibility ────────────────
 export const categoryTree = [
-  {
-    id: 'faceplate',
-    label: 'Mặt che',
-    short: 'Mặt che',
-    sub: [
-      { id: 'faceplate-velet120', label: 'VELET 120' },
-      { id: 'faceplate-mayple120', label: 'MAYPLE 120' },
-      { id: 'faceplate-acus', label: 'ACUS' },
-    ],
-  },
-  {
-    id: 'socket',
-    label: 'Ổ cắm',
-    short: 'Ổ cắm',
-    sub: [
-      { id: 'socket-velet120', label: 'VELET 120' },
-      { id: 'socket-mayple120', label: 'MAYPLE 120' },
-      { id: 'socket-mayple', label: 'MAYPLE' },
-      { id: 'socket-velet', label: 'VELET' },
-      { id: 'socket-zita', label: 'ZITA' },
-      { id: 'socket-acus', label: 'ACUS' },
-    ],
-  },
-  {
-    id: 'switch',
-    label: 'Công tắc',
-    short: 'Công tắc',
-    sub: [
-      { id: 'switch-velet120', label: 'VELET 120' },
-      { id: 'switch-mayple120', label: 'MAYPLE 120' },
-      { id: 'switch-mayple', label: 'MAYPLE' },
-      { id: 'switch-velet', label: 'VELET' },
-      { id: 'switch-zita', label: 'ZITA' },
-      { id: 'switch-acus', label: 'ACUS' },
-    ],
-  },
-  {
-    id: 'media-socket',
-    label: 'Ổ cắm TV, mạng, điện thoại',
-    short: 'TV, Mạng, Thoại',
-    sub: [
-      { id: 'media-velet120', label: 'VELET 120' },
-      { id: 'media-mayple120', label: 'MAYPLE 120' },
-      { id: 'media-mayple', label: 'MAYPLE' },
-      { id: 'media-velet', label: 'VELET' },
-      { id: 'media-zita', label: 'ZITA' },
-      { id: 'media-acus', label: 'ACUS' },
-    ],
-  },
-  {
-    id: 'accessories',
-    label: 'Thiết bị và phụ kiện khác',
-    short: 'Phụ kiện khác',
-    sub: [
-      { id: 'other-velet120', label: 'VELET 120' },
-      { id: 'other-mayple120', label: 'MAYPLE 120' },
-      { id: 'other-mayple', label: 'MAYPLE' },
-      { id: 'other-velet', label: 'VELET' },
-      { id: 'other-zita', label: 'ZITA' },
-      { id: 'other-acus', label: 'ACUS' },
-    ],
-  },
-  {
-    id: 'breaker',
-    label: 'Cầu dao',
-    short: 'Cầu dao',
-    sub: [
-      { id: 'breaker-auto', label: 'Cầu dao tự động' },
-      { id: 'breaker-leakage', label: 'Cầu dao chống rò' },
-    ],
-  },
+  { id: 'faceplate', label: 'Mặt che', short: 'Mặt che' },
+  { id: 'socket', label: 'Ổ cắm', short: 'Ổ cắm' },
+  { id: 'switch', label: 'Công tắc', short: 'Công tắc' },
+  { id: 'media-socket', label: 'Ổ cắm TV, mạng, điện thoại', short: 'TV, Mạng, Thoại' },
+  { id: 'accessories', label: 'Thiết bị và phụ kiện khác', short: 'Phụ kiện khác' },
+  { id: 'breaker', label: 'Cầu dao', short: 'Cầu dao' },
+]
+
+export const SERIES_OPTIONS = [
+  { id: 'all', label: 'Tất cả dòng sản phẩm (Series)' },
+  { id: 'ACUS', label: '1. ABB Acus Series (Viền tràn)' },
+  { id: 'VELET 120', label: '2. ABB Velet 120 (Chữ nhật 120)' },
+  { id: 'MAYPLE 120', label: '3. ABB Mayple 120 (Chữ nhật 120)' },
+  { id: 'VELET', label: '4. ABB Velet (Vuông)' },
+  { id: 'ZITA', label: '5. ABB Zita (Vuông thanh lịch)' },
+  { id: 'MAYPLE', label: '6. ABB Mayple (Vuông tiêu chuẩn)' },
+  { id: 'breaker', label: '7. Thiết bị đóng cắt SH200 (MCB)' },
+]
+
+export const COLOR_OPTIONS = [
+  { id: 'all', label: 'Tất cả màu sắc (Color)' },
+  { id: 'Vàng', label: '🟡 Vàng ánh kim (Gold)' },
+  { id: 'Xám Đậm', label: '⚫ Xám Đậm (Titanium)' },
+  { id: 'Trắng', label: '⚪ Trắng ngọc (White)' },
+  { id: 'Bạc', label: '🔘 Bạc kim loại (Silver)' },
+  { id: 'Đen', label: '⬛ Đen huyền (Black)' },
+]
+
+export const CATEGORY_OPTIONS = [
+  { id: 'all', label: 'Tất cả nhóm thiết bị' },
+  { id: 'faceplate', label: 'Mặt che thiết bị' },
+  { id: 'switch', label: 'Công tắc điện' },
+  { id: 'socket', label: 'Ổ cắm điện' },
+  { id: 'media-socket', label: 'Ổ cắm TV, Mạng, Điện thoại' },
+  { id: 'accessories', label: 'Thiết bị & Phụ kiện khác' },
+  { id: 'breaker', label: 'Cầu dao tự động (MCB)' },
 ]
 
 const font = "'Roboto Condensed', 'Roboto', sans-serif"
@@ -138,10 +103,10 @@ function ProductPagination({ currentPage, totalPages, onPageChange }: ProductPag
         />
         <span>/ {totalPages}</span>
       </label>
-      <button className={buttonClass} onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages} title="Trang kế tiếp" aria-label="Qua trang kế tiếp">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 6l6 6-6 6" /></svg>
+      <button className={buttonClass} onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages} title="Trang sau" aria-label="Về trang sau">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6" /></svg>
       </button>
-      <button className={buttonClass} onClick={() => onPageChange(totalPages)} disabled={currentPage === totalPages} title="Trang cuối" aria-label="Tới trang cuối">
+      <button className={buttonClass} onClick={() => onPageChange(totalPages)} disabled={currentPage === totalPages} title="Trang cuối" aria-label="Về trang cuối">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 7l5 5-5 5M13 7l5 5-5 5" /></svg>
       </button>
     </div>
@@ -153,57 +118,71 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
     const stored = getStoredProducts()
     return stored && stored.length > 0 ? stored : []
   })
-  const [productCategories, setProductCategories] = useState(getStoredProductCategories())
 
   // Selected active color for each individual product card: { [productId]: 'Vàng' }
   const [selectedColors, setSelectedColors] = useState<Record<string, string>>({})
 
-  const [selectedCat, setSelectedCat] = useState(initialCategory || 'all')
-  const [selectedSubcat, setSelectedSubcat] = useState('all')
-  const [expandedCats, setExpandedCats] = useState<string[]>(initialCategory ? [initialCategory] : ['switch', 'socket'])
-  const [search, setSearch] = useState('')
-  const [stockOnly, setStockOnly] = useState(false)
+  // 4-Column Filter States
+  const [selectedSeries, setSelectedSeries] = useState<string>('all')
+  const [selectedColor, setSelectedColor] = useState<string>('all')
+  const [selectedCat, setSelectedCat] = useState<string>(initialCategory || 'all')
+  const [search, setSearch] = useState<string>('')
+  const [stockOnly, setStockOnly] = useState<boolean>(false)
+
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-  const [pageSize, setPageSize] = useState(12)
-  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState<number>(12)
+  const [currentPage, setCurrentPage] = useState<number>(1)
 
   // Auto-sync when database updates in Admin or Cloudflare
   useEffect(() => {
     const handleUpdate = () => {
       const stored = getStoredProducts()
       if (stored && stored.length > 0) setProducts(stored)
-      setProductCategories(getStoredProductCategories())
     }
     window.addEventListener('viendong_storage_update', handleUpdate)
     return () => window.removeEventListener('viendong_storage_update', handleUpdate)
   }, [])
 
+  // Sync initialCategory from routing
   useEffect(() => {
-    const parent = productCategories.find((category) => category.id === initialCategory)
-    const parentOfSubcategory = productCategories.find((category) => category.sub.some((sub) => sub.id === initialCategory))
-    setSelectedCat(parent?.id || parentOfSubcategory?.id || 'all')
-    setSelectedSubcat(parentOfSubcategory ? initialCategory || 'all' : 'all')
-    const expandedId = parent?.id || parentOfSubcategory?.id
-    if (expandedId) {
-      setExpandedCats((prev) => Array.from(new Set([...prev, expandedId])))
+    if (!initialCategory) return
+    const isSeries = SERIES_OPTIONS.some((s) => s.id === initialCategory)
+    if (isSeries) {
+      setSelectedSeries(initialCategory)
+      setSelectedCat('all')
+    } else {
+      setSelectedCat(initialCategory)
     }
-  }, [initialCategory, productCategories])
+  }, [initialCategory])
 
-  const toggleExpand = (id: string) => {
-    setExpandedCats((prev) => prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id])
+  const allList = products
+
+  // Active filter detection
+  const hasActiveFilter =
+    selectedSeries !== 'all' ||
+    selectedColor !== 'all' ||
+    selectedCat !== 'all' ||
+    search.trim() !== '' ||
+    stockOnly
+
+  const handleResetFilters = () => {
+    setSelectedSeries('all')
+    setSelectedColor('all')
+    setSelectedCat('all')
+    setSearch('')
+    setStockOnly(false)
+    setCurrentPage(1)
   }
 
-  const handleCatSelect = (catId: string) => {
-    setSelectedCat(catId)
-    setSelectedSubcat('all')
-  }
-
-  // Helper function to get active variant of a product
+  // Helper function to get active variant of a product (prioritizes active color filter)
   const getActiveVariant = (p: ProductItem): ProductVariant => {
     const enabledVariants = getEnabledVariants(p)
-    const chosenColor = selectedColors[p.id]
-    if (chosenColor) {
-      const found = enabledVariants.find((v) => v.color === chosenColor)
+    const cardChosenColor = selectedColors[p.id]
+    const globalFilterColor = selectedColor !== 'all' ? selectedColor : undefined
+    const preferredColor = cardChosenColor || globalFilterColor
+
+    if (preferredColor) {
+      const found = enabledVariants.find((v) => v.color.toLowerCase() === preferredColor.toLowerCase())
       if (found) return found
     }
     return enabledVariants[0] || (p.variants && p.variants[0]) || {
@@ -216,18 +195,26 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
     }
   }
 
-  const allList = products
-
+  // Filter products by all 4 criteria + stock
   const filtered = allList.filter((p) => {
+    // 1. Series Filter
+    const matchSeries =
+      selectedSeries === 'all' ||
+      (selectedSeries === 'breaker'
+        ? p.series === 'SH200' || p.series === 'SH200L' || p.series === 'GSH200' || p.category === 'breaker'
+        : p.series === selectedSeries)
+
+    // 2. Color Filter
+    const matchColor =
+      selectedColor === 'all' ||
+      (p.variants && p.variants.some((v) => v.color.toLowerCase() === selectedColor.toLowerCase()))
+
+    // 3. Category Filter
     const matchCat =
       selectedCat === 'all' ||
       productMatchesCategory(p, selectedCat)
 
-    const matchSubcat =
-      selectedSubcat === 'all' ||
-      p.subCategory === selectedSubcat ||
-      (p.subCategory && p.subCategory.includes(selectedSubcat.replace('other-', 'acc-')))
-
+    // 4. Search Filter (by SKU, name, series, specs)
     const searchLower = search.toLowerCase().trim()
     const matchSearch =
       !searchLower ||
@@ -237,9 +224,10 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
       p.specs.toLowerCase().includes(searchLower) ||
       (p.variants && p.variants.some((v) => v.sku.toLowerCase().includes(searchLower)))
 
+    // 5. In stock only
     const matchStock = !stockOnly || p.inStock
 
-    return matchCat && matchSubcat && matchSearch && matchStock
+    return matchSeries && matchColor && matchCat && matchSearch && matchStock
   })
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
@@ -248,23 +236,19 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [selectedCat, selectedSubcat, search, stockOnly, pageSize])
+  }, [selectedSeries, selectedColor, selectedCat, search, stockOnly, pageSize])
 
   useEffect(() => {
     if (currentPage !== safeCurrentPage) setCurrentPage(safeCurrentPage)
   }, [currentPage, safeCurrentPage])
 
-  // Dynamic count for category tree
-  const getCatCount = (catId: string) => {
-    return allList.filter((p) => productMatchesCategory(p, catId)).length
-  }
-
-  const selectedCatData = productCategories.find((c) => c.id === selectedCat)
+  const selectedSeriesData = SERIES_OPTIONS.find((s) => s.id === selectedSeries)
+  const selectedCatData = CATEGORY_OPTIONS.find((c) => c.id === selectedCat)
 
   return (
-    <div className="bg-white min-h-screen">
-      {/* Page header */}
-      <div style={{ background: 'linear-gradient(135deg, #1B4C98 0%, #1B4C98 100%)' }} className="py-10 px-6">
+    <div className="bg-[#fcfcfc] min-h-screen pb-16">
+      {/* Page Header */}
+      <div style={{ background: 'linear-gradient(135deg, #1B4C98 0%, #10346c 100%)' }} className="py-10 px-6 shadow-sm">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
             <nav className="flex items-center gap-2 text-blue-200 text-xs mb-2">
@@ -276,158 +260,229 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
               Nhà Phân Phối Chính Thức Thiết Bị Điện ABB (Thụy Sỹ)
             </h1>
             <p className="text-blue-200 text-sm mt-1 max-w-xl">
-              Sản phẩm chính hãng 100%. Bảo hành lâu dài &amp; Uy tín.
+              Sản phẩm chính hãng 100%. Đầy đủ CO/CQ, bảng thông số và chiết khấu dự án trực tiếp.
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <span className="px-3.5 py-1.5 rounded-full text-xs font-semibold text-white bg-white/15 backdrop-blur-xs border border-white/20">
+            <span className="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-white/15 backdrop-blur-xs border border-white/20 shadow-xs">
               {allList.length} sản phẩm niêm yết
             </span>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8 flex flex-col lg:flex-row gap-8">
-        {/* ── Left Sidebar: Sticky & Independent Scroll ── */}
-        <aside className="w-full lg:w-72 flex-shrink-0">
-          <div className="max-h-[70vh] space-y-4 overflow-y-auto overscroll-auto pr-1.5 lg:sticky lg:top-20 lg:max-h-[calc(100vh-5.5rem)] [scrollbar-width:thin] [scrollbar-color:#c8daf4_transparent]">
-            {/* Top Fixed Filter Controls */}
-            <div className="bg-white rounded-2xl p-4 shadow-xs" style={{ border: '1px solid #c8daf4' }}>
-              <div className="relative mb-3">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8">
+        {/* ── 4-Column Horizontal Filter Bar (Faceted Filter) ── */}
+        <section aria-label="Bộ lọc sản phẩm" className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-6 mb-8 shadow-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* 1. DÒNG SẢN PHẨM ABB (SERIES) */}
+            <div>
+              <label className="block text-[11px] font-bold text-gray-700 tracking-wider uppercase mb-1.5">
+                1. Dòng sản phẩm ABB (Series)
+              </label>
+              <div className="relative">
+                <select
+                  value={selectedSeries}
+                  onChange={(e) => setSelectedSeries(e.target.value)}
+                  className="w-full h-11 pl-3.5 pr-8 bg-gray-50/70 hover:bg-white focus:bg-white border border-gray-300 rounded-xl text-xs sm:text-sm font-medium text-gray-800 focus:outline-none focus:border-[#1B4C98] focus:ring-2 focus:ring-[#1B4C98]/10 cursor-pointer appearance-none transition-all shadow-2xs"
+                >
+                  {SERIES_OPTIONS.map((opt) => {
+                    const count = opt.id === 'all'
+                      ? allList.length
+                      : opt.id === 'breaker'
+                        ? allList.filter((p) => p.series === 'SH200' || p.series === 'SH200L' || p.series === 'GSH200' || p.category === 'breaker').length
+                        : allList.filter((p) => p.series === opt.id).length
+                    return (
+                      <option key={opt.id} value={opt.id}>
+                        {opt.label} ({count} mã)
+                      </option>
+                    )
+                  })}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. MÀU SẮC (COLOR) */}
+            <div>
+              <label className="block text-[11px] font-bold text-gray-700 tracking-wider uppercase mb-1.5">
+                2. Màu sắc (Color)
+              </label>
+              <div className="relative">
+                <select
+                  value={selectedColor}
+                  onChange={(e) => setSelectedColor(e.target.value)}
+                  className="w-full h-11 pl-3.5 pr-8 bg-gray-50/70 hover:bg-white focus:bg-white border border-gray-300 rounded-xl text-xs sm:text-sm font-medium text-gray-800 focus:outline-none focus:border-[#1B4C98] focus:ring-2 focus:ring-[#1B4C98]/10 cursor-pointer appearance-none transition-all shadow-2xs"
+                >
+                  {COLOR_OPTIONS.map((opt) => (
+                    <option key={opt.id} value={opt.id}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                </div>
+              </div>
+            </div>
+
+            {/* 3. NHÓM CHỨC NĂNG */}
+            <div>
+              <label className="block text-[11px] font-bold text-gray-700 tracking-wider uppercase mb-1.5">
+                3. Nhóm chức năng
+              </label>
+              <div className="relative">
+                <select
+                  value={selectedCat}
+                  onChange={(e) => setSelectedCat(e.target.value)}
+                  className="w-full h-11 pl-3.5 pr-8 bg-gray-50/70 hover:bg-white focus:bg-white border border-gray-300 rounded-xl text-xs sm:text-sm font-medium text-gray-800 focus:outline-none focus:border-[#1B4C98] focus:ring-2 focus:ring-[#1B4C98]/10 cursor-pointer appearance-none transition-all shadow-2xs"
+                >
+                  {CATEGORY_OPTIONS.map((opt) => {
+                    const count = opt.id === 'all'
+                      ? allList.length
+                      : allList.filter((p) => productMatchesCategory(p, opt.id)).length
+                    return (
+                      <option key={opt.id} value={opt.id}>
+                        {opt.label} ({count} mã)
+                      </option>
+                    )
+                  })}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                </div>
+              </div>
+            </div>
+
+            {/* 4. TÌM THEO MÃ SKU */}
+            <div>
+              <label className="block text-[11px] font-bold text-gray-700 tracking-wider uppercase mb-1.5">
+                4. Tìm theo mã SKU
+              </label>
+              <div className="relative">
                 <input
                   type="text"
-                  placeholder="Tìm tên, mã SKU..."
+                  placeholder="Nhập mã SKU (VD: 4TYA500...)"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-8 pr-3 py-2 text-xs rounded-lg border border-gray-200 focus:outline-hidden focus:border-blue-500 transition-colors"
+                  className="w-full h-11 pl-9 pr-8 bg-gray-50/70 hover:bg-white focus:bg-white border border-gray-300 rounded-xl text-xs sm:text-sm font-medium text-gray-800 focus:outline-none focus:border-[#1B4C98] focus:ring-2 focus:ring-[#1B4C98]/10 transition-all shadow-2xs placeholder:text-gray-400"
                 />
-                <svg className="w-3.5 h-3.5 absolute left-2.5 top-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 absolute left-3 top-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
                 {search && (
-                  <button onClick={() => setSearch('')} className="absolute right-2.5 top-2.5 text-gray-400 hover:text-gray-600 text-xs">✕</button>
-                )}
-              </div>
-
-              <div className="pt-2 border-t border-gray-100">
-                <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={stockOnly}
-                    onChange={(e) => setStockOnly(e.target.checked)}
-                    className="rounded-sm border-gray-300 text-blue-600 focus:ring-0"
-                  />
-                  <span>Chỉ sản phẩm sẵn hàng</span>
-                </label>
-              </div>
-            </div>
-
-            {/* Hierarchical Category Tree */}
-            <div className="bg-white rounded-2xl p-4 shadow-xs" style={{ border: '1px solid #c8daf4' }}>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider">Danh mục sản phẩm</h3>
-                {selectedCat !== 'all' && (
-                  <button onClick={() => { setSelectedCat('all'); setSelectedSubcat('all') }} className="text-[10px] text-blue-600 hover:underline">
-                    Xem tất cả
+                  <button
+                    onClick={() => setSearch('')}
+                    className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 text-xs w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100"
+                    title="Xóa tìm kiếm"
+                  >
+                    ✕
                   </button>
                 )}
               </div>
-
-              <div className="space-y-1">
-                {productCategories.map((cat) => {
-                  const isParentSelected = selectedCat === cat.id
-                  const isExpanded = expandedCats.includes(cat.id)
-                  const count = getCatCount(cat.id)
-
-                  return (
-                    <div key={cat.id} className="rounded-xl overflow-hidden">
-                      <div
-                        className={`flex items-center justify-between px-3 py-2 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
-                          isParentSelected
-                            ? 'bg-blue-50 text-[#1B4C98] font-bold'
-                            : 'text-gray-700 hover:bg-gray-50'
-                        }`}
-                        onClick={() => handleCatSelect(cat.id)}
-                      >
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              toggleExpand(cat.id)
-                            }}
-                            className="w-4 h-4 flex items-center justify-center text-gray-400 hover:text-gray-700 rounded-sm"
-                          >
-                            <span className={`transform transition-transform text-[10px] ${isExpanded ? 'rotate-90' : ''}`}>▶</span>
-                          </button>
-                          <span className="truncate">{cat.label}</span>
-                        </div>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500 font-normal ml-1">
-                          {count}
-                        </span>
-                      </div>
-
-                      {/* Sub-items */}
-                      {isExpanded && cat.sub && (
-                        <div className="ml-5 pl-2 border-l border-blue-100 py-1 space-y-0.5">
-                          <button
-                            onClick={() => { setSelectedCat(cat.id); setSelectedSubcat('all') }}
-                            className={`w-full text-left px-2.5 py-1 text-[11px] rounded-md transition-colors ${
-                              isParentSelected && selectedSubcat === 'all'
-                                ? 'text-[#1B4C98] font-bold bg-blue-50/60'
-                                : 'text-gray-500 hover:text-gray-800'
-                            }`}
-                          >
-                            Tất cả {cat.short}
-                          </button>
-                          {cat.sub.map((sub) => (
-                            <button
-                              key={sub.id}
-                              onClick={() => { setSelectedCat(cat.id); setSelectedSubcat(sub.id) }}
-                              className={`w-full text-left px-2.5 py-1 text-[11px] rounded-md transition-colors flex items-center justify-between ${
-                                selectedSubcat === sub.id
-                                  ? 'text-[#1B4C98] font-bold bg-blue-50/60'
-                                  : 'text-gray-500 hover:text-gray-800'
-                              }`}
-                            >
-                              <span className="truncate">{sub.label}</span>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
             </div>
           </div>
-        </aside>
 
-        {/* ── Main Product Content ── */}
-        <div className="flex-1 min-w-0">
+          {/* Filter Status Bar */}
+          <div className="mt-4 pt-4 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div className="flex flex-wrap items-center gap-3">
+              <label className="inline-flex items-center gap-2 cursor-pointer select-none text-gray-700 font-medium">
+                <input
+                  type="checkbox"
+                  checked={stockOnly}
+                  onChange={(e) => setStockOnly(e.target.checked)}
+                  className="w-4 h-4 rounded-md border-gray-300 text-[#1B4C98] focus:ring-0 cursor-pointer"
+                />
+                <span>Chỉ sản phẩm sẵn hàng trong kho</span>
+              </label>
+
+              {hasActiveFilter && (
+                <button
+                  onClick={handleResetFilters}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                  Đặt lại bộ lọc
+                </button>
+              )}
+            </div>
+
+            <div className="text-gray-500 font-medium">
+              Tìm thấy <span className="font-bold text-[#1B4C98] text-sm">{filtered.length}</span> / {allList.length} sản phẩm phù hợp
+            </div>
+          </div>
+
+          {/* Active Filter Chips */}
+          {hasActiveFilter && (
+            <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-50">
+              <span className="text-[11px] text-gray-400 font-medium">Bộ lọc đang áp dụng:</span>
+              {selectedSeries !== 'all' && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-[#1B4C98] border border-blue-100">
+                  Dòng: {selectedSeriesData?.label.replace(/^\d+\.\s*/, '')}
+                  <button onClick={() => setSelectedSeries('all')} className="hover:text-red-600 ml-0.5">✕</button>
+                </span>
+              )}
+              {selectedColor !== 'all' && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-900 border border-amber-200">
+                  Màu: {selectedColor}
+                  <button onClick={() => setSelectedColor('all')} className="hover:text-red-600 ml-0.5">✕</button>
+                </span>
+              )}
+              {selectedCat !== 'all' && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-100">
+                  Nhóm: {selectedCatData?.label}
+                  <button onClick={() => setSelectedCat('all')} className="hover:text-red-600 ml-0.5">✕</button>
+                </span>
+              )}
+              {search && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">
+                  SKU/Tên: &quot;{search}&quot;
+                  <button onClick={() => setSearch('')} className="hover:text-red-600 ml-0.5">✕</button>
+                </span>
+              )}
+              {stockOnly && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200">
+                  Sẵn hàng
+                  <button onClick={() => setStockOnly(false)} className="hover:text-red-600 ml-0.5">✕</button>
+                </span>
+              )}
+            </div>
+          )}
+        </section>
+
+        {/* ── Main Product Content: Full-width Grid ── */}
+        <div>
           {/* Controls Bar */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-gray-100">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-gray-200">
             <div>
-              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <span>{selectedCat === 'all' ? 'Tất cả sản phẩm' : (selectedCatData?.label ?? selectedCat)}</span>
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600">
-                  {filtered.length} mã
+              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2" style={{ fontFamily: font }}>
+                <span>
+                  {selectedSeries !== 'all'
+                    ? selectedSeriesData?.label.replace(/^\d+\.\s*/, '')
+                    : selectedCat !== 'all'
+                      ? selectedCatData?.label
+                      : 'Tất cả sản phẩm ABB'}
+                </span>
+                <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-[#1B4C98] border border-blue-100">
+                  {filtered.length} sản phẩm
                 </span>
               </h2>
-              <p className="text-xs text-gray-500 mt-0.5">
-                {selectedCat === 'breaker'
-                  ? 'Chọn số cực trên từng sản phẩm để xem đúng hình ảnh và mã SKU tương ứng.'
+              <p className="text-xs text-gray-500 mt-1">
+                {selectedCat === 'breaker' || selectedSeries === 'breaker'
+                  ? 'Chọn số cực trên từng sản phẩm để xem hình ảnh và mã SKU tương ứng.'
                   : 'Bấm vào ô màu sắc trên từng sản phẩm để xem trước ảnh và đổi mã SKU tương ứng.'}
               </p>
             </div>
 
-            <div className="flex items-center gap-2 self-end sm:self-auto">
+            <div className="flex items-center gap-3 self-end sm:self-auto">
               <label className="flex items-center gap-1.5 text-xs text-gray-500">
                 <span className="hidden sm:inline">Hiển thị</span>
                 <select
                   value={pageSize}
                   onChange={(e) => setPageSize(Number(e.target.value))}
-                  className="h-8 rounded-lg border border-gray-200 bg-white px-2 text-xs font-semibold text-gray-700 focus:border-[#1B4C98] focus:outline-none"
+                  className="h-9 rounded-xl border border-gray-200 bg-white px-2.5 text-xs font-semibold text-gray-700 focus:border-[#1B4C98] focus:outline-none shadow-2xs"
                   aria-label="Số sản phẩm mỗi trang"
                 >
                   <option value={12}>12 / trang</option>
@@ -435,10 +490,10 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
                   <option value={48}>48 / trang</option>
                 </select>
               </label>
-              <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden bg-white">
+              <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden bg-white shadow-2xs">
                 <button
                   onClick={() => setViewMode('grid')}
-                  className={`p-1.5 ${viewMode === 'grid' ? 'bg-blue-50 text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
+                  className={`p-2 transition-colors ${viewMode === 'grid' ? 'bg-blue-50 text-[#1B4C98] font-bold' : 'text-gray-400 hover:text-gray-600'}`}
                   title="Xem dạng lưới"
                 >
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -447,7 +502,7 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
-                  className={`p-1.5 ${viewMode === 'list' ? 'bg-blue-50 text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
+                  className={`p-2 transition-colors ${viewMode === 'list' ? 'bg-blue-50 text-[#1B4C98] font-bold' : 'text-gray-400 hover:text-gray-600'}`}
                   title="Xem dạng danh sách"
                 >
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -458,46 +513,15 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
             </div>
           </div>
 
-          {/* Active filter badges */}
-          {(search || selectedCat !== 'all' || stockOnly) && (
-            <div className="flex flex-wrap items-center gap-2 mb-4">
-              <span className="text-[11px] text-gray-400 font-medium">Đang lọc:</span>
-              {selectedCat !== 'all' && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-blue-50 text-blue-700">
-                  {selectedCatData?.label}
-                  <button onClick={() => { setSelectedCat('all'); setSelectedSubcat('all') }} className="hover:text-blue-900">✕</button>
-                </span>
-              )}
-              {search && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-700">
-                  &quot;{search}&quot;
-                  <button onClick={() => setSearch('')} className="hover:text-gray-900">✕</button>
-                </span>
-              )}
-              {stockOnly && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-green-50 text-green-700">
-                  Còn hàng
-                  <button onClick={() => setStockOnly(false)} className="hover:text-green-900">✕</button>
-                </span>
-              )}
-              <button
-                onClick={() => { setSelectedCat('all'); setSelectedSubcat('all'); setSearch(''); setStockOnly(false) }}
-                className="text-[11px] text-red-600 hover:underline font-semibold ml-1"
-              >
-                Xóa tất cả
-              </button>
-            </div>
-          )}
-
           {filtered.length > 0 && (
-            <div className="mb-4 overflow-x-auto pb-1">
+            <div className="mb-6 overflow-x-auto pb-1">
               <ProductPagination currentPage={safeCurrentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
             </div>
           )}
 
-          {/* Grid View */}
+          {/* Grid View: Spacious 4-column layout on desktop, 2-column on mobile */}
           {viewMode === 'grid' && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
               {paginatedProducts.map((p) => {
                 const activeVariant = getActiveVariant(p)
                 const enabledVariants = getEnabledVariants(p)
@@ -506,7 +530,7 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
                 return (
                   <div
                     key={p.id}
-                    className="bg-white rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 group flex flex-col justify-between border border-[#c8daf4] hover:border-[#1B4C98]/40"
+                    className="bg-white rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 group flex flex-col justify-between border border-gray-200/80 hover:border-[#1B4C98]/40"
                   >
                     <div>
                       {/* Product Image Area */}
@@ -532,7 +556,7 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
 
                           {/* Interactive color or breaker-pole variants */}
                           {showVariantOptions && (
-                            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-center gap-1.5 bg-white/80 backdrop-blur-xs py-1 px-2 rounded-full border border-gray-200/60 shadow-xs">
+                            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-center gap-1.5 bg-white/90 backdrop-blur-xs py-1 px-2 rounded-full border border-gray-200/80 shadow-xs">
                               {enabledVariants.map((v) => {
                                 const isSelected = activeVariant.color === v.color
                                 return (
@@ -545,10 +569,10 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
                                     title={p.category === 'breaker' ? `Xem phiên bản ${v.color} (${v.sku})` : `Xem màu ${v.color} (${v.sku})`}
                                     className={p.category === 'breaker'
                                       ? `min-w-7 rounded-md border px-1.5 py-0.5 text-[9px] font-bold transition-all ${isSelected ? 'border-gray-500 bg-gray-100 text-gray-800' : 'border-gray-300 bg-white text-gray-600 hover:border-gray-400'}`
-                                      : `w-3.5 h-3.5 rounded-full transition-all ${isSelected ? 'ring-2 ring-gray-500 ring-offset-1 ring-offset-white scale-110 shadow-xs' : 'border border-gray-300 hover:scale-110'}`}
+                                      : `w-3.5 h-3.5 rounded-full transition-all ${isSelected ? 'ring-2 ring-gray-600 ring-offset-1 ring-offset-white scale-110 shadow-xs' : 'border border-gray-300 hover:scale-110'}`}
                                     style={p.category === 'breaker' ? undefined : { backgroundColor: productColorDot[v.color] || v.hex }}
                                   >
-                                    {p.category === 'breaker' ? v.color : null}
+                                    <span className="sr-only">{v.color}</span>
                                   </button>
                                 )
                               })}
@@ -557,55 +581,44 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
                         </div>
                       </div>
 
-                      {/* Product Meta */}
-                      <div className="p-3">
-                        <div className="flex items-center justify-between gap-1 mb-1">
-                          <p className="text-[10px] text-blue-600 font-bold uppercase tracking-wider">
-                            {p.series}
-                          </p>
-                          <span className="text-[9px] text-gray-500 font-medium">
-                            {p.category === 'breaker' ? 'Số cực' : 'Màu'}: <strong className="text-gray-800">{activeVariant.color}</strong>
-                          </span>
+                      {/* Product Content */}
+                      <div className="p-3.5 sm:p-4">
+                        <div className="flex items-center justify-between text-[11px] text-gray-400 mb-1">
+                          <span className="font-bold uppercase tracking-wider text-[#1B4C98] truncate">{p.series}</span>
+                          <span className="text-gray-500 font-medium">Màu: <strong className="text-gray-700">{activeVariant.color}</strong></span>
                         </div>
 
-                        <h4
+                        <h3
                           onClick={() => onNavigate('productDetail', p.id)}
-                          className="text-[12px] font-bold text-gray-900 leading-snug mb-1 line-clamp-2 hover:text-[#1B4C98] cursor-pointer"
+                          className="font-bold text-gray-900 text-xs sm:text-sm line-clamp-2 hover:text-[#1B4C98] cursor-pointer transition-colors leading-snug"
                         >
                           {p.name}
-                        </h4>
+                        </h3>
 
-                        {/* Dynamic SKU updates when color switches */}
-                        <div className="flex items-center gap-1.5 mb-1.5">
-                          <span className="text-[9px] text-gray-400">SKU:</span>
-                          <span className="text-[10px] font-mono font-bold text-gray-700 bg-gray-100 px-1.5 py-0.5 rounded-sm">
-                            {activeVariant.sku}
-                          </span>
-                        </div>
+                        <p className="text-[11px] font-mono font-bold text-blue-900 bg-blue-50/70 border border-blue-100/80 rounded px-1.5 py-0.5 mt-1.5 w-fit">
+                          SKU: {activeVariant.sku}
+                        </p>
 
-                        <p className="text-[10px] text-gray-500 line-clamp-2 mb-2">
+                        <p className="text-[11px] text-gray-500 line-clamp-1 mt-1">
                           {p.specs}
                         </p>
                       </div>
                     </div>
 
-                    {/* Action Buttons & B2B Status (NO PRICE) */}
-                    <div className="p-3 pt-0 border-t border-gray-50">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-[10px] font-bold text-[#1B4C98] uppercase tracking-wide">
-                          Liên hệ báo giá
-                        </span>
-                        <span className="text-[9px] text-green-600 font-semibold flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />
+                    {/* Card Actions */}
+                    <div className="p-3.5 sm:p-4 pt-0">
+                      <div className="flex items-center justify-between pt-2.5 border-t border-gray-100 mb-3">
+                        <span className="text-xs font-bold text-[#1B4C98]">LIÊN HỆ BÁO GIÁ</span>
+                        <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                           Chính hãng ABB
                         </span>
                       </div>
 
-                      <div className="flex gap-1.5">
+                      <div className="grid grid-cols-2 gap-2">
                         <button
                           onClick={() => onNavigate('productDetail', p.id)}
-                          className="flex-1 py-1.5 text-[11px] font-semibold border rounded-lg transition-colors hover:bg-blue-50 text-center"
-                          style={{ borderColor: 'var(--navy)', color: 'var(--navy)' }}
+                          className="w-full py-2 text-xs font-semibold text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors"
                         >
                           Chi tiết
                         </button>
@@ -617,10 +630,10 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
                               sku: activeVariant.sku,
                             })
                           }
-                          className="flex-1 py-1.5 text-[11px] font-bold text-white rounded-lg transition-all hover:bg-red-700 shadow-xs flex items-center justify-center gap-1"
+                          className="w-full py-2 text-xs font-bold text-white rounded-xl transition-all hover:bg-red-700 active:scale-95 shadow-xs"
                           style={{ backgroundColor: 'var(--red)' }}
                         >
-                          <span>+</span> Báo giá
+                          + Báo giá
                         </button>
                       </div>
                     </div>
@@ -641,93 +654,65 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
                 return (
                   <div
                     key={p.id}
-                    className="bg-white rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 hover:shadow-md transition-all border border-[#c8daf4]"
+                    className="bg-white rounded-2xl border border-gray-200 p-4 hover:shadow-md transition-shadow flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
                   >
-                    <div className="w-28 h-28 bg-gray-50 rounded-xl flex flex-col flex-shrink-0 border border-gray-100 overflow-hidden">
-                      <ProductImageBranding series={p.series} badge={p.badge} size="compact" />
-                      <div className="flex min-h-0 flex-1 items-center justify-center p-1">
+                    <div className="flex items-center gap-4">
+                      <div className="w-20 h-20 bg-gray-50 rounded-xl p-2 flex-shrink-0 flex items-center justify-center border border-gray-100">
                         {activeVariant.image ? (
                           <img src={activeVariant.image} alt={p.name} className="w-full h-full object-contain" />
                         ) : (
-                          <div className="text-gray-300">⚡</div>
+                          <span className="text-[10px] text-gray-400">ABB</span>
                         )}
                       </div>
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wide">
-                          {p.series}
-                        </span>
-                        {p.badge && (
-                          <span className="px-1.5 py-0.5 text-[9px] font-bold text-white rounded-full bg-[#FF000F]">
-                            {p.badge}
-                          </span>
-                        )}
-                        <span className="text-[10px] text-gray-500">
-                          Màu đang chọn: <strong className="text-gray-800">{activeVariant.color}</strong>
-                        </span>
-                      </div>
-
-                      <h4
-                        onClick={() => onNavigate('productDetail', p.id)}
-                        className="font-bold text-gray-900 text-sm hover:text-[#1B4C98] cursor-pointer"
-                      >
-                        {p.name}
-                      </h4>
-
-                      <div className="flex items-center gap-3 mt-1 flex-wrap">
-                        <span className="text-[10px] font-mono font-bold text-gray-700 bg-gray-100 px-2 py-0.5 rounded-sm">
-                          SKU: {activeVariant.sku}
-                        </span>
-                        <p className="text-[11px] text-gray-500">{p.specs}</p>
-                      </div>
-
-                      {/* Color dots in list view */}
-                      {showVariantOptions && (
-                        <div className="flex items-center gap-2 mt-2">
-                          <span className="text-[10px] text-gray-400">Đổi màu:</span>
-                          {enabledVariants.map((v) => (
-                            <button
-                              key={v.color}
-                              onClick={() => setSelectedColors((prev) => ({ ...prev, [p.id]: v.color }))}
-                              className={`w-4 h-4 rounded-full transition-all ${
-                                activeVariant.color === v.color
-                                  ? 'ring-2 ring-gray-500 ring-offset-1 ring-offset-white scale-110'
-                                  : 'border border-gray-300'
-                              }`}
-                              style={{ backgroundColor: productColorDot[v.color] || v.hex }}
-                              title={`Màu ${v.color}`}
-                            />
-                          ))}
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 text-[#1B4C98]">{p.series}</span>
+                          <span className="text-xs font-mono text-gray-500">{activeVariant.sku}</span>
                         </div>
-                      )}
+                        <h3
+                          onClick={() => onNavigate('productDetail', p.id)}
+                          className="font-bold text-gray-900 text-sm hover:text-[#1B4C98] cursor-pointer"
+                        >
+                          {p.name}
+                        </h3>
+                        <p className="text-xs text-gray-500 mt-0.5">{p.specs}</p>
+
+                        {showVariantOptions && (
+                          <div className="flex items-center gap-1.5 mt-2">
+                            {enabledVariants.map((v) => (
+                              <button
+                                key={v.color}
+                                onClick={() => setSelectedColors((prev) => ({ ...prev, [p.id]: v.color }))}
+                                className={`w-3.5 h-3.5 rounded-full ${activeVariant.color === v.color ? 'ring-2 ring-gray-600 scale-110' : 'border border-gray-300'}`}
+                                style={{ backgroundColor: productColorDot[v.color] || v.hex }}
+                                title={v.color}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
 
-                    <div className="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-2 flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100">
-                      <span className="text-xs font-bold text-[#1B4C98]">Liên hệ báo giá</span>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => onNavigate('productDetail', p.id)}
-                          className="px-3 py-1.5 text-xs font-semibold border rounded-lg hover:bg-blue-50 transition-colors"
-                          style={{ borderColor: 'var(--navy)', color: 'var(--navy)' }}
-                        >
-                          Chi tiết
-                        </button>
-                        <button
-                          onClick={() =>
-                            onAddToCart({
-                              id: p.id,
-                              name: `${p.name} (${activeVariant.color})`,
-                              sku: activeVariant.sku,
-                            })
-                          }
-                          className="px-3.5 py-1.5 text-xs font-bold text-white rounded-lg transition-all hover:bg-red-700"
-                          style={{ backgroundColor: 'var(--red)' }}
-                        >
-                          + Báo giá
-                        </button>
-                      </div>
+                    <div className="flex items-center gap-3 w-full sm:w-auto justify-end pt-3 sm:pt-0 border-t sm:border-t-0 border-gray-100">
+                      <button
+                        onClick={() => onNavigate('productDetail', p.id)}
+                        className="px-4 py-2 text-xs font-semibold text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50"
+                      >
+                        Chi tiết
+                      </button>
+                      <button
+                        onClick={() =>
+                          onAddToCart({
+                            id: p.id,
+                            name: `${p.name} (${activeVariant.color})`,
+                            sku: activeVariant.sku,
+                          })
+                        }
+                        className="px-4 py-2 text-xs font-bold text-white rounded-xl hover:bg-red-700"
+                        style={{ backgroundColor: 'var(--red)' }}
+                      >
+                        + Thêm báo giá
+                      </button>
                     </div>
                   </div>
                 )
@@ -735,23 +720,28 @@ export default function ProductsPage({ onNavigate, onAddToCart, initialCategory 
             </div>
           )}
 
+          {/* Empty State */}
           {filtered.length === 0 && (
-            <div className="text-center py-20 text-gray-400">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" className="mx-auto mb-3 opacity-30">
+            <div className="text-center py-20 bg-white rounded-2xl border border-gray-200 p-8 my-6">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" className="mx-auto mb-3 text-gray-300">
                 <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
-              <p className="text-sm font-medium">Không tìm thấy sản phẩm phù hợp với bộ lọc.</p>
+              <h3 className="text-base font-bold text-gray-800">Không tìm thấy sản phẩm phù hợp</h3>
+              <p className="text-sm text-gray-500 mt-1 max-w-md mx-auto">
+                Không có sản phẩm nào khớp với các tiêu chí lọc hiện tại. Vui lòng thử chọn dòng hoặc màu sắc khác.
+              </p>
               <button
-                onClick={() => { setSelectedCat('all'); setSelectedSubcat('all'); setSearch('') }}
-                className="mt-2 text-sm text-blue-600 underline font-semibold"
+                onClick={handleResetFilters}
+                className="mt-4 px-5 py-2.5 text-xs font-bold text-white rounded-xl shadow-xs transition-colors"
+                style={{ backgroundColor: '#1B4C98' }}
               >
-                Xóa tất cả bộ lọc
+                Đặt lại toàn bộ bộ lọc
               </button>
             </div>
           )}
 
           {filtered.length > 0 && (
-            <div className="mt-6 overflow-x-auto border-t border-gray-100 pt-4 pb-1">
+            <div className="mt-8 border-t border-gray-200 pt-6">
               <ProductPagination currentPage={safeCurrentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
             </div>
           )}

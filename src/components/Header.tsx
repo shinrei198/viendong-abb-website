@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import logoColor from '@/imports/logo_viendong_header.png'
 import GlobalSearch from '@/components/GlobalSearch'
+import { getStoredProducts, productMatchesCategory, type ProductItem } from '@/data/siteData'
 
 interface HeaderProps {
   currentPage: string
@@ -16,13 +17,13 @@ const navItems = [
   { label: 'Tin tức', page: 'news' },
 ]
 
-const productCategories = [
-  { id: 'faceplate', name: 'Mặt che', sub: 'Velet 120, Mayple 120', count: 35 },
-  { id: 'socket', name: 'Ổ cắm', sub: 'Velet, Mayple, Zita, Acus...', count: 120 },
-  { id: 'switch', name: 'Công tắc', sub: 'Velet, Mayple, Zita, Acus...', count: 110 },
-  { id: 'media-socket', name: 'Ổ cắm TV, Mạng, Điện thoại', sub: 'Velet, Mayple, Zita, Acus...', count: 45 },
-  { id: 'accessories', name: 'Thiết bị và phụ kiện khác', sub: 'Velet, Mayple, Zita, Acus...', count: 60 },
-  { id: 'breaker', name: 'Cầu dao', sub: 'Cầu dao tự động & chống rò', count: 150, isBreaker: true },
+const baseProductCategories = [
+  { id: 'faceplate', name: 'Mặt che', sub: 'Velet 120, Mayple 120' },
+  { id: 'socket', name: 'Ổ cắm', sub: 'Velet, Mayple, Zita, Acus...' },
+  { id: 'switch', name: 'Công tắc', sub: 'Velet, Mayple, Zita, Acus...' },
+  { id: 'media-socket', name: 'Ổ cắm TV, Mạng, Điện thoại', sub: 'Velet, Mayple, Zita, Acus...' },
+  { id: 'accessories', name: 'Thiết bị và phụ kiện khác', sub: 'Velet, Mayple, Zita, Acus...' },
+  { id: 'breaker', name: 'Cầu dao', sub: 'Cầu dao tự động & chống rò', isBreaker: true },
 ]
 
 const catIcons = [
@@ -37,6 +38,18 @@ const catIcons = [
 export default function Header({ currentPage, onNavigate, cartCount }: HeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [productsOpen, setProductsOpen] = useState(false)
+  const [products, setProducts] = useState<ProductItem[]>(() => getStoredProducts())
+
+  useEffect(() => {
+    const handleUpdate = () => setProducts(getStoredProducts())
+    window.addEventListener('viendong_storage_update', handleUpdate)
+    return () => window.removeEventListener('viendong_storage_update', handleUpdate)
+  }, [])
+
+  const productCategories = baseProductCategories.map((cat) => ({
+    ...cat,
+    count: products.filter((p) => productMatchesCategory(p, cat.id)).length,
+  }))
 
   return (
     <>

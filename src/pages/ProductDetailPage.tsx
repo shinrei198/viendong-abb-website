@@ -287,10 +287,10 @@ export default function ProductDetailPage({ productId, onNavigate, onAddToCart }
 
       {/* Technical Specifications Tabs */}
       <div className="border border-gray-200 rounded-2xl overflow-hidden mb-12 bg-white shadow-sm">
-        <div className="flex border-b border-gray-200 bg-gray-50">
+        <div className="flex border-b border-gray-200 bg-gray-50 overflow-x-auto scrollbar-none scroll-smooth">
           <button
             onClick={() => setActiveTab('specs')}
-            className={`px-6 py-3.5 text-xs font-bold uppercase tracking-wider border-b-2 transition-all ${
+            className={`px-4 sm:px-6 py-3.5 text-xs font-bold uppercase tracking-wider border-b-2 transition-all flex-shrink-0 ${
               activeTab === 'specs'
                 ? 'border-[#FF000F] text-[#FF000F] bg-white'
                 : 'border-transparent text-gray-500 hover:text-gray-800'
@@ -300,7 +300,7 @@ export default function ProductDetailPage({ productId, onNavigate, onAddToCart }
           </button>
           <button
             onClick={() => setActiveTab('features')}
-            className={`px-6 py-3.5 text-xs font-bold uppercase tracking-wider border-b-2 transition-all ${
+            className={`px-4 sm:px-6 py-3.5 text-xs font-bold uppercase tracking-wider border-b-2 transition-all flex-shrink-0 ${
               activeTab === 'features'
                 ? 'border-[#FF000F] text-[#FF000F] bg-white'
                 : 'border-transparent text-gray-500 hover:text-gray-800'
@@ -310,7 +310,7 @@ export default function ProductDetailPage({ productId, onNavigate, onAddToCart }
           </button>
           <button
             onClick={() => setActiveTab('docs')}
-            className={`px-6 py-3.5 text-xs font-bold uppercase tracking-wider border-b-2 transition-all ${
+            className={`px-4 sm:px-6 py-3.5 text-xs font-bold uppercase tracking-wider border-b-2 transition-all flex-shrink-0 ${
               activeTab === 'docs'
                 ? 'border-[#FF000F] text-[#FF000F] bg-white'
                 : 'border-transparent text-gray-500 hover:text-gray-800'

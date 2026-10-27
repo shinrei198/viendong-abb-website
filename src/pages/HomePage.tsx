@@ -497,9 +497,8 @@ export default function HomePage({ onNavigate, onAddToCart }: HomePageProps) {
               {homeContent.whySubtitle}
             </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px" style={{ background: '#e5e5e5' }}>
-            {homeBenefits.map((item, i) => {
-              const inverted = i % 2 === 0
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {homeBenefits.map((item) => {
               const pos = item.iconConfig?.position || 'top-left'
               const isInline = pos === 'inline-left'
               const isCenter = pos === 'top-center'
@@ -507,35 +506,37 @@ export default function HomePage({ onNavigate, onAddToCart }: HomePageProps) {
               return (
                 <div
                   key={item.id || item.title}
-                  className={`p-8 flex flex-col ${isCenter ? 'items-center text-center' : ''}`}
-                  style={{ background: inverted ? 'var(--red)' : '#ffffff' }}
+                  className={`p-8 bg-white rounded-2xl border border-gray-200 shadow-xs hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col group relative overflow-hidden ${isCenter ? 'items-center text-center' : ''}`}
                 >
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-transparent group-hover:bg-[#FF000F] transition-colors" />
                   {isInline ? (
                     <div className="flex items-center gap-3.5 mb-3.5">
-                      <CmsIcon
-                        icon={item.icon}
-                        config={item.iconConfig}
-                        inverted={inverted}
-                      />
-                      <h3 style={{ fontFamily: font, fontWeight: 700, fontSize: '1.1rem', lineHeight: 1.25, color: inverted ? 'white' : '#1a1a1a' }}>
+                      <div className="p-2.5 rounded-xl bg-gray-50 border border-gray-100 group-hover:border-red-100 transition-colors">
+                        <CmsIcon
+                          icon={item.icon}
+                          config={item.iconConfig}
+                          inverted={false}
+                        />
+                      </div>
+                      <h3 style={{ fontFamily: font, fontWeight: 700, fontSize: '1.15rem', lineHeight: 1.25, color: '#1a1a1a' }}>
                         {item.title}
                       </h3>
                     </div>
                   ) : (
                     <>
-                      <div className="mb-6">
+                      <div className="mb-6 p-3.5 w-fit rounded-xl bg-gray-50 border border-gray-100 group-hover:border-red-100 transition-colors">
                         <CmsIcon
                           icon={item.icon}
                           config={item.iconConfig}
-                          inverted={inverted}
+                          inverted={false}
                         />
                       </div>
-                      <h3 style={{ fontFamily: font, fontWeight: 700, fontSize: '1.1rem', lineHeight: 1.25, marginBottom: '0.5rem', color: inverted ? 'white' : '#1a1a1a' }}>
+                      <h3 style={{ fontFamily: font, fontWeight: 700, fontSize: '1.15rem', lineHeight: 1.25, marginBottom: '0.5rem', color: '#1a1a1a' }}>
                         {item.title}
                       </h3>
                     </>
                   )}
-                  <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: inverted ? 'rgba(255,255,255,0.65)' : '#888' }}>
+                  <p className="text-sm leading-relaxed whitespace-pre-line text-gray-500">
                     {item.description}
                   </p>
                 </div>
