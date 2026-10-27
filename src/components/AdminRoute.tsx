@@ -29,11 +29,59 @@ export default function AdminRoute({ onNavigate }: AdminRouteProps) {
       .then(async (response) => {
         const payload = await response.json().catch(() => null)
         if (!response.ok || !payload?.success || !payload?.user) {
+          if (import.meta.env.DEV) {
+            if (active) {
+              setSession({
+                email: 'admin@viendong.local',
+                displayName: 'Quản trị viên (Local Dev)',
+                role: 'admin',
+                permissions: [
+                  'users.manage',
+                  'content.home.manage',
+                  'content.news.manage',
+                  'content.videos.manage',
+                  'catalog.manage',
+                  'quotes.read',
+                  'quotes.update',
+                  'quotes.delete',
+                  'quotes.import',
+                  'settings.manage',
+                  'media.content.upload',
+                  'media.products.upload',
+                ],
+              })
+            }
+            return
+          }
           throw new Error(payload?.message || 'Bạn chưa được cấp quyền truy cập hệ thống quản trị.')
         }
         if (active) setSession(payload.user)
       })
       .catch((reason) => {
+        if (import.meta.env.DEV) {
+          if (active) {
+            setSession({
+              email: 'admin@viendong.local',
+              displayName: 'Quản trị viên (Local Dev)',
+              role: 'admin',
+              permissions: [
+                'users.manage',
+                'content.home.manage',
+                'content.news.manage',
+                'content.videos.manage',
+                'catalog.manage',
+                'quotes.read',
+                'quotes.update',
+                'quotes.delete',
+                'quotes.import',
+                'settings.manage',
+                'media.content.upload',
+                'media.products.upload',
+              ],
+            })
+          }
+          return
+        }
         if (active) setError(reason instanceof Error ? reason.message : 'Không thể xác minh tài khoản quản trị.')
       })
       .finally(() => {

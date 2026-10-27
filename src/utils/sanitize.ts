@@ -44,3 +44,28 @@ export function sanitizeRichHtml(value: string): string {
 export function sanitizePlainText(value: unknown, maxLength = 5000): string {
   return String(value ?? '').replace(/[<>]/g, '').trim().slice(0, maxLength)
 }
+
+export function sanitizeSvg(value: string, tint = false): string {
+  if (!value) return ''
+  let cleaned = value.trim()
+  if (typeof window !== 'undefined' && typeof DOMPurify.sanitize === 'function') {
+    cleaned = DOMPurify.sanitize(cleaned, {
+      USE_PROFILES: { svg: true, svgFilters: true },
+      FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'form', 'link', 'meta', 'style'],
+      FORBID_ATTR: ['srcdoc'],
+    })
+  } else {
+    cleaned = cleaned
+      .replace(/<script[\s\S]*?<\/script>/gi, '')
+      .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '')
+  }
+
+  if (tint && cleaned.includes('<svg')) {
+    cleaned = cleaned
+      .replace(/fill="(?!none)[^"]*"/gi, 'fill="currentColor"')
+      .replace(/stroke="(?!none)[^"]*"/gi, 'stroke="currentColor"')
+  }
+
+  return cleaned
+}
+

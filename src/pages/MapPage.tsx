@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { getStoredSiteSettings, defaultMapStats, type MapStatItem } from '@/data/siteData'
+import CmsIcon from '@/components/CmsIcon'
 
 interface MapPageProps {
   onNavigate: (page: string) => void
@@ -121,6 +123,20 @@ export default function MapPage({ onNavigate }: MapPageProps) {
   const [selectedId, setSelectedId] = useState<number | null>(1)
   const [selectedType, setSelectedType] = useState('Tất cả')
 
+  const [statsList, setStatsList] = useState<MapStatItem[]>(() => {
+    const s = getStoredSiteSettings()
+    return s.mapStats || defaultMapStats
+  })
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      const s = getStoredSiteSettings()
+      setStatsList(s.mapStats || defaultMapStats)
+    }
+    window.addEventListener('viendong_storage_update', handleUpdate)
+    return () => window.removeEventListener('viendong_storage_update', handleUpdate)
+  }, [])
+
   const types = ['Tất cả', 'Văn phòng đại diện', 'Chi nhánh', 'Đại lý cấp 2']
 
   const filtered = locations.filter((l) => {
@@ -163,9 +179,15 @@ export default function MapPage({ onNavigate }: MapPageProps) {
       {/* Stats */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 py-5 grid grid-cols-2 md:grid-cols-4 gap-4">
-          {stats.map((s) => (
-            <div key={s.label} className="text-center">
-              <div className="text-2xl mb-0.5">{s.icon}</div>
+          {statsList.map((s) => (
+            <div key={s.id || s.label} className="text-center flex flex-col items-center">
+              <div className="min-h-[32px] flex items-center justify-center mb-1 text-gray-700">
+                {s.iconConfig ? (
+                  <CmsIcon config={{ ...s.iconConfig, showBox: false }} overrideSize={28} />
+                ) : (
+                  <span className="text-2xl">{s.emoji || '📍'}</span>
+                )}
+              </div>
               <div className="text-2xl font-black" style={{ fontFamily: 'Barlow Condensed, sans-serif', color: 'var(--red)' }}>{s.value}</div>
               <div className="text-xs text-gray-500 font-medium">{s.label}</div>
             </div>

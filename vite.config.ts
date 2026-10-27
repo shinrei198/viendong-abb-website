@@ -440,6 +440,34 @@ function saveSiteDataPlugin(): Plugin {
           })
           return
         }
+
+        if (req.url === '/api/auth/session') {
+          res.setHeader('Content-Type', 'application/json; charset=utf-8')
+          res.end(JSON.stringify({
+            success: true,
+            user: {
+              email: 'admin@viendong.local',
+              displayName: 'Quản trị viên (Local Dev)',
+              role: 'admin',
+              permissions: [
+                'users.manage',
+                'content.home.manage',
+                'content.news.manage',
+                'content.videos.manage',
+                'catalog.manage',
+                'quotes.read',
+                'quotes.update',
+                'quotes.delete',
+                'quotes.import',
+                'settings.manage',
+                'media.content.upload',
+                'media.products.upload',
+              ],
+            },
+          }))
+          return
+        }
+
         next()
       })
     },

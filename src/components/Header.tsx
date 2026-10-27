@@ -67,8 +67,8 @@ export default function Header({ currentPage, onNavigate, cartCount }: HeaderPro
       <header className="sticky top-0 z-40" style={{ background: 'white', borderBottom: '1px solid #e5e5e5' }}>
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-16">
           {/* Logo */}
-          <button onClick={() => onNavigate('home')} className="flex items-center gap-2 flex-shrink-0">
-            <img src={logoColor} alt="Viễn Đông Electric" className="h-10 w-auto object-contain" />
+          <button onClick={() => onNavigate('home')} className="flex items-center gap-2 flex-shrink-0 w-[95px]">
+            <img src={logoColor} alt="Viễn Đông Electric" className="h-10 w-23.5 object-contain max-w-[99%]" />
           </button>
 
           {/* Desktop nav */}

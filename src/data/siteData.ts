@@ -84,6 +84,26 @@ export interface BannerSlideItem {
   mobileCtaLayout?: 'hotspot' | 'bottom-bar'
 }
 
+import type { CustomIconConfig } from '@/types/icon'
+export type { CustomIconConfig, IconSourceType, IconPosition, IconBoxShape } from '@/types/icon'
+
+export interface FloatingContactAction {
+  id: string
+  label: string
+  href: string
+  bg: string
+  iconConfig?: CustomIconConfig
+  isActive: boolean
+}
+
+export interface MapStatItem {
+  id: string
+  value: string
+  label: string
+  iconConfig?: CustomIconConfig
+  emoji?: string
+}
+
 export interface SiteSettings {
   heroTitle: string
   heroSubtitle: string
@@ -96,7 +116,95 @@ export interface SiteSettings {
   zaloUrl: string
   catalogueUrl: string
   companyName: string
+  floatingActions?: FloatingContactAction[]
+  mapStats?: MapStatItem[]
 }
+
+export const defaultFloatingActions: FloatingContactAction[] = [
+  {
+    id: 'float-call',
+    label: 'Gọi điện',
+    href: 'tel:02839435276',
+    bg: '#22c55e',
+    isActive: true,
+    iconConfig: {
+      type: 'builtin',
+      builtinName: 'phone',
+      size: 22,
+      showBox: false,
+      tint: true,
+    },
+  },
+  {
+    id: 'float-email',
+    label: 'Email',
+    href: 'mailto:viendongelectric@gmail.com',
+    bg: '#f97316',
+    isActive: true,
+    iconConfig: {
+      type: 'builtin',
+      builtinName: 'support',
+      size: 22,
+      showBox: false,
+      tint: true,
+    },
+  },
+]
+
+export const defaultMapStats: MapStatItem[] = [
+  {
+    id: 'stat-stores',
+    value: '50+',
+    label: 'Cửa hàng',
+    emoji: '🏪',
+    iconConfig: {
+      type: 'builtin',
+      builtinName: 'store',
+      size: 28,
+      showBox: false,
+      tint: false,
+    },
+  },
+  {
+    id: 'stat-provinces',
+    value: '30+',
+    label: 'Tỉnh thành',
+    emoji: '📍',
+    iconConfig: {
+      type: 'builtin',
+      builtinName: 'map-pin',
+      size: 28,
+      showBox: false,
+      tint: false,
+    },
+  },
+  {
+    id: 'stat-offices',
+    value: '3',
+    label: 'Văn phòng đại diện',
+    emoji: '🏢',
+    iconConfig: {
+      type: 'builtin',
+      builtinName: 'building',
+      size: 28,
+      showBox: false,
+      tint: false,
+    },
+  },
+  {
+    id: 'stat-staff',
+    value: '500+',
+    label: 'Nhân sự',
+    emoji: '👥',
+    iconConfig: {
+      type: 'builtin',
+      builtinName: 'users',
+      size: 28,
+      showBox: false,
+      tint: false,
+    },
+  },
+]
 
 export type HomeBenefitIcon = 'shield' | 'truck' | 'support' | 'price'
 
@@ -116,8 +224,82 @@ export interface HomeBenefitItem {
   title: string
   description: string
   icon: HomeBenefitIcon
+  iconConfig?: CustomIconConfig
   isActive: boolean
 }
+
+export interface SupportButtonItem {
+  id: string
+  label: string
+  href: string
+  bg: string
+  textColor?: string
+  iconConfig?: CustomIconConfig
+  isActive: boolean
+}
+
+export const defaultSupportButtons: SupportButtonItem[] = [
+  {
+    id: 'support-hotline',
+    label: 'Liên hệ qua Hotline',
+    href: 'tel:+842839435276',
+    bg: '#FF000F',
+    textColor: '#ffffff',
+    isActive: true,
+    iconConfig: {
+      type: 'builtin',
+      builtinName: 'phone',
+      size: 18,
+      showBox: false,
+      tint: true,
+    },
+  },
+  {
+    id: 'support-zalo',
+    label: 'Liên hệ qua Zalo',
+    href: 'https://zalo.me',
+    bg: '#1B4C98',
+    textColor: '#ffffff',
+    isActive: true,
+    iconConfig: {
+      type: 'builtin',
+      builtinName: 'support',
+      size: 18,
+      showBox: false,
+      tint: true,
+    },
+  },
+  {
+    id: 'support-catalogue',
+    label: 'Catalogue, Bảng giá ABB',
+    href: '#',
+    bg: '#f7f7f7',
+    textColor: '#1a1a1a',
+    isActive: true,
+    iconConfig: {
+      type: 'builtin',
+      builtinName: 'box',
+      size: 18,
+      showBox: false,
+      tint: false,
+    },
+  },
+  {
+    id: 'support-quote',
+    label: 'Gửi yêu cầu báo giá nhanh',
+    href: 'mailto:info@viendongelectric.vn',
+    bg: '#FF000F',
+    textColor: '#ffffff',
+    isActive: true,
+    iconConfig: {
+      type: 'builtin',
+      builtinName: 'mail',
+      size: 18,
+      showBox: false,
+      tint: true,
+    },
+  },
+]
 
 export interface HomePageContent {
   partnerTitle: string
@@ -135,8 +317,10 @@ export interface HomePageContent {
   ctaPrimaryLabel: string
   ctaPrimaryUrl: string
   ctaSecondaryLabel: string
+  ctaSecondaryUrl?: string
   supportTitle: string
   supportDescription: string
+  supportButtons?: SupportButtonItem[]
   newsSectionTitle: string
 }
 
@@ -694,9 +878,19 @@ export async function deleteRemoteQuote(id: string): Promise<void> {
 export function getStoredSiteSettings(): SiteSettings {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.SETTINGS)
-    return raw ? JSON.parse(raw) : initialSiteSettings
+    const data = raw ? JSON.parse(raw) : initialSiteSettings
+    return {
+      ...initialSiteSettings,
+      ...data,
+      floatingActions: data.floatingActions || defaultFloatingActions,
+      mapStats: data.mapStats || defaultMapStats,
+    }
   } catch {
-    return initialSiteSettings
+    return {
+      ...initialSiteSettings,
+      floatingActions: defaultFloatingActions,
+      mapStats: defaultMapStats,
+    }
   }
 }
 
@@ -722,6 +916,9 @@ function normalizeHomePagePartnerCopy<T extends Partial<HomePageContent>>(conten
     partnerSubtitle: content.partnerSubtitle === LEGACY_HOME_PARTNER_SUBTITLE
       ? 'Nhà phân phối chính thức thiết bị điện dân dụng của ABB'
       : content.partnerSubtitle,
+    supportButtons: Array.isArray(content.supportButtons) && content.supportButtons.length > 0
+      ? content.supportButtons
+      : defaultSupportButtons,
   }
 }
 

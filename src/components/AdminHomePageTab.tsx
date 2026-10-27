@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { countProductsForTarget } from '@/data/siteData'
+import { countProductsForTarget, defaultSupportButtons } from '@/data/siteData'
 import type {
   HomeBenefitIcon,
   HomeBenefitItem,
@@ -7,8 +7,10 @@ import type {
   HomePageContent,
   ProductCategoryItem,
   ProductItem,
+  SupportButtonItem,
 } from '@/data/siteData'
 import { uploadMedia } from '@/utils/mediaUpload'
+import AdminIconPicker from '@/components/AdminIconPicker'
 
 interface AdminHomePageTabProps {
   content: HomePageContent
@@ -60,6 +62,12 @@ export default function AdminHomePageTab({ content, products, productCategories,
   const updateBenefit = (index: number, patch: Partial<HomeBenefitItem>) => {
     const benefits = draft.benefits.map((item, itemIndex) => itemIndex === index ? { ...item, ...patch } : item)
     updateDraft({ ...draft, benefits })
+  }
+
+  const updateSupportButton = (index: number, patch: Partial<SupportButtonItem>) => {
+    const list = draft.supportButtons || defaultSupportButtons
+    const updated = list.map((item, itemIndex) => itemIndex === index ? { ...item, ...patch } : item)
+    updateDraft({ ...draft, supportButtons: updated })
   }
 
   const moveItem = (key: 'categories' | 'benefits', index: number, direction: -1 | 1) => {
@@ -178,33 +186,300 @@ export default function AdminHomePageTab({ content, products, productCategories,
       </SectionCard>
 
       <SectionCard title="Lý do chọn Viễn Đông" description="Có thể đổi nội dung, biểu tượng, trạng thái và thứ tự từng lợi ích.">
-        <div className="grid gap-4 md:grid-cols-2">
-          <label><span className={labelClass}>Tiêu đề</span><input className={inputClass} value={draft.whyTitle} onChange={(e) => updateDraft({ ...draft, whyTitle: e.target.value })} /></label>
-          <label><span className={labelClass}>Mô tả</span><input className={inputClass} value={draft.whySubtitle} onChange={(e) => updateDraft({ ...draft, whySubtitle: e.target.value })} /></label>
+        <div className="grid gap-4 md:grid-cols-2 mb-4">
+          <label><span className={labelClass}>Tiêu đề khối</span><input className={inputClass} value={draft.whyTitle} onChange={(e) => updateDraft({ ...draft, whyTitle: e.target.value })} placeholder="VD: Tại sao chọn Viễn Đông?" /></label>
+          <label><span className={labelClass}>Mô tả phụ</span><input className={inputClass} value={draft.whySubtitle} onChange={(e) => updateDraft({ ...draft, whySubtitle: e.target.value })} placeholder="VD: Đối tác tin cậy của hàng nghìn đại lý..." /></label>
         </div>
-        <div className="space-y-3">
+
+        <div className="space-y-4">
           {draft.benefits.map((benefit, index) => (
-            <div key={benefit.id} className="grid items-end gap-3 rounded-lg border border-gray-200 p-4 md:grid-cols-[140px_1fr_2fr_auto]">
-              <label><span className={labelClass}>Biểu tượng</span><select className={inputClass} value={benefit.icon} onChange={(e) => updateBenefit(index, { icon: e.target.value as HomeBenefitIcon })}><option value="shield">Chính hãng</option><option value="truck">Giao hàng</option><option value="support">Hỗ trợ</option><option value="price">Giá/chiết khấu</option></select></label>
-              <label><span className={labelClass}>Tiêu đề</span><input className={inputClass} value={benefit.title} onChange={(e) => updateBenefit(index, { title: e.target.value })} /></label>
-              <label><span className={labelClass}>Mô tả</span><input className={inputClass} value={benefit.description} onChange={(e) => updateBenefit(index, { description: e.target.value })} /></label>
-              <div className="flex items-center gap-1.5"><label className="mr-2 flex items-center gap-1 text-xs"><input type="checkbox" checked={benefit.isActive} onChange={(e) => updateBenefit(index, { isActive: e.target.checked })} /> Hiện</label><button type="button" aria-label="Đưa lợi ích lên" title="Đưa lên" disabled={index === 0} onClick={() => moveItem('benefits', index, -1)} className="flex h-8 w-8 items-center justify-center rounded-md border border-gray-300 text-[11px] text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-30">▲</button><button type="button" aria-label="Đưa lợi ích xuống" title="Đưa xuống" disabled={index === draft.benefits.length - 1} onClick={() => moveItem('benefits', index, 1)} className="flex h-8 w-8 items-center justify-center rounded-md border border-gray-300 text-[11px] text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-30">▼</button><button type="button" aria-label="Xóa lợi ích" title="Xóa" onClick={() => updateDraft({ ...draft, benefits: draft.benefits.filter((_, itemIndex) => itemIndex !== index) })} className="flex h-8 w-8 items-center justify-center rounded-md border border-red-200 text-sm font-medium text-red-600 transition-colors hover:bg-red-50">×</button></div>
+            <div
+              key={benefit.id}
+              className="rounded-xl border border-gray-200 bg-white p-4 shadow-xs transition-shadow hover:shadow-sm"
+            >
+              {/* Card Header: Badge & Toolbar */}
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-3 mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center rounded-md bg-[#1B4C98]/10 px-2.5 py-1 text-xs font-bold text-[#1B4C98]">
+                    Lợi ích #{index + 1}
+                  </span>
+                  <span className="text-xs font-semibold text-gray-800">
+                    {benefit.title || 'Chưa đặt tiêu đề'}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <label className="flex items-center gap-1.5 rounded-md border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-700 cursor-pointer hover:bg-gray-100">
+                    <input
+                      type="checkbox"
+                      checked={benefit.isActive}
+                      onChange={(e) => updateBenefit(index, { isActive: e.target.checked })}
+                      className="rounded border-gray-300 text-[#1B4C98] focus:ring-[#1B4C98]"
+                    />
+                    <span>{benefit.isActive ? 'Đang hiển thị' : 'Tạm ẩn'}</span>
+                  </label>
+
+                  <div className="flex items-center rounded-md border border-gray-200 bg-gray-50 p-0.5">
+                    <button
+                      type="button"
+                      aria-label="Đưa lên"
+                      title="Đưa lên"
+                      disabled={index === 0}
+                      onClick={() => moveItem('benefits', index, -1)}
+                      className="flex h-7 w-7 items-center justify-center rounded text-xs text-gray-600 transition-colors hover:bg-white hover:text-gray-900 disabled:opacity-30"
+                    >
+                      ▲
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="Đưa xuống"
+                      title="Đưa xuống"
+                      disabled={index === draft.benefits.length - 1}
+                      onClick={() => moveItem('benefits', index, 1)}
+                      className="flex h-7 w-7 items-center justify-center rounded text-xs text-gray-600 transition-colors hover:bg-white hover:text-gray-900 disabled:opacity-30"
+                    >
+                      ▼
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    aria-label="Xóa lợi ích"
+                    title="Xóa lợi ích này"
+                    onClick={() => updateDraft({ ...draft, benefits: draft.benefits.filter((_, itemIndex) => itemIndex !== index) })}
+                    className="flex items-center gap-1 rounded-md border border-red-200 bg-red-50/50 px-2.5 py-1 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 hover:border-red-300"
+                  >
+                    <span>✕</span>
+                    <span className="hidden sm:inline">Xóa</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Card Body */}
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                <div className="md:col-span-5">
+                  <AdminIconPicker
+                    label="Biểu tượng & Giao diện"
+                    value={benefit.iconConfig}
+                    legacyIcon={benefit.icon}
+                    onToast={showToast}
+                    onChange={(newConfig) => {
+                      updateBenefit(index, {
+                        iconConfig: newConfig,
+                        icon: (newConfig.builtinName as HomeBenefitIcon) || benefit.icon || 'shield',
+                      })
+                    }}
+                  />
+                </div>
+
+                <div className="md:col-span-7">
+                  <label>
+                    <span className={labelClass}>Tiêu đề chính</span>
+                    <input
+                      className={inputClass}
+                      value={benefit.title}
+                      onChange={(e) => updateBenefit(index, { title: e.target.value })}
+                      placeholder="VD: Hàng chính hãng 100%"
+                    />
+                  </label>
+                </div>
+
+                <div className="md:col-span-12">
+                  <label>
+                    <span className={labelClass}>Nội dung mô tả (Bấm Enter để ngắt dòng hiển thị trên website)</span>
+                    <textarea
+                      rows={2}
+                      className={`${inputClass} resize-y font-normal leading-relaxed`}
+                      value={benefit.description}
+                      onChange={(e) => updateBenefit(index, { description: e.target.value })}
+                      placeholder="Nhập nội dung mô tả chi tiết..."
+                    />
+                  </label>
+                </div>
+              </div>
             </div>
           ))}
         </div>
-        {draft.benefits.length < 6 && <button type="button" onClick={() => updateDraft({ ...draft, benefits: [...draft.benefits, { id: `benefit-${Date.now()}`, title: 'Lợi ích mới', description: '', icon: 'shield', isActive: true }] })} className="border border-dashed border-[#1B4C98] px-4 py-2 text-xs font-bold text-[#1B4C98]">+ Thêm lợi ích</button>}
+        {draft.benefits.length < 6 && (
+          <button
+            type="button"
+            onClick={() => updateDraft({ ...draft, benefits: [...draft.benefits, { id: `benefit-${Date.now()}`, title: 'Lợi ích mới', description: '', icon: 'shield', isActive: true }] })}
+            className="mt-4 border border-dashed border-[#1B4C98] px-4 py-2 text-xs font-bold text-[#1B4C98] hover:bg-blue-50"
+          >
+            + Thêm lợi ích
+          </button>
+        )}
       </SectionCard>
 
-      <SectionCard title="Kêu gọi hợp tác & Hỗ trợ" description="Nội dung CTA đại lý và phần liên hệ ở cuối trang chủ.">
+      {/* SECTION 1: CTA BANNER ĐẠI LÝ */}
+      <SectionCard title="Kêu gọi hợp tác đại lý (CTA Banner)" description="Banner kêu gọi hợp tác dành cho đại lý và nhà thầu ở gần cuối trang chủ.">
         <div className="grid gap-4 md:grid-cols-2">
-          <label><span className={labelClass}>Tiêu đề CTA</span><input className={inputClass} value={draft.ctaTitle} onChange={(e) => updateDraft({ ...draft, ctaTitle: e.target.value })} /></label>
-          <label><span className={labelClass}>Mô tả CTA</span><input className={inputClass} value={draft.ctaDescription} onChange={(e) => updateDraft({ ...draft, ctaDescription: e.target.value })} /></label>
-          <label><span className={labelClass}>Nhãn nút chính</span><input maxLength={28} className={inputClass} value={draft.ctaPrimaryLabel} onChange={(e) => updateDraft({ ...draft, ctaPrimaryLabel: e.target.value })} /></label>
-          <label><span className={labelClass}>Link nút chính</span><input className={inputClass} value={draft.ctaPrimaryUrl} onChange={(e) => updateDraft({ ...draft, ctaPrimaryUrl: e.target.value })} placeholder="mailto:..., tel:... hoặc https://..." /></label>
-          <label><span className={labelClass}>Nhãn nút giới thiệu</span><input maxLength={28} className={inputClass} value={draft.ctaSecondaryLabel} onChange={(e) => updateDraft({ ...draft, ctaSecondaryLabel: e.target.value })} /></label>
-          <div />
-          <label><span className={labelClass}>Tiêu đề hỗ trợ</span><input className={inputClass} value={draft.supportTitle} onChange={(e) => updateDraft({ ...draft, supportTitle: e.target.value })} /></label>
-          <label><span className={labelClass}>Mô tả hỗ trợ</span><input className={inputClass} value={draft.supportDescription} onChange={(e) => updateDraft({ ...draft, supportDescription: e.target.value })} /></label>
+          <label>
+            <span className={labelClass}>Tiêu đề CTA</span>
+            <input className={inputClass} value={draft.ctaTitle} onChange={(e) => updateDraft({ ...draft, ctaTitle: e.target.value })} placeholder="VD: ĐỒNG HÀNH CÙNG VIỄN ĐÔNG" />
+          </label>
+          <label>
+            <span className={labelClass}>Mô tả CTA</span>
+            <input className={inputClass} value={draft.ctaDescription} onChange={(e) => updateDraft({ ...draft, ctaDescription: e.target.value })} placeholder="VD: Tiếp cận toàn bộ danh mục ABB..." />
+          </label>
+          <label>
+            <span className={labelClass}>Nhãn nút chính (Đỏ)</span>
+            <input maxLength={32} className={inputClass} value={draft.ctaPrimaryLabel} onChange={(e) => updateDraft({ ...draft, ctaPrimaryLabel: e.target.value })} placeholder="VD: Đăng ký làm đại lý" />
+          </label>
+          <label>
+            <span className={labelClass}>Link nút chính</span>
+            <input className={inputClass} value={draft.ctaPrimaryUrl} onChange={(e) => updateDraft({ ...draft, ctaPrimaryUrl: e.target.value })} placeholder="mailto:..., tel:... hoặc https://..." />
+          </label>
+          <label>
+            <span className={labelClass}>Nhãn nút phụ (Trắng viền)</span>
+            <input maxLength={32} className={inputClass} value={draft.ctaSecondaryLabel} onChange={(e) => updateDraft({ ...draft, ctaSecondaryLabel: e.target.value })} placeholder="VD: Về Viễn Đông Electric" />
+          </label>
+          <label>
+            <span className={labelClass}>Link nút phụ</span>
+            <input className={inputClass} value={draft.ctaSecondaryUrl || ''} onChange={(e) => updateDraft({ ...draft, ctaSecondaryUrl: e.target.value })} placeholder="Để trống nếu dẫn tới trang Giới thiệu (/about)" />
+          </label>
+        </div>
+      </SectionCard>
+
+      {/* SECTION 2: KHỐI HỖ TRỢ & 4 NÚT TRỰC QUAN */}
+      <SectionCard title="Khối Hỗ trợ khách hàng & Báo giá (Support Section)" description="Khối 4 nút hỗ trợ nổi bật ở cuối trang chủ. Cho phép chỉnh sửa tiêu đề, mô tả và toàn bộ nhãn, link, màu sắc, biểu tượng của 4 nút.">
+        <div className="grid gap-4 md:grid-cols-2 mb-6">
+          <label>
+            <span className={labelClass}>Tiêu đề hỗ trợ</span>
+            <input className={inputClass} value={draft.supportTitle} onChange={(e) => updateDraft({ ...draft, supportTitle: e.target.value })} placeholder="VD: CHÚNG TÔI SẴN SÀNG HỖ TRỢ BẠN" />
+          </label>
+          <label>
+            <span className={labelClass}>Mô tả hỗ trợ</span>
+            <input className={inputClass} value={draft.supportDescription} onChange={(e) => updateDraft({ ...draft, supportDescription: e.target.value })} placeholder="VD: Hãy liên hệ với Viễn Đông nếu bạn cần tư vấn..." />
+          </label>
+        </div>
+
+        <div className="border-t border-gray-100 pt-4">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h4 className="text-xs font-bold uppercase text-[#1B4C98]">Cấu hình 4 Nút Hỗ Trợ Trực Quan</h4>
+              <p className="text-[11px] text-gray-500">Tùy chỉnh nhãn nút, link liên kết, màu nền và icon cho từng nút bấm</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                const list = draft.supportButtons || defaultSupportButtons
+                const newItem: SupportButtonItem = {
+                  id: `support-${Date.now()}`,
+                  label: 'Nút hỗ trợ mới',
+                  href: '#',
+                  bg: '#1B4C98',
+                  textColor: '#ffffff',
+                  isActive: true,
+                  iconConfig: {
+                    type: 'builtin',
+                    builtinName: 'support',
+                    size: 18,
+                    showBox: false,
+                    tint: true,
+                  },
+                }
+                updateDraft({ ...draft, supportButtons: [...list, newItem] })
+              }}
+              className="border border-dashed border-[#1B4C98] px-3 py-1.5 text-xs font-bold text-[#1B4C98] hover:bg-blue-50"
+            >
+              + Thêm nút hỗ trợ
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {(draft.supportButtons || defaultSupportButtons).map((btn, index) => (
+              <div key={btn.id || index} className="rounded-xl border border-gray-200 bg-gray-50/60 p-4 space-y-3">
+                <div className="flex items-center justify-between border-b border-gray-200/80 pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#1B4C98] text-[10px] font-bold text-white">
+                      {index + 1}
+                    </span>
+                    <span className="text-xs font-bold text-gray-800 truncate max-w-[180px]">
+                      {btn.label || `Nút #${index + 1}`}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <label className="flex items-center gap-1 text-xs text-gray-600 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={btn.isActive !== false}
+                        onChange={(e) => updateSupportButton(index, { isActive: e.target.checked })}
+                        className="rounded border-gray-300 text-[#1B4C98]"
+                      />
+                      <span>Hiện</span>
+                    </label>
+                    {(draft.supportButtons || defaultSupportButtons).length > 2 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const list = draft.supportButtons || defaultSupportButtons
+                          updateDraft({
+                            ...draft,
+                            supportButtons: list.filter((_, i) => i !== index),
+                          })
+                        }}
+                        className="text-xs text-red-500 hover:text-red-700 ml-1 font-medium"
+                      >
+                        ✕ Xóa
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <span className={labelClass}>Nhãn hiển thị</span>
+                    <input
+                      className={inputClass}
+                      value={btn.label}
+                      onChange={(e) => updateSupportButton(index, { label: e.target.value })}
+                      placeholder="VD: LIÊN HỆ QUA HOTLINE"
+                    />
+                  </div>
+                  <div>
+                    <span className={labelClass}>Link liên kết (tel:, https:, mailto:)</span>
+                    <input
+                      className={inputClass}
+                      value={btn.href}
+                      onChange={(e) => updateSupportButton(index, { href: e.target.value })}
+                      placeholder="VD: tel:02839435276 hoặc https://..."
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 items-end">
+                  <div>
+                    <span className={labelClass}>Màu nền nút</span>
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="color"
+                        value={btn.bg.startsWith('#') ? btn.bg : btn.bg.includes('red') ? '#FF000F' : '#1B4C98'}
+                        onChange={(e) => updateSupportButton(index, { bg: e.target.value, textColor: e.target.value.toLowerCase() === '#f7f7f7' || e.target.value.toLowerCase() === '#ffffff' ? '#1a1a1a' : '#ffffff' })}
+                        className="h-8 w-8 cursor-pointer rounded border border-gray-300 bg-white p-0.5"
+                      />
+                      <input
+                        type="text"
+                        value={btn.bg}
+                        onChange={(e) => updateSupportButton(index, { bg: e.target.value })}
+                        className="w-full px-2 py-1.5 text-xs border border-gray-300 bg-white font-mono focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <AdminIconPicker
+                      label="Biểu tượng nút"
+                      value={btn.iconConfig}
+                      onToast={showToast}
+                      onChange={(newConfig) => updateSupportButton(index, { iconConfig: newConfig })}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </SectionCard>
 

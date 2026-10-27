@@ -7,9 +7,9 @@ interface FooterProps {
 export default function Footer({ onNavigate }: FooterProps) {
   return (
     <footer style={{ background: '#1B4C98' }} className="text-white">
-      <div className="max-w-7xl mx-auto px-6 py-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+      <div className="max-w-7xl mx-auto px-6 py-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-y-10 gap-x-9">
         {/* Brand & Corporate Info */}
-        <div className="space-y-3">
+        <div className="space-y-3 w-[303px]">
           <img src={logoWhite} alt="Viễn Đông Electric" className="h-12 w-auto object-contain mb-3" />
           <p className="text-white text-xs font-bold uppercase tracking-wider">
             CÔNG TY TNHH THIẾT BỊ ĐIỆN VIỄN ĐÔNG
@@ -43,7 +43,7 @@ export default function Footer({ onNavigate }: FooterProps) {
         </div>
 
         {/* Chính sách */}
-        <div>
+        <div className="w-59">
           <h4 className="text-sm font-bold uppercase tracking-wider mb-5 text-white">Chính sách</h4>
           <ul className="space-y-2.5">
             {['Chính sách bảo mật', 'Chính sách đổi trả', 'Điều khoản dịch vụ', 'Chính sách bảo hành', 'Chính sách đại lý'].map((item) => (
@@ -55,7 +55,7 @@ export default function Footer({ onNavigate }: FooterProps) {
         </div>
 
         {/* Hỗ trợ */}
-        <div>
+        <div className="w-62">
           <h4 className="text-sm font-bold uppercase tracking-wider mb-5 text-white">Hỗ trợ</h4>
           <ul className="space-y-2.5">
             {[

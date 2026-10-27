@@ -12,5 +12,18 @@ vite.config.*.timestamp-*
 logs/
 *.log
 .claude-replay.*
-.tmp-*
 viendong_sitedata_*.json
+
+# Dữ liệu nhạy cảm / database backup
+scratch/*.sql
+*.sql
+
+# File ảnh và kết quả đối soát tạm thời trong scratch
+scratch/*.png
+scratch/reference-thumbnails/
+scratch/chrome-mobile-test/
+scratch/chrome-production-fixed/
+scratch/chrome-products-mobile-fixed/
+
+# File nén tài nguyên lớn
+Product_Img/*.zip

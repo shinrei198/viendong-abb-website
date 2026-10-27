@@ -19,10 +19,11 @@ import {
   getStoredProducts,
   getStoredProductCategories,
   countProductsForTarget,
-  HomeBenefitIcon,
   ProductItem,
   createVietnameseSlug,
+  defaultSupportButtons,
 } from '@/data/siteData'
+import CmsIcon from '@/components/CmsIcon'
 import NewsThumbnailView from '@/components/NewsThumbnailView'
 import VideoModal from '@/components/VideoModal'
 import HeroSlider from '@/components/HeroSlider'
@@ -46,15 +47,7 @@ const categoryDefaultImages: Record<string, string> = {
   'home-cat-surge': imgSurgeArrest,
 }
 
-function BenefitIcon({ icon }: { icon: HomeBenefitIcon }) {
-  const paths: Record<HomeBenefitIcon, string> = {
-    shield: 'M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z',
-    truck: 'M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2a3 3 0 006 0h6a3 3 0 006 0h2v-5l-3-4zM6 18a1 1 0 110-2 1 1 0 010 2zm12 0a1 1 0 110-2 1 1 0 010 2z',
-    support: 'M20 2H4a2 2 0 00-2 2v18l4-4h14a2 2 0 002-2V4a2 2 0 00-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z',
-    price: 'M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z',
-  }
-  return <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d={paths[icon]} /></svg>
-}
+
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return <div className="uppercase">{children}</div>
@@ -255,7 +248,7 @@ export default function HomePage({ onNavigate, onAddToCart }: HomePageProps) {
                 {countProductsForTarget(products, productCategories, homeCategories[0].targetCategory)} sản phẩm
               </span>
               <h3 style={{ fontFamily: font, fontWeight: 700, fontSize: '1.9rem', color: 'white' }}>{homeCategories[0].name}</h3>
-              <p className="text-white/60 text-sm mt-1">{homeCategories[0].description}</p>
+              <p className="text-white/60 text-sm mt-1 w-full">{homeCategories[0].description}</p>
               <span className="mt-3 inline-flex items-center text-xs font-semibold text-white/70 group-hover:text-white transition-colors">Khám phá →</span>
             </div>
           </div>
@@ -505,22 +498,49 @@ export default function HomePage({ onNavigate, onAddToCart }: HomePageProps) {
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px" style={{ background: '#e5e5e5' }}>
-            {homeBenefits.map((item, i) => (
-              <div
-                key={item.title}
-                className="p-8 flex flex-col"
-                style={{ background: i % 2 === 0 ? 'var(--red)' : '#ffffff' }}
-              >
+            {homeBenefits.map((item, i) => {
+              const inverted = i % 2 === 0
+              const pos = item.iconConfig?.position || 'top-left'
+              const isInline = pos === 'inline-left'
+              const isCenter = pos === 'top-center'
+
+              return (
                 <div
-                  className="mb-6 w-12 h-12 flex items-center justify-center"
-                  style={{ background: i % 2 === 0 ? 'rgba(255,255,255,0.18)' : '#f7f7f7' }}
+                  key={item.id || item.title}
+                  className={`p-8 flex flex-col ${isCenter ? 'items-center text-center' : ''}`}
+                  style={{ background: inverted ? 'var(--red)' : '#ffffff' }}
                 >
-                  <span style={{ color: i % 2 === 0 ? 'white' : '#1a1a1a' }}><BenefitIcon icon={item.icon} /></span>
+                  {isInline ? (
+                    <div className="flex items-center gap-3.5 mb-3.5">
+                      <CmsIcon
+                        icon={item.icon}
+                        config={item.iconConfig}
+                        inverted={inverted}
+                      />
+                      <h3 style={{ fontFamily: font, fontWeight: 700, fontSize: '1.1rem', lineHeight: 1.25, color: inverted ? 'white' : '#1a1a1a' }}>
+                        {item.title}
+                      </h3>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="mb-6">
+                        <CmsIcon
+                          icon={item.icon}
+                          config={item.iconConfig}
+                          inverted={inverted}
+                        />
+                      </div>
+                      <h3 style={{ fontFamily: font, fontWeight: 700, fontSize: '1.1rem', lineHeight: 1.25, marginBottom: '0.5rem', color: inverted ? 'white' : '#1a1a1a' }}>
+                        {item.title}
+                      </h3>
+                    </>
+                  )}
+                  <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: inverted ? 'rgba(255,255,255,0.65)' : '#888' }}>
+                    {item.description}
+                  </p>
                 </div>
-                <h3 style={{ fontFamily: font, fontWeight: 700, fontSize: '1.1rem', lineHeight: 1.25, marginBottom: '0.5rem', color: i % 2 === 0 ? 'white' : '#1a1a1a' }}>{item.title}</h3>
-                <p className="text-sm leading-relaxed" style={{ color: i % 2 === 0 ? 'rgba(255,255,255,0.65)' : '#888' }}>{item.description}</p>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       </section>
@@ -542,13 +562,23 @@ export default function HomePage({ onNavigate, onAddToCart }: HomePageProps) {
             >
               {homeContent.ctaPrimaryLabel}
             </a>
-            <button
-              onClick={() => onNavigate('about')}
-              className="px-8 py-3.5 font-medium transition-all hover:bg-gray-100"
-              style={{ border: '1px solid #d5d5d5', color: '#1a1a1a', background: 'white' }}
-            >
-              {homeContent.ctaSecondaryLabel}
-            </button>
+            {homeContent.ctaSecondaryUrl ? (
+              <a
+                href={isSafeContentUrl(homeContent.ctaSecondaryUrl) ? homeContent.ctaSecondaryUrl : '#'}
+                className="px-8 py-3.5 font-medium transition-all hover:bg-gray-100 flex items-center justify-center"
+                style={{ border: '1px solid #d5d5d5', color: '#1a1a1a', background: 'white' }}
+              >
+                {homeContent.ctaSecondaryLabel}
+              </a>
+            ) : (
+              <button
+                onClick={() => onNavigate('about')}
+                className="px-8 py-3.5 font-medium transition-all hover:bg-gray-100"
+                style={{ border: '1px solid #d5d5d5', color: '#1a1a1a', background: 'white' }}
+              >
+                {homeContent.ctaSecondaryLabel}
+              </button>
+            )}
           </div>
         </div>
       </section>
@@ -565,26 +595,30 @@ export default function HomePage({ onNavigate, onAddToCart }: HomePageProps) {
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {[
-              { href: settings.hotlineFormatted || 'tel:+842839435276', label: 'Liên hệ qua Hotline', bg: 'var(--red)', icon: 'M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z', textColor: 'white' },
-              { href: settings.zaloUrl || 'https://zalo.me', label: 'Liên hệ qua Zalo', bg: '#1B4C98', icon: 'M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z', textColor: 'white' },
-              { href: settings.catalogueUrl || '#', label: 'Catalogue, Bảng giá ABB', bg: '#f7f7f7', icon: 'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 1.5V8H18.5L13 3.5zM6 20V4h5v5h5v11H6z', textColor: '#1a1a1a', stroke: true },
-              { href: `mailto:${settings.email || 'info@viendongelectric.vn'}`, label: 'Gửi yêu cầu báo giá nhanh', bg: 'var(--red)', icon: 'M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z', textColor: 'white' },
-            ].map((btn) => (
-              <a
-                key={btn.label}
-                href={isSafeContentUrl(btn.href) ? btn.href : '#'}
-                target={btn.href.startsWith('http') ? '_blank' : undefined}
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-3 py-4 font-bold text-sm uppercase tracking-widest transition-all hover:opacity-85 active:scale-95"
-                style={{ background: btn.bg, color: btn.textColor, fontFamily: font, fontSize: '0.9rem', border: btn.textColor === '#1a1a1a' ? '1px solid #e5e5e5' : 'none' }}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill={btn.stroke ? 'none' : btn.textColor} stroke={btn.stroke ? btn.textColor : 'none'} strokeWidth={btn.stroke ? 2 : 0}>
-                  <path d={btn.icon} />
-                </svg>
-                {btn.label}
-              </a>
-            ))}
+            {(homeContent.supportButtons && homeContent.supportButtons.length > 0 ? homeContent.supportButtons : defaultSupportButtons)
+              .filter((btn) => btn.isActive !== false)
+              .map((btn) => {
+                const isBorderNeeded = btn.textColor === '#1a1a1a' || btn.bg === '#f7f7f7' || btn.bg?.toLowerCase() === '#ffffff'
+                return (
+                  <a
+                    key={btn.id || btn.label}
+                    href={isSafeContentUrl(btn.href) ? btn.href : '#'}
+                    target={btn.href?.startsWith('http') ? '_blank' : undefined}
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-3 py-4 font-bold text-sm uppercase tracking-widest transition-all hover:opacity-85 active:scale-95"
+                    style={{
+                      background: btn.bg,
+                      color: btn.textColor || '#ffffff',
+                      fontFamily: font,
+                      fontSize: '0.9rem',
+                      border: isBorderNeeded ? '1px solid #e5e5e5' : 'none',
+                    }}
+                  >
+                    {btn.iconConfig && <CmsIcon config={btn.iconConfig} overrideSize={18} />}
+                    {btn.label}
+                  </a>
+                )
+              })}
           </div>
         </div>
       </section>

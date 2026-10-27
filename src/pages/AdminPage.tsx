@@ -22,6 +22,8 @@ import {
   deleteRemoteQuote,
   getStoredSiteSettings,
   saveStoredSiteSettings,
+  defaultFloatingActions,
+  defaultMapStats,
   exportAllDataAsJSON,
   createVietnameseSlug,
   ProductItem,
@@ -45,6 +47,7 @@ import ThumbnailCropper from '@/components/ThumbnailCropper'
 import NewsThumbnailView from '@/components/NewsThumbnailView'
 import { calculateAdaptiveButtonPositions } from '@/utils/bannerLayout'
 import { uploadMedia } from '@/utils/mediaUpload'
+import AdminIconPicker from '@/components/AdminIconPicker'
 import { isSafeContentUrl, sanitizePlainText, sanitizeRichHtml } from '@/utils/sanitize'
 import type { AdminSession } from '@/types/admin'
 
@@ -1804,6 +1807,248 @@ export default function AdminPage({ onNavigate, session }: AdminPageProps) {
                   onChange={(e) => setSettingsForm({ ...settingsForm, address: e.target.value })}
                   className="w-full px-3 py-2 text-xs border border-gray-300 focus:outline-none focus:border-[#1B4C98]"
                 />
+              </div>
+
+              {/* Nút liên hệ nổi */}
+              <div className="pt-4 border-t border-gray-200">
+                <div className="flex items-center justify-between mb-2">
+                  <div>
+                    <h4 className="text-sm font-bold text-[#1B4C98] uppercase font-['Roboto_Condensed']">
+                      Nút liên hệ nổi ở góc màn hình
+                    </h4>
+                    <p className="text-xs text-gray-500">
+                      Tùy chỉnh các nút liên hệ tròn (Gọi điện, Email, Zalo...) gồm màu sắc, link và biểu tượng.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const current = settingsForm.floatingActions || defaultFloatingActions
+                      const newItem = {
+                        id: `float-${Date.now()}`,
+                        label: 'Nút mới',
+                        href: 'https://',
+                        bg: '#1B4C98',
+                        isActive: true,
+                        iconConfig: {
+                          type: 'builtin' as const,
+                          builtinName: 'phone',
+                          size: 22,
+                          showBox: false,
+                          tint: true,
+                        },
+                      }
+                      setSettingsForm({ ...settingsForm, floatingActions: [...current, newItem] })
+                    }}
+                    className="border border-dashed border-[#1B4C98] px-3 py-1.5 text-xs font-bold text-[#1B4C98] hover:bg-blue-50"
+                  >
+                    + Thêm nút liên hệ
+                  </button>
+                </div>
+
+                <div className="space-y-3 mt-3">
+                  {(settingsForm.floatingActions || defaultFloatingActions).map((action, idx) => (
+                    <div key={action.id || idx} className="grid grid-cols-1 md:grid-cols-[140px_1fr_130px_200px_auto] items-end gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                      <div>
+                        <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">Tên nút</label>
+                        <input
+                          type="text"
+                          value={action.label}
+                          onChange={(e) => {
+                            const updated = [...(settingsForm.floatingActions || defaultFloatingActions)]
+                            updated[idx] = { ...updated[idx], label: e.target.value }
+                            setSettingsForm({ ...settingsForm, floatingActions: updated })
+                          }}
+                          className="w-full px-2.5 py-1.5 text-xs border border-gray-300 bg-white focus:outline-none focus:border-[#1B4C98]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">Link liên kết (tel:, mailto: hoặc https:)</label>
+                        <input
+                          type="text"
+                          value={action.href}
+                          onChange={(e) => {
+                            const updated = [...(settingsForm.floatingActions || defaultFloatingActions)]
+                            updated[idx] = { ...updated[idx], href: e.target.value }
+                            setSettingsForm({ ...settingsForm, floatingActions: updated })
+                          }}
+                          className="w-full px-2.5 py-1.5 text-xs border border-gray-300 bg-white focus:outline-none focus:border-[#1B4C98]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">Màu nền nút</label>
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="color"
+                            value={action.bg?.startsWith('#') ? action.bg : '#1B4C98'}
+                            onChange={(e) => {
+                              const updated = [...(settingsForm.floatingActions || defaultFloatingActions)]
+                              updated[idx] = { ...updated[idx], bg: e.target.value }
+                              setSettingsForm({ ...settingsForm, floatingActions: updated })
+                            }}
+                            className="h-8 w-8 cursor-pointer rounded border border-gray-300 bg-white p-0.5"
+                          />
+                          <input
+                            type="text"
+                            value={action.bg}
+                            onChange={(e) => {
+                              const updated = [...(settingsForm.floatingActions || defaultFloatingActions)]
+                              updated[idx] = { ...updated[idx], bg: e.target.value }
+                              setSettingsForm({ ...settingsForm, floatingActions: updated })
+                            }}
+                            className="w-20 px-1.5 py-1.5 text-xs border border-gray-300 bg-white text-center font-mono focus:outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <AdminIconPicker
+                          label="Biểu tượng nút"
+                          value={action.iconConfig}
+                          onToast={showToast}
+                          onChange={(newCfg) => {
+                            const updated = [...(settingsForm.floatingActions || defaultFloatingActions)]
+                            updated[idx] = { ...updated[idx], iconConfig: newCfg }
+                            setSettingsForm({ ...settingsForm, floatingActions: updated })
+                          }}
+                        />
+                      </div>
+
+                      <div className="flex items-center gap-2 pb-1">
+                        <label className="flex items-center gap-1 text-xs text-gray-700 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={action.isActive !== false}
+                            onChange={(e) => {
+                              const updated = [...(settingsForm.floatingActions || defaultFloatingActions)]
+                              updated[idx] = { ...updated[idx], isActive: e.target.checked }
+                              setSettingsForm({ ...settingsForm, floatingActions: updated })
+                            }}
+                            className="rounded border-gray-300 text-[#1B4C98]"
+                          />
+                          Hiện
+                        </label>
+                        <button
+                          type="button"
+                          title="Xóa nút"
+                          onClick={() => {
+                            const current = settingsForm.floatingActions || defaultFloatingActions
+                            setSettingsForm({
+                              ...settingsForm,
+                              floatingActions: current.filter((_, i) => i !== idx),
+                            })
+                          }}
+                          className="h-8 w-8 text-red-500 hover:bg-red-50 border border-red-200 rounded flex items-center justify-center font-bold"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Số liệu thống kê trang Hệ thống phân phối */}
+              <div className="pt-4 border-t border-gray-200">
+                <div className="flex items-center justify-between mb-2">
+                  <div>
+                    <h4 className="text-sm font-bold text-[#1B4C98] uppercase font-['Roboto_Condensed']">
+                      Số liệu thống kê trang Hệ thống phân phối
+                    </h4>
+                    <p className="text-xs text-gray-500">
+                      Tùy chỉnh các chỉ số (Cửa hàng, Tỉnh thành...) và thay đổi biểu tượng vector hoặc ảnh.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const current = settingsForm.mapStats || defaultMapStats
+                      const newItem = {
+                        id: `stat-${Date.now()}`,
+                        value: '100+',
+                        label: 'Chỉ số mới',
+                        iconConfig: {
+                          type: 'builtin' as const,
+                          builtinName: 'star',
+                          size: 28,
+                          showBox: false,
+                          tint: false,
+                        },
+                      }
+                      setSettingsForm({ ...settingsForm, mapStats: [...current, newItem] })
+                    }}
+                    className="border border-dashed border-[#1B4C98] px-3 py-1.5 text-xs font-bold text-[#1B4C98] hover:bg-blue-50"
+                  >
+                    + Thêm chỉ số
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                  {(settingsForm.mapStats || defaultMapStats).map((stat, idx) => (
+                    <div key={stat.id || idx} className="p-3 bg-gray-50 border border-gray-200 rounded-lg space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-gray-700">Chỉ số #{idx + 1}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const current = settingsForm.mapStats || defaultMapStats
+                            setSettingsForm({
+                              ...settingsForm,
+                              mapStats: current.filter((_, i) => i !== idx),
+                            })
+                          }}
+                          className="text-xs text-red-500 hover:underline"
+                        >
+                          Xóa
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">Số liệu hiển thị</label>
+                          <input
+                            type="text"
+                            value={stat.value}
+                            onChange={(e) => {
+                              const updated = [...(settingsForm.mapStats || defaultMapStats)]
+                              updated[idx] = { ...updated[idx], value: e.target.value }
+                              setSettingsForm({ ...settingsForm, mapStats: updated })
+                            }}
+                            className="w-full px-2.5 py-1.5 text-xs border border-gray-300 bg-white font-bold text-red-600 focus:outline-none focus:border-[#1B4C98]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">Tên nhãn</label>
+                          <input
+                            type="text"
+                            value={stat.label}
+                            onChange={(e) => {
+                              const updated = [...(settingsForm.mapStats || defaultMapStats)]
+                              updated[idx] = { ...updated[idx], label: e.target.value }
+                              setSettingsForm({ ...settingsForm, mapStats: updated })
+                            }}
+                            className="w-full px-2.5 py-1.5 text-xs border border-gray-300 bg-white focus:outline-none focus:border-[#1B4C98]"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <AdminIconPicker
+                          label="Biểu tượng chỉ số"
+                          value={stat.iconConfig}
+                          onToast={showToast}
+                          onChange={(newCfg) => {
+                            const updated = [...(settingsForm.mapStats || defaultMapStats)]
+                            updated[idx] = { ...updated[idx], iconConfig: newCfg }
+                            setSettingsForm({ ...settingsForm, mapStats: updated })
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <div className="pt-4 flex justify-end">

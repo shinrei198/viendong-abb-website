@@ -31,16 +31,19 @@ export default function ProductImageBranding({ series, badge, size = 'card' }: P
   const styles = sizeStyles[size]
 
   return (
-    <div className="pointer-events-none flex w-full flex-shrink-0 items-center justify-between">
-      <div
-        className="flex min-w-0 flex-wrap items-center gap-1.5"
-        style={{ marginLeft: styles.inset }}
-      >
-        <span className={`${styles.seriesClass} rounded-md border border-blue-200 bg-blue-50/95 font-bold uppercase tracking-wide text-[#1B4C98] shadow-xs`}>
+    <div
+      className="pointer-events-none flex w-full flex-shrink-0 items-center justify-between gap-2"
+      style={{
+        padding: `${styles.inset}px ${styles.logoX}px ${styles.inset}px ${styles.inset}px`,
+        minHeight: styles.logoX * 3,
+      }}
+    >
+      <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+        <span className={`${styles.seriesClass} whitespace-nowrap rounded-md border border-blue-200 bg-blue-50/95 font-bold uppercase tracking-wide text-[#1B4C98] shadow-xs`}>
           {series}
         </span>
         {badge && (
-          <span className={`${styles.badgeClass} rounded-full bg-[#FF000F] font-bold text-white shadow-xs`}>
+          <span className={`${styles.badgeClass} whitespace-nowrap rounded-full bg-[#FF000F] font-bold text-white shadow-xs`}>
             {badge}
           </span>
         )}
@@ -48,7 +51,6 @@ export default function ProductImageBranding({ series, badge, size = 'card' }: P
 
       <div
         className="flex-shrink-0"
-        style={{ padding: styles.logoX }}
         aria-label="Thương hiệu ABB"
       >
         <img

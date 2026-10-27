@@ -1,30 +1,22 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { getStoredSiteSettings, type FloatingContactAction } from '@/data/siteData'
+import CmsIcon from '@/components/CmsIcon'
 
 export default function FloatingButton() {
   const [open, setOpen] = useState(false)
+  const [actions, setActions] = useState<FloatingContactAction[]>([])
 
-  const actions = [
-    {
-      label: 'Gọi điện',
-      bg: '#22c55e',
-      icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
-          <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
-        </svg>
-      ),
-      href: 'tel:02839435276',
-    },
-    {
-      label: 'Email',
-      bg: '#f97316',
-      icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
-          <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
-        </svg>
-      ),
-      href: 'mailto:viendongelectric@gmail.com',
-    },
-  ]
+  useEffect(() => {
+    const loadActions = () => {
+      const s = getStoredSiteSettings()
+      const list = s.floatingActions || []
+      setActions(list.filter((a) => a.isActive !== false))
+    }
+
+    loadActions()
+    window.addEventListener('viendong_storage_update', loadActions)
+    return () => window.removeEventListener('viendong_storage_update', loadActions)
+  }, [])
 
   return (
     <div className="fixed bottom-6 right-5 z-50 flex flex-col items-center gap-3">
@@ -39,15 +31,25 @@ export default function FloatingButton() {
       >
         {actions.map((a) => (
           <a
-            key={a.label}
+            key={a.id || a.label}
             href={a.href}
             title={a.label}
             target={a.href.startsWith('http') ? '_blank' : undefined}
             rel="noopener noreferrer"
             className="w-12 h-12 rounded-full flex items-center justify-center shadow-xl hover:scale-110 active:scale-95 transition-transform"
-            style={{ backgroundColor: a.bg }}
+            style={{ backgroundColor: a.bg || '#1B4C98' }}
           >
-            {a.icon}
+            <CmsIcon
+              config={{
+                ...a.iconConfig,
+                type: a.iconConfig?.type || 'builtin',
+                builtinName: a.iconConfig?.builtinName || 'phone',
+                showBox: false,
+                tint: true,
+              }}
+              inverted={true}
+              overrideSize={22}
+            />
           </a>
         ))}
 
